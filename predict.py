@@ -31,7 +31,6 @@ ex = Experiment('Prediction')
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
-
 @ex.config
 def default_config():
     """

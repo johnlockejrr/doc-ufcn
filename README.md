@@ -114,8 +114,7 @@ To start the prediction:
 $ python predict.py with utils/testing_config.json
 ```
 
-The predicted labels are put in `./runs/experiment_name/predictions` (and
-`./runs/experiment_name/predictions_pp`).
+The predicted labels are put in `./runs/experiment_name/predictions`.
 
 ### Metrics
 

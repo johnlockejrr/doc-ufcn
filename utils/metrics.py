@@ -19,6 +19,7 @@
 
 import cv2
 import numpy as np
+from shapely.geometry import Polygon
 
 
 def get_coords(image: np.ndarray, channel: int) -> list:
@@ -204,22 +205,21 @@ class ObjectMetrics():
         self.positive_examples = {channel: 0 for channel in self.classes[1:]}
         self.rank_scores = self.compute_rank_scores()
 
-    def __compute_iou_from_contours(self, contour1: np.array,
-                                    contour2: np.array) -> float:
+    def __compute_iou_from_contours(self, poly1: np.array,
+                                    poly2: np.array) -> float:
         """
         Get the Intersection-over-Union value between two contours.
-        :param contour1: The first contour used to compute the
-                         Intersection-over-Union.
-        :param contour2: The second contour used to compute the
-                         Intersection-over-Union.
+        :param poly1: The first contour used to compute the
+                      Intersection-over-Union.
+        :param poly2: The second contour used to compute the
+                      Intersection-over-Union.
         :return: The computed Intersection-over-Union value between the two
                  contours.
         """
-        blank = np.zeros(self.prediction.shape)
-        image1 = cv2.drawContours(blank.copy(), [contour1], 0, 1, -1)
-        image2 = cv2.drawContours(blank.copy(), [contour2], 0, 1, -1)
-        intersection = (image1 * image2).sum()
-        union = (image1 + image2).sum() - intersection
+        poly1 = Polygon(poly1).buffer(0)
+        poly2 = Polygon(poly2).buffer(0)
+        intersection = poly1.intersection(poly2).area
+        union = poly1.area + poly2.area - intersection
         return intersection / union
 
     def __get_ious_by_channel(self, coords_prediction: list,
@@ -235,10 +235,12 @@ class ObjectMetrics():
         ious = {key: 0 for key in range(len(coords_prediction))}
         size = np.asarray(self.prediction.shape[0:1])
         for coord_label in coords_label:
+            coord_label = np.asarray([element[0] for element in coord_label])
             mean_label = get_mean_point(coord_label)
             best_iou = 0
             best_prediction = None
             for index_pred, coord_pred in enumerate(coords_prediction):
+                coord_pred = np.asarray([element[0] for element in coord_pred])
                 mean_prediction = get_mean_point(coord_pred)
                 if (np.abs(mean_label-mean_prediction) < size/5).all():
                     iou = self.__compute_iou_from_contours(coord_pred,

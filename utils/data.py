@@ -34,11 +34,14 @@ def load_data(frame_path: str, img_size: int, mean: list, std: list,
     """
     starting_time = time.time()
     # Generate the dataset / Load all the data (+ create batches).
-    data = MyDataset(frame_path, mask_path, classes,
-                     transform=transforms.Compose([Rescale(img_size),
-                                                   Normalize(mean, std),
-                                                   ToTensor()]))
-    loader = DataLoader(data, batch_size=batch_size,
-                        shuffle=shuffle, num_workers=2)
+
+    dataset = MyDataset(frame_path, mask_path, classes,
+                        transform=transforms.Compose([Rescale(img_size, mean),
+                                                      Normalize(mean, std),
+                                                      ToTensor()]))
+
+    loader = DataLoader(dataset, batch_size=batch_size,
+                        shuffle=shuffle, num_workers=2,
+                        pin_memory=True)
     logging.info('Loaded data in %1.5fs', (time.time() - starting_time))
     return loader

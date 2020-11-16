@@ -21,7 +21,9 @@ from sacred import Experiment
 from sacred.observers import MongoObserver
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
+from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
 import utils.model as m
 from utils.data import load_data
@@ -54,6 +56,23 @@ def default_config():
     restore_model = False
     classes_names = ["Background", "Text_line"]
     normalization_params = {"mean": [0, 0, 0], "std": [1, 1, 1]}
+
+
+class diceloss(nn.Module):
+    def __init__(self):
+        super(diceloss, self).__init__()
+
+    def forward(self, pred, target):
+
+       label = nn.functional.one_hot(target, num_classes=2).permute(0,3,1,2).contiguous()
+
+       smooth = 1.
+       iflat = pred.contiguous().view(-1)
+       tflat = label.contiguous().view(-1)
+       intersection = (iflat * tflat).sum()
+       A_sum = torch.sum(iflat * iflat)
+       B_sum = torch.sum(tflat * tflat)
+       return 1 - ((2. * intersection + smooth) / (A_sum + B_sum + smooth) )
 
 
 @ex.capture
@@ -98,7 +117,7 @@ def initialize_experiment(classes: list, params: TrainingParams,
                            batch_size=batch_size)
 
     net, last_layer = m.load_network(no_of_classes, device, ex)
-    criterion = nn.CrossEntropyLoss()
+    criterion = diceloss()
     optimizer = optim.Adam(net.parameters(), lr=learning_rate)
     # Generate model graph.
     m.generate_model_graph(net, img_size)
@@ -134,15 +153,16 @@ def run_one_epoch(loader, net, criterion, optimizer, writer, epoch: int,
     for index, data in enumerate(tqdm(loader, desc=step), 0):
         image, label = data['image'].to(device), data['label'].to(device)
         optimizer.zero_grad()
-        output = net(image.float())
+        output = net[0](image.float())
+
         loss = criterion(output, label.long())
         running_loss.append(loss.item())
 
         if step == "Training":
             loss.backward()
             optimizer.step()
-            # Display prediction images in Tensorboard all 20 mini-batches.
-            if index % 20 == 19:
+            # Display prediction images in Tensorboard all 200 mini-batches.
+            if index % 200 == 199:
                 display_training(output, image, label, writer,
                                  epoch, normalization_params)
 
@@ -216,16 +236,17 @@ def run(params: TrainingParams, log_path: str, restore_model: bool,
     # Get the possible colors.
     colors = get_classes_colors(params.classes_file)
 
-    train_loader, val_loader, net, _, criterion, \
+    train_loader, val_loader, net, softmax, criterion, \
         optimizer = initialize_experiment(colors)
     net.apply(weights_init)
 
-    best_loss = 10e5
     saved_epoch = 0
     if restore_model:
         checkpoint, net, optimizer = m.restore_model_parameters(
             net, optimizer, log_path, params.model_path)
         saved_epoch = checkpoint['epoch']-1
+        optimizer = optim.Adam(net.parameters(), lr=5e-3)
+    best_loss = 10e5
 
     writer = SummaryWriter(os.path.join(log_path, tb_path))
     # Train the model.
@@ -236,20 +257,21 @@ def run(params: TrainingParams, log_path: str, restore_model: bool,
         # Run training.
         net.train()
         loss, iou, criterion, optimizer = run_one_epoch(
-            train_loader, net, criterion, optimizer, writer,
+            train_loader, [net, softmax], criterion, optimizer, writer,
             current_epoch, step="Training")
         log_metrics(current_epoch, loss, iou, writer, step="Training")
-        # Run evaluation.
-        net.eval()
-        loss, iou = run_one_epoch(val_loader, net, criterion, optimizer,
-                                  writer, current_epoch, step="Validation")
-        log_metrics(current_epoch, loss, iou, writer, step="Validation")
-        # Keep best model.
-        if loss < best_loss:
-            best_loss = loss
-            m.save_model(current_epoch+1, net.module.state_dict(), loss,
-                         optimizer.state_dict(), params.model_path, log_path)
-            logging.info('Best model (epoch %d) saved', current_epoch+1)
+        with torch.no_grad():
+            # Run evaluation.
+            net.eval()
+            loss, iou = run_one_epoch(val_loader, [net, softmax], criterion, optimizer,
+                                      writer, current_epoch, step="Validation")
+            log_metrics(current_epoch, loss, iou, writer, step="Validation")
+            # Keep best model.
+            if loss < best_loss:
+                best_loss = loss
+                m.save_model(current_epoch+1, net.module.state_dict(), loss,
+                             optimizer.state_dict(), params.model_path, log_path)
+                logging.info('Best model (epoch %d) saved', current_epoch+1)
     # Save last model.
     if restore_model:
         m.save_model(current_epoch+1, net.module.state_dict(), loss,

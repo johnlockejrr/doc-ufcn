@@ -91,7 +91,7 @@ def load_one_batch(probs: np.ndarray, min_cc: int) -> list:
     """
     predictions = []
     for pred in range(probs.shape[0]):
-        probas = probs[pred, :, :, :].cpu().numpy()
+        probas = probs[pred, :, :, :]
         max_probas = np.argmax(probas, axis=0)
         for channel in range(1, probas.shape[0]):
             # Keep pixels with highest probability.
@@ -163,12 +163,17 @@ def run(params: TestParams, device: str, log_path: str, no_of_classes: int,
             image, label = data['image'].to(device), data['label'].to(device)
             probas = last_layer(net(image.float()))
 
+            input_size = [element.numpy()[0] for element in data['size']]
+            probas = utils.back_to_original_size(probas, input_size)
+
             for index, prediction in enumerate(load_one_batch(probas)):
-                label = label[index, :, :].cpu().numpy()
+                current_label = cv2.resize(label[index, :, :].cpu().numpy(),
+                                           (input_size[1], input_size[0]),
+                                           interpolation=cv2.INTER_NEAREST)
                 pixel_m = m.PixelMetrics(prediction['prediction'],
-                                         label, classes_names)
+                                         current_label, classes_names)
                 object_m = m.ObjectMetrics(prediction['prediction'],
-                                           label, classes_names,
+                                           current_label, classes_names,
                                            prediction['probas'])
 
                 results['pixel'], confusion_matrix = pixel_m.update_results(

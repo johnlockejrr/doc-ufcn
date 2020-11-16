@@ -52,6 +52,39 @@ def get_classes_colors(filename: str) -> list:
         return [tuple(element[:-1].split(' '))
                 for element in classes_file.readlines()]
 
+def back_to_original_size(prediction, size):
+    """
+    Resize the predicted channel into the original input image size.
+    Compute the size of the prediction in the padded prediction.
+    Extract and resize the prediction into the real image size.
+    :param prediction: The predicted image to resize.
+    :param size: The original input image size.
+    :param interpolation: The interpolation to use when resizing the image.
+    :return: The resized predicted channel.
+    """
+    prediction = prediction.cpu().numpy()
+    # Resize
+    input_size = prediction.shape[-1]
+    # Compute the new sizes.
+    ratio = float(input_size) / max(size)
+    new_size = tuple([int(x * ratio) for x in size])
+    # Extract the small image.
+    delta_w = input_size - new_size[1]
+    delta_h = input_size - new_size[0]
+    top, bottom = delta_h // 2, delta_h - (delta_h // 2)
+    left, right = delta_w // 2, delta_w - (delta_w // 2)
+    resized_image = np.zeros(
+        (prediction.shape[2] - bottom - top, prediction.shape[3] - right - left)
+    )
+    full_size_image = np.zeros((prediction.shape[0], prediction.shape[1], size[0], size[1]))
+    for channel in range(prediction.shape[1]):
+        resized_image[:, :] = prediction[0, channel,
+            top : prediction.shape[2] - bottom,
+            left : prediction.shape[3] - right
+        ]
+        full_size_image[0, channel, :, :] = cv2.resize(resized_image, (size[1], size[0]), interpolation=cv2.INTER_LINEAR)
+    return full_size_image
+
 # Plot the prediction during training.
 
 

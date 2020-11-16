@@ -16,7 +16,6 @@ from skimage import io
 from torch.utils.data import Dataset
 from .utils import rgb_to_gray_array, rgb_to_gray_value
 
-
 class MyDataset(Dataset):
     """
     The MyDataset class is used to prepare the images and labels.
@@ -52,6 +51,7 @@ class MyDataset(Dataset):
             idx = idx.tolist()
         img_name = os.listdir(self.images_dir)[idx]
         image = cv2.imread(os.path.join(self.images_dir, img_name))
+
         if len(image.shape) < 3:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -66,7 +66,9 @@ class MyDataset(Dataset):
                 new_label[label == color] = index
         else:
             new_label = None
-        sample = {'image': image, 'label': new_label}
+
+        sample = {'image': image, 'label': new_label, 'size': image.shape[:2]}
+
         # Apply the transformations.
         if self.transform:
             sample = self.transform(sample)
@@ -87,6 +89,8 @@ class Rescale():
         """
         assert isinstance(output_size, int)
         self.output_size = output_size
+        assert isinstance(mean, list)
+        self.mean = mean
 
     def __call__(self, sample: dict) -> dict:
         """
@@ -98,26 +102,27 @@ class Rescale():
         old_size = image.shape[:2]
         # Compute the new sizes.
         ratio = float(self.output_size) / max(old_size)
-        new_size = tuple([int(x * ratio) for x in old_size])
+        new_size = [int(x * ratio) for x in old_size]
+
         # Resize the image and label.
         new_image = cv2.resize(image, (new_size[1], new_size[0]))
         if label is not None:
             new_label = cv2.resize(label, (new_size[1], new_size[0]),
                                    interpolation=cv2.INTER_NEAREST)
 
-        delta_w = self.output_size - new_size[1]
-        delta_h = self.output_size - new_size[0]
+        delta_w = self.output_size - new_image.shape[1]
+        delta_h = self.output_size - new_image.shape[0]
         top, bottom = delta_h // 2, delta_h - (delta_h // 2)
         left, right = delta_w // 2, delta_w - (delta_w // 2)
         # Add padding to have same size images.
         new_image = cv2.copyMakeBorder(new_image, top, bottom, left, right,
-                                       cv2.BORDER_CONSTANT, value=[0, 0, 0])
+                                       cv2.BORDER_CONSTANT, value=self.mean)
         if label is not None:
             new_label = cv2.copyMakeBorder(new_label, top, bottom, left, right,
                                            cv2.BORDER_CONSTANT, value=0)
         else:
             new_label = None
-        return {'image': new_image, 'label': new_label}
+        return {'image': new_image, 'label': new_label, 'size': sample['size']}
 
 
 class Normalize():
@@ -151,7 +156,7 @@ class Normalize():
             new_image[:, :, channel] = (np.float32(image[:, :, channel])
                                         - self.mean[channel]) \
                                         / self.std[channel]
-        return {'image': new_image, 'label': sample['label']}
+        return {'image': new_image, 'label': sample['label'], 'size': sample['size']}
 
 
 class ToTensor():
@@ -168,6 +173,7 @@ class ToTensor():
         image = image.transpose((2, 0, 1))
         if label is not None:
             return {'image': torch.from_numpy(image),
-                    'label': torch.from_numpy(label)}
+                    'label': torch.from_numpy(label),
+                    'size': sample['size']}
         else:
             return {'image': torch.from_numpy(image)}

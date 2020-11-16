@@ -53,14 +53,15 @@ class Net(nn.Module):
         """
         modules = []
         modules.append(nn.Conv2d(input_size, output_size, 3, stride=1,
-                                 dilation=1, padding=1))
+                                 dilation=1, padding=1, bias=False))
         modules.append(nn.BatchNorm2d(output_size,
                                       track_running_stats=False))
         modules.append(nn.ReLU(inplace=True))
         modules.append(nn.Dropout(p=0.4))
         for i in [2, 4, 8, 16]:
             modules.append(nn.Conv2d(output_size, output_size, 3,
-                                     stride=1, dilation=i, padding=i))
+                                     stride=1, dilation=i, padding=i,
+                                     bias=False))
             modules.append(nn.BatchNorm2d(output_size,
                                           track_running_stats=False))
             modules.append(nn.ReLU(inplace=True))
@@ -78,13 +79,13 @@ class Net(nn.Module):
         """
         return nn.Sequential(
             nn.Conv2d(input_size, output_size, 3,
-                      stride=1, padding=1),
+                      stride=1, padding=1, bias=False),
             nn.BatchNorm2d(output_size, track_running_stats=False),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.4),
             # Does the upsampling.
             nn.ConvTranspose2d(output_size, output_size,
-                               2, stride=2),
+                               2, stride=2, bias=False),
             nn.BatchNorm2d(output_size, track_running_stats=False),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.4))

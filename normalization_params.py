@@ -14,6 +14,7 @@
 
 import logging
 import time
+import cv2
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -21,12 +22,41 @@ from sacred import Experiment
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from utils.params_config import TrainingParams
-from utils.preprocessing import MyDataset, Rescale, ToTensor
+from utils.preprocessing import MyDataset, ToTensor
 from utils.utils import get_classes_colors
 
 ex = Experiment('Get normalization parameters')
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+class Rescale():
+    """
+    The Rescale class is used to rescale the image of a sample into a
+    given size.
+    """
+    def __init__(self, output_size: int):
+        """
+        Constructor of the Rescale class.
+        :param output_size: The desired new size.
+        """
+        assert isinstance(output_size, int)
+        self.output_size = output_size
+
+    def __call__(self, sample: dict) -> dict:
+        """
+        Rescale the sample image and label into the new size.
+        :param sample: The sample to rescale.
+        :return: The rescaled sample.
+        """
+        image, label = sample['image'], sample['label']
+        old_size = image.shape[:2]
+        # Compute the new sizes.
+        ratio = float(self.output_size) / max(old_size)
+        new_size = tuple([int(x * ratio) for x in old_size])
+        # Resize the image.
+        new_image = cv2.resize(image, (new_size[1], new_size[0]))
+        return {'image': new_image, 'label': None}
 
 
 @ex.config
@@ -66,9 +96,8 @@ def run(params: TrainingParams, img_size: int):
     std = []
     for data in tqdm(loader, desc="Computing parameters"):
         image = data['image'].numpy()
-        if image.shape == (1, 3, img_size, img_size):
-            mean.append(np.mean(image, axis=(0, 2, 3)))
-            std.append(np.std(image, axis=(0, 2, 3)))
+        mean.append(np.mean(image, axis=(0, 2, 3)))
+        std.append(np.std(image, axis=(0, 2, 3)))
 
     mean = np.array(mean).mean(axis=0)
     std = np.array(std).mean(axis=0)
