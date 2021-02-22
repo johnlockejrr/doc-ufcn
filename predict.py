@@ -97,7 +97,6 @@ def run(prediction_path: str, log_path: str, img_size: int, colors: list,
                     pr_utils.save_prediction_image(polygons, colors, input_size,
                                                    os.path.join(log_path, prediction_path,
                                                                 set, data['name'][0]))
-                break
 
     end = time.gmtime(time.time() - starting_time)
     logging.info('Finished predicting in %2d:%2d:%2d',

@@ -61,7 +61,7 @@ Different files must be updated according to the task one want to run. In the ro
 | `omniboard`       | Whether to use Omniboard observer                                                                                    | `false`                                                         |
 | `restore_model`   | Path to the last saved model to resume training                                                                      | `None`                                                                |
 
-Note: All the steps are dependant, e.g to run the `"prediction"` step, one **need** the results of the `"normalization_params"` and `"train"` steps.
+Note: All the steps are dependant, e.g to run the `"prediction"` step, one **needs** the results of the `"normalization_params"` and `"train"` steps.
 
 ### `data/classes.txt`
 

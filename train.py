@@ -92,7 +92,6 @@ def run_one_epoch(loader, params: dict, writer, epochs: list,
             if index == 0 or index % 100 == 99:
                 tr_utils.display_training(output, data['image'], data['mask'], writer,
                                           epoch, norm_params)
-        break
 
     if step == "Training":
         return params, epoch_values
