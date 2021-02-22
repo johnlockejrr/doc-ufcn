@@ -1,100 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-    The normalization_params module
-    ======================
-
-    Use it to get the mean value and standard deviation of a dataset.
-
-    :example:
-
-    >>> python normalization_params.py with img_size=XXX
-"""
-
 import logging
-import time
-import cv2
-import torch
 import numpy as np
 from tqdm import tqdm
-from sacred import Experiment
 from torchvision import transforms
 from torch.utils.data import DataLoader
-from utils.params_config import TrainingParams
-from utils.preprocessing import MyDataset, ToTensor
-from utils.utils import get_classes_colors
+from utils.params_config import Params
+import utils.preprocessing as pprocessing
 
-ex = Experiment('Get normalization parameters')
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
-
-class Rescale():
+def run(params: Params, img_size: int):
     """
-    The Rescale class is used to rescale the image of a sample into a
-    given size.
+    Compute the normalization parameters: mean and standard deviation on
+    train set.
+    :param params: Parameters to use to find the mean and std values.
+    :param img_size: The network input image size.
     """
-    def __init__(self, output_size: int):
-        """
-        Constructor of the Rescale class.
-        :param output_size: The desired new size.
-        """
-        assert isinstance(output_size, int)
-        self.output_size = output_size
-
-    def __call__(self, sample: dict) -> dict:
-        """
-        Rescale the sample image and label into the new size.
-        :param sample: The sample to rescale.
-        :return: The rescaled sample.
-        """
-        image, label = sample['image'], sample['label']
-        old_size = image.shape[:2]
-        # Compute the new sizes.
-        ratio = float(self.output_size) / max(old_size)
-        new_size = tuple([int(x * ratio) for x in old_size])
-        # Resize the image.
-        new_image = cv2.resize(image, (new_size[1], new_size[0]))
-        return {'image': new_image, 'label': None}
-
-
-@ex.config
-def default_config():
-    """
-    Define the default configuration for the experiment.
-    """
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    logging.info('Running on {}'.format(device))
-    params = TrainingParams().to_dict()
-    img_size = 768
-
-
-@ex.automain
-def run(params: TrainingParams, img_size: int):
-    """
-    Main function.
-    :param params: The dictionnary containing the parameters
-                   of the experiment.
-    :param img_size: The size in which the images are resized.
-    """
-    params = TrainingParams.from_dict(params)
-    colors = get_classes_colors(params.classes_file)
-    # Generate the training dataset / Load all the data + create batchs.
-    starting_time = time.time()
-    data = MyDataset(params.train_frame_path, params.train_mask_path,
-                     colors,
-                     transform=transforms.Compose([Rescale(img_size),
-                                                   ToTensor()]))
-    loader = DataLoader(data, batch_size=1,
+    dataset = pprocessing.PredictionDataset(
+        params.train_image_path,
+        transform=transforms.Compose([pprocessing.Rescale(img_size),
+                                      pprocessing.ToTensor()]))
+    loader = DataLoader(dataset, batch_size=1,
                         shuffle=False, num_workers=2)
-
-    logging.info('Loaded data in %1.5fs', (time.time() - starting_time))
 
     # Compute mean and std.
     mean = []
     std = []
-    for data in tqdm(loader, desc="Computing parameters"):
+    for data in tqdm(loader, desc="Computing parameters (prog)"):
         image = data['image'].numpy()
         mean.append(np.mean(image, axis=(0, 2, 3)))
         std.append(np.std(image, axis=(0, 2, 3)))
@@ -102,5 +34,13 @@ def run(params: TrainingParams, img_size: int):
     mean = np.array(mean).mean(axis=0)
     std = np.array(std).mean(axis=0)
 
-    logging.info('Mean : {}'.format(np.uint8(mean)))
-    logging.info('Std  : {}'.format(np.uint8(std)))
+    logging.info('Mean: {}'.format(np.uint8(mean)))
+    logging.info(' Std: {}'.format(np.uint8(std)))
+    
+    with open(params.mean, 'w') as file:
+        for value in mean:
+            file.write(str(np.uint8(value))+'\n')
+
+    with open(params.std, 'w') as file:
+        for value in std:
+            file.write(str(np.uint8(value))+'\n')

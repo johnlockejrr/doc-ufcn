@@ -16,147 +16,90 @@
 import os
 import logging
 import time
-import torch
 import cv2
 import numpy as np
 from tqdm import tqdm
-from sacred import Experiment
-from utils.data import load_data
-from utils.model import load_network, restore_model
-from utils.params_config import PredictionParams
-from utils.utils import get_classes_colors, save_prediction
-from utils.postprocessing import post_processing
+from shapely.geometry import Polygon
+import torch
+import utils.prediction_utils as pr_utils
 
-ex = Experiment('Prediction')
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
-@ex.config
-def default_config():
+def get_predicted_polygons(probas: np.ndarray, min_cc: int, classes_names: list) -> dict:
     """
-    Define the default configuration for the experiment.
+    Clean the predicted and retrieve the detected object coordinates.
+    :param probas: The probability maps obtained by the model.
+    :param min_cc: The threshold used to remove small connected components.
+    :param classes_names: The classes names involved in the experiment.
+    :return page_contours: The contour and confidence score obtained for each
+                           detected object.
+    """
+    page_contours = {}
+    max_probas = np.argmax(probas, axis=0)
+    for channel in range(1, probas.shape[0]):
+        # Keep pixels with highest probability.
+        channel_probas = np.uint8(max_probas == channel) \
+                             * probas[channel, :, :]
+        # Retrieve the polygons contours.
+        bin_img = channel_probas.copy()
+        bin_img[bin_img > 0] = 1
+        contours, hierarchy = cv2.findContours(np.uint8(bin_img), cv2.RETR_EXTERNAL,
+                                               cv2.CHAIN_APPROX_SIMPLE)
+        # Remove small connected components.
+        if min_cc > 0:
+            contours = [contour for contour in contours if cv2.contourArea(contour) > min_cc]
+        page_contours[classes_names[channel]] = [
+            {'confidence': pr_utils.compute_confidence(contour, channel_probas),
+             'polygon': contour} for contour in contours
+        ]
+    return page_contours
+
+
+def run(prediction_path: str, log_path: str, img_size: int, colors: list,
+        classes_names: list, save_image: list, min_cc: int,
+        loaders: dict, pr_params: dict):
+    """
+    Run the prediction.
+    :param prediction_path: The path to save the predictions.
+    :param log_path: Path to save the experiment information and model.
+    :param img_size: Network input size.
+    :param colors: Colors of the classes used during the experiment.
+    :param classes_names: The names of the classes involved during the experiment.
+    :param save_image: List of sets (train, val, test) for which the prediction images
+                       are generated and saved.
+    :param min_cc: The threshold used to remove small connected components.
+    :param loaders: The loaders containing the images to predict.
+    :param pr_params: The prediction parameters.
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    logging.info('Running on %s', device)
-    params = PredictionParams().to_dict()
-    img_size = 384
-    experiment_name = 'ufcn'
-    log_path = 'runs/'+experiment_name.lower().replace(' ', '_').replace('-', '_')
-    no_of_classes = 2
-    classes_names = []
-    normalization_params = {"mean": [0, 0, 0], "std": [1, 1, 1]}
-    min_cc = 0
 
+    # Run prediction.
+    pr_params['net'].eval()
 
-@ex.capture
-def initialize_experiment(classes: list, params: PredictionParams,
-                          img_size: int, no_of_classes: int, device: str,
-                          normalization_params: dict):
-    """
-    Initialize the experiment.
-    Load the data into batches and load the network.
-    :param classes: The color codes of the different classes.
-    :param params: The dictionnary containing the parameters
-                   of the experiment.
-    :param img_size: The size in which the images will be resized.
-    :param no_of_classes: The number of classes involved in the experiment.
-    :param device: The device used to run the experiment.
-    :param normalization_params: The mean values and standard deviations used
-                                 to normalize the images.
-    :return loader: The loader containing the pre-processed images.
-    :return net: The loaded network.
-    :return last_layer: The last activation function to apply.
-    """
-    params = PredictionParams.from_dict(params)
-    loader = load_data(params.test_frame_path, img_size,
-                       normalization_params['mean'],
-                       normalization_params['std'], classes, shuffle=False)
-    net, last_layer = load_network(no_of_classes, device, ex)
-    return loader, net, last_layer
-
-
-@ex.capture
-def predict_one_batch(probs: np.ndarray, classes: list, min_cc: int) -> list:
-    """
-    Save the predictions of one batch of images.
-    :param probs: The probabilities of the predicted batch images.
-    :param classes: The color codes of the classes.
-    :param min_cc: The minimum size of the small connected
-                   components to remove.
-    :return predictions: A list of the predictions for the
-                         current batch images.
-    """
-    predictions = []
-    for pred in range(probs.shape[0]):
-        probas = probs[pred, :, :, :].cpu().numpy()
-
-        prediction_image = np.zeros((probas.shape[1], probas.shape[2], 3))
-        max_probas = np.argmax(probas, axis=0)
-        for channel in range(1, probas.shape[0]):
-            # Keep pixels with highest probability.
-            probas_channel = np.uint8(max_probas == channel) \
-                                 * probas[channel, :, :]
-            # Remove small connected components.
-            if min_cc > 0:
-                bin_img = probas_channel.copy()
-                bin_img[bin_img > 0] = 1
-                _, labeled_cc = cv2.connectedComponents(np.uint8(bin_img),
-                                                        connectivity=8)
-                for lab in np.unique(labeled_cc):
-                    if np.sum(labeled_cc == lab) < min_cc:
-                        labeled_cc[labeled_cc == lab] = 0
-                probas_channel = probas_channel * (labeled_cc > 0)
-            probas[channel, :, :] = probas_channel
-            # Generate the prediction image.
-            color = [int(element) for element in classes[channel]]
-            prediction_image[probas[channel, :, :] > 0] = color
-        predictions.append({
-            'prediction': prediction_image,
-            'prediction_pp': post_processing(probas, colors=classes)
-        })
-    return predictions
-
-
-@ex.automain
-def run(params: PredictionParams, device: str, log_path: str):
-    """
-    Main function. Run the prediction of all the images.
-    :param params: The dictionnary containing the parameters
-                   of the experiment.
-    :param device: The device used to run the experiment.
-    :param log_path: The directory to save the predictions for
-                     the current experiment.
-    """
-    params = PredictionParams.from_dict(params)
-    # Get the possible colors.
-    colors = get_classes_colors(params.classes_file)
-
-    test_loader, net, last_layer = initialize_experiment(colors)
-    net = restore_model(net, log_path, params.model_path)
-    net.eval()
-    # Create folder to save the predictions.
-    os.makedirs(os.path.join(log_path, params.predictions_path),
-                exist_ok=True)
-    os.makedirs(os.path.join(log_path, params.predictions_pp_path),
-                exist_ok=True)
-
-    logging.info('Starting predictions')
+    logging.info('Starting predicting')
     starting_time = time.time()
-    filenames = os.listdir(params.test_frame_path)
     with torch.no_grad():
-        for i, data in enumerate(tqdm(test_loader, desc="Predicting"), 0):
-            image = data['image'].to(device)
-            probas = last_layer(net(image.float()))
-            for prediction in predict_one_batch(probas, colors):
-                save_prediction(prediction['prediction'],
-                                os.path.join(log_path,
-                                             params.predictions_path,
-                                             filenames[i]))
-                save_prediction(prediction['prediction_pp'],
-                                os.path.join(log_path,
-                                             params.predictions_pp_path,
-                                             filenames[i]))
+        for set, loader in zip(['train', 'val', 'test'],
+                               loaders.values()):
+            # Create folders to save the predictions.
+            os.makedirs(os.path.join(log_path, prediction_path, set),
+                        exist_ok=True)
+
+            for i, data in enumerate(tqdm(loader, desc="Prediction (prog) "+set), 0):
+                output = pr_params['softmax'](pr_params['net'](data['image'].to(device).float()))
+                input_size = [element.numpy()[0] for element in data['size'][:2]]
+
+                assert(output.shape[0] == 1)
+                polygons = get_predicted_polygons(output[0].cpu().numpy(), min_cc, classes_names)
+                polygons = pr_utils.resize_polygons(polygons, input_size, img_size)
+
+                pr_utils.save_prediction(polygons,
+                    os.path.join(log_path, prediction_path, set, data['name'][0]))
+                if set in save_image:
+                    pr_utils.save_prediction_image(polygons, colors, input_size,
+                                                   os.path.join(log_path, prediction_path,
+                                                                set, data['name'][0]))
+                break
 
     end = time.gmtime(time.time() - starting_time)
     logging.info('Finished predicting in %2d:%2d:%2d',
                  end.tm_hour, end.tm_min, end.tm_sec)
+

@@ -8,8 +8,8 @@ Code to train and test U-FCN model.
 The U-FCN tool is split into three parts:
 
 - The code to train the model on a given dataset;
-- The code to predict the segmentation of testing images according to the trained model;
-- The code to evaluate the model based on the previous predictions.
+- The code to predict the segmentation of images according to the trained model;
+- The code to evaluate the model based on the predictions.
 
 ## Preparing the environment
 
@@ -21,7 +21,7 @@ $ source ufcn/bin/activate
 $ pip install -r requirements.txt
 ```
 
-### Preparing the data
+## Preparing the data
 
 To train and test the model, all the images and their annotations must be in the `./data` folder following this hierarchy:
 
@@ -30,8 +30,7 @@ To train and test the model, all the images and their annotations must be in the
 ├── data
 │   ├── classes.txt
 │   ├── test
-│   │   ├── images
-│   │   └── labels
+│   │   └── images
 │   ├── train
 │   │   ├── images
 │   │   └── labels
@@ -41,19 +40,30 @@ To train and test the model, all the images and their annotations must be in the
 ├── ...
 ```
 
-Once the images are in the right directories, one has to compute the normalization parameters (mean value and standard deviation) of the training set:
+The labels should be generated directly at the network input size (*img_size*) to avoid resizing (that can cause mergings of regions).
 
-```
-$ python normalization_params.py with img_size=XXX
-```
+## Preparing the configuration files
 
-The *img_size* variable is the size of the images on which the model will be trained (typically `img_size=768`).
+### `config.json`
 
-## Training U-FCN
+Different files must be updated according to the task one want to run. In the root directory, one has the first configuration file `config.json`. One can change the different parameters like the number of epochs or the batch size directly in this file according to the following:
 
-### Configuration files
+| Parameter         | Description                                                                                                          | Default value                                                   |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `experiment_name` | Name of the experiment                                                                                               | `ufcn`                                                          |
+| `classes_names`   | List with the names of the classes / **must be in the same order** as the colors defined in the `./data/classes.txt` | `["background", "text_line"]`                                   |
+| `img_size`        | Network input size / **must be the same** as the one used during the label generation                                | `768`                                                           |
+| `no_of_epochs`    | Number of epochs to train the model                                                                                  | `200`                                                           |
+| `batch_size`      | Size of batchs to use during training                                                                                | `2`                                                             |
+| `min_cc`          | Threshold to use when removing of small connected components                                                         | `50`                                                            |
+| `save_image`      | List with the sets ["train", "val", "test"] for which we want to save the predicted masks.                           | `["test"]`                                                      |
+| `steps`           | List with the steps to run ["normalization_params", "train", "prediction", "evaluation"]                             | `["normalization_params", "train", "prediction", "evaluation"]` |
+| `omniboard`       | Whether to use Omniboard observer                                                                                    | `false`                                                         |
+| `restore_model`   | Path to the last saved model to resume training                                                                      | `None`                                                                |
 
-Different files must be updated according to the task one want to run. In the `./utils` directory, one has the first configuration file for the training stage named `training_config.json`. One can change the different parameters of the training like the number of epochs or the batch size directly in this file. One has to add the mean values and standard deviations computed before to allow the normalization of the images during training. The *img_size* chosen before also has to be put in this configuration file.
+Note: All the steps are dependant, e.g to run the `"prediction"` step, one **need** the results of the `"normalization_params"` and `"train"` steps.
+
+### `data/classes.txt`
 
 In addition, one has to update the `./data/classes.txt` file. This text file declares the different classes used during the experiment. Each line must contain a single color code (RGB format) corresponding to a class. Here are presented two examples of contents that can be put in `classes.txt`. In this file, the background (black) must be defined by adding on the first line `0 0 0`.
 
@@ -73,15 +83,34 @@ For a global segmentation containing different classes:
 0 150 0
 ```
 
-These colors must be the same than the one used in the annotation images.
+Note: These colors must be the same than the ones in the annotation images and be defined in the same order as in `classes_names` of `config.json` file.
 
-### Start and visualize the training
+Note 2: One **must not** add an empty line at the end of the file.
 
-To start the training :
+## Start an experiment
+
+To start the experiment and run the steps defined in `config.json` file at once:
 
 ```
-$ python train.py with utils/training_config.json
+$ bash run_dla_experiment.sh
 ```
+
+There's a way to be notified in slack when training has finished (successfully or not):
+- Create a webhook here https://my.slack.com/services/new/incoming-webhook/;
+- Save the webhook key into `~/.notify-slack-cfg` (looks like: `T02TKKSAX/B246MJ6HX/WXt2BWPfNhSKxdoFNFblczW9`)
+- Make sure that the notifier is working:
+```
+python notify-slack.py "WARN: notifier works"
+```
+- The slack notification is used by default;
+- To start the experiment without this slack notification run:
+```
+$ bash run_dla_experiment.sh -s false
+```
+
+## Follow a training
+
+### Tensorboard
 
 One can see the training progress using Tensorboard. In a new terminal:
 
@@ -91,47 +120,22 @@ $ tensorboard --logdir ./runs/experiment_name
 
 The model and the useful file for visualization are stored in `./runs/experiment_name`.
 
-One can also log and visualize the training using [Omniboard](https://github.com/vivekratnavel/omniboard) and need to add a MongoObserver (l. 35):
+### Omniboard
 
-```
-ex.observers.append(MongoObserver(
-    url='mongodb://username:password@omniboard/dbname'))
-```
+One can also log and visualize the training using [Omniboard](https://github.com/vivekratnavel/omniboard):
+- Put `"omniboard": true` in `config.json` file;
+- Update the user and password in `run_experiment.py` (l. 23).
 
-## Prediction and evaluation
+## Result of an experiment
 
-### Configuration file
+The logs of an experiment are saved in `DLA_train.log` file.
 
-The configuration file `./utils/testing_config.json` is used for the prediction and the evaluation steps. In this file, the background must be defined as the other classes. We also have to add the *normalization_params* used during training as well as the *img_size* parameter and the *experiment_name*.
+Once a model has been trained, it can be found in `./runs/experiment_name/model.pth`.
 
-Once a model has been trained, it can be found in `./runs/experiment_name`.
+The predictions are in `./runs/experiment_name/predictions`.
 
-### Start the prediction
+**So far, no evaluation, come in a few days.**
 
-To start the prediction:
+## Resume a training
 
-```
-$ python predict.py with utils/testing_config.json
-```
-
-The predicted labels are put in `./runs/experiment_name/predictions`.
-
-### Metrics
-
-We chose to compute the Mean Intersection-over-Union (IoU) metric to evaluate the performance of the models but also the pixel precision, recall and F1-score. A value is computed for each class of each image. We then compute the average of a particular over all the images.
-
-In addition, some object metrics are computed for different IoU thresholds: precision, recall, F1-score and AP.
-
-### Start the evaluation
-
-To start the evaluation:
-
-```
-$ python evaluate.py with utils/testing_config.json
-```
-
-The summary of the computed metrics is in `./runs/experiment_name/res/Results.json` along with some plots:
-- Precision-recall curve for each class;
-- F-score vs. confidence score;
-- Precision vs. confidence score;
-- Recall vs. confidence score.
+To resume a training, one can add `"resume_training": "path/to/last_model.pth"` to the `config.json` file. If the training images are the same as the first one used, there is no need to re-run the `"normalization_params"` step.

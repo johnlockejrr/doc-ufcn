@@ -30,7 +30,7 @@ def default_config():
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     logging.info('Running on %s', device)
-    img_size = 384
+    img_size = 768
     no_of_classes = 2
 
 
