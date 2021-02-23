@@ -5,79 +5,95 @@
     The pixel metrics module
     ======================
 
-    Use it to compute different metrics during training.
+    Use it to compute different metrics during evaluation.
     Available metrics:
-        - Confusion matrix
         - Intersection-over-Union
+        - Precision
+        - Recall
+        - F-score
 """
 
 import numpy as np
 
 
-def compute_metrics(pred: np.ndarray, label: np.ndarray, loss: float,
-                    classes: list) -> dict:
+def compute_metrics(labels: list, predictions: list, classes: list,
+                    global_metrics: dict) -> dict:
     """
-    Compute the metrics between a prediction and a label mask.
-    :param pred: The prediction made by the network.
-    :param label: The mask of the input image.
-    :param loss: The loss the the current batch.
-    :param classes: The classes names involved during the experiment.
-    :return metrics: The computed metrics.
+    Compute the pixel level metrics between prediction and label areas of
+    a given page.
+    :param labels: The label's polygons.
+    :param predictions: The predicted polygons.
+    :param classes: The classes names involved in the experiment.
+    :param global_metrics: The initialized results dictionary.
+    :return global_metrics: The updated results dictionary.
     """
-    metrics = {}
-    metrics["matrix"] = confusion_matrix(pred, label, classes)
-    metrics["loss"] = loss
-    return metrics
+    for channel in classes:
+        inter = 0
+        for _, gt in labels[channel]:
+            for _, pred in predictions[channel]:
+                inter += gt.intersection(pred).area
+        gt_area = np.sum([gt.area for _, gt in labels[channel]])
+        pred_area = np.sum([pred.area for _, pred in predictions[channel]])
+
+        global_metrics[channel]['iou'].append(get_iou(inter, gt_area, pred_area))
+        precision = get_precision(inter, pred_area)
+        recall = get_recall(inter, gt_area)
+        global_metrics[channel]['precision'].append(precision)
+        global_metrics[channel]['recall'].append(recall)
+        if precision + recall != 0:
+            global_metrics[channel]['fscore'].append(
+                2*precision*recall / (precision+recall)
+            )
+        else:
+            global_metrics[channel]['fscore'].append(0)
+    return global_metrics
 
 
-def update_metrics(metrics: dict, batch_metrics: dict) -> dict:
+def get_iou(intersection: float, label_area: float, predicted_area: float) -> float:
     """
-    Add batch metrics to the global metrics.
-    :param metrics: The global epoch metrics.
-    :param batch_metrics: The current batch metrics.
-    :return metrics: The updated global metrics.
-    """
-    for i in range(metrics['matrix'].shape[0]):
-        for j in range(metrics['matrix'].shape[1]):  
-            metrics['matrix'][i][j] += batch_metrics['matrix'][i][j]
-    metrics['loss'] += batch_metrics['loss']
-    return metrics
-
-
-def confusion_matrix(pred: np.ndarray, label: np.ndarray,
-                     classes: list) -> np.array:
-    """
-    Get the confusion matrix between the prediction and the given label.
-    :param pred: The prediction made by the network.
-    :param label: The mask of the input image.
-    :params classes: The classes names involved during the experiment.
-    :return confusion_matrix: The computed confusion matrix.
-    """
-    size = len(classes)
-    confusion_matrix = np.zeros((size, size))
-    for i in range(size):
-        for j in range(size):
-            bin_label = label == i
-            bin_pred = pred == j
-            confusion_matrix[j, i] = (bin_pred*bin_label).sum()
-    return confusion_matrix
-
-
-def iou(confusion_matrix: np.ndarray, channel: str) -> float:
-    """
-    Get the Intersection-over-Union values between the prediction and the
-    given label. It returns one value for the given class.
-    :param confusion_matrix: The confusion matrix obtained between the label
-                             and prediction masks.
-    :param channel: The name of the current class.
+    Get the Intersection-over-Union value between prediction and label areas of
+    a given page.
+    :param intersection: Area of the intersection.
+    :param label_area: Area of the label objects.
+    :param predicted_area: Area of the predicted objects.
     :return: The computed Intersection-over-Union value.
     """
-    true_positives = confusion_matrix[channel, channel]
-    tpfn = np.sum(confusion_matrix[:, channel])
-    tpfp = np.sum(confusion_matrix[channel, :])
-    if true_positives == 0:
+    union = label_area + predicted_area - intersection
+    # Nothing to detect and nothing predicted.
+    if label_area == 0 and predicted_area == 0:
+        return 1
+    # Objects to detect and/or predicted but no intersection.
+    if intersection == 0 and union != 0:
         return 0
-    elif tpfn + tpfp == true_positives:
-    	return 0
-    return true_positives / (tpfn + tpfp - true_positives)
+    # Objects to detect and/or predicted that intersect.
+    return intersection / union  
 
+
+def get_precision(intersection: float, predicted_area: float) -> float:
+    """
+    Get the precision between prediction and label areas of
+    a given page.
+    :param intersection: Area of the intersection.
+    :param predicted_area: Area of the predicted objects.
+    :return: The computed precision value.
+    """
+    # Nothing predicted.
+    if predicted_area == 0:
+        return 1
+    return intersection / predicted_area
+
+
+def get_recall(intersection, label_area) -> float:
+    """
+    Get the recall between prediction and label areas of
+    a given page.
+    :param intersection: Area of the intersection.
+    :param label_area: Area of the label objects.
+    :return: The computed recall value.
+    """
+    # Nothing to detect.
+    if label_area == 0:
+        return 1
+    return intersection / label_area
+
+    

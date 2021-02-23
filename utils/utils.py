@@ -4,6 +4,8 @@
 """
     The utils module
     ======================
+
+    Generic functions used during all the steps.
 """
 
 import numpy as np

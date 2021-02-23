@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+    The run experiment module
+    ======================
+
+    Use it to train, predict and evaluate a model.
+"""
+
 import os
 import sys
 import logging
@@ -11,7 +18,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
 import normalization_params
-import train, predict
+import train, predict, evaluate
 from utils import model, utils
 from utils.params_config import Params
 import utils.preprocessing as pprocessing

@@ -40,8 +40,15 @@ def resize_polygons(polygons: dict, image_size: tuple,
             y_points = [element[0][0] for element in polygon['polygon']]
             x_points = [int((element - top) * ratio[0]) for element in x_points]
             y_points = [int((element - left) * ratio[1]) for element in y_points]
-            #assert(max(x_points) <= image_size[0])
-            #assert(max(y_points) <= image_size[1])
+            
+            x_points = [int(element) if element < image_size[0] else int(image_size[0]) for element in x_points]
+            y_points = [int(element) if element < image_size[1] else int(image_size[1]) for element in y_points]
+            x_points = [int(element) if element > 0 else 0 for element in x_points]
+            y_points = [int(element) if element > 0 else 0 for element in y_points]
+            assert(max(x_points) <= image_size[0])
+            assert(min(x_points) >= 0)                              
+            assert(max(y_points) <= image_size[1])
+            assert(min(y_points) >= 0)                              
             polygons[channel][index]['polygon'] = list(zip(y_points, x_points))
     return polygons
 

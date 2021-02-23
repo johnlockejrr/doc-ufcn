@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+    The train module
+    ======================
+
+    Use it to train a model.
+"""
+
 import sys
 import os
 import logging
@@ -11,7 +18,7 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 from utils import model
 from utils.params_config import Params
-import utils.pixel_metrics as p_metrics
+import utils.training_pixel_metrics as p_metrics
 import utils.training_utils as tr_utils
 
 def init_metrics(no_of_classes: int) -> dict:

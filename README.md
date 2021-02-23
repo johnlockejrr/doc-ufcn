@@ -30,17 +30,21 @@ To train and test the model, all the images and their annotations must be in the
 ├── data
 │   ├── classes.txt
 │   ├── test
-│   │   └── images
+│   │   ├── images
+│   │   └── labels_json
 │   ├── train
 │   │   ├── images
-│   │   └── labels
+│   │   ├── labels
+│   │   └── labels_json
 │   └── val
 │       ├── images
-│       └── labels
+│       ├── labels
+│   │   └── labels_json
 ├── ...
 ```
 
 The labels should be generated directly at the network input size (*img_size*) to avoid resizing (that can cause mergings of regions).
+In addition, the evaluation is run over json files containing the polygons coordinates that should be in the `labels_json` folders.
 
 ## Preparing the configuration files
 
@@ -134,7 +138,7 @@ Once a model has been trained, it can be found in `./runs/experiment_name/model.
 
 The predictions are in `./runs/experiment_name/predictions`.
 
-**So far, no evaluation, come in a few days.**
+The evaluation results are in `./runs/experiment_name/results`.
 
 ## Resume a training
 

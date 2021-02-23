@@ -59,11 +59,18 @@ class Params(BaseParams):
                                            './data/train/images/')
         self.train_mask_path = kwargs.get('train_mask_path',
                                           './data/train/labels/')
+        self.train_gt_path = kwargs.get('train_gt_path',
+                                        './data/train/labels_json/')
         self.val_image_path = kwargs.get('val_image_path',
                                          './data/val/images/')
         self.val_mask_path = kwargs.get('val_mask_path',
                                         './data/val/labels/')
+        self.val_gt_path = kwargs.get('val_gt_path',
+                                      './data/val/labels_json/')
         self.test_image_path = kwargs.get('test_image_path',
-                                         './data/test/images/')                     
+                                         './data/test/images/')
+        self.test_gt_path = kwargs.get('test_gt_path',
+                                       './data/test/labels_json/')
         self.classes_file = kwargs.get('classes_dir', './data/classes.txt')
         self.prediction_path = kwargs.get('prediction_path', 'prediction')
+        self.evaluation_path = kwargs.get('evaluation_path', 'results')

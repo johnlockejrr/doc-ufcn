@@ -6,11 +6,6 @@
     ======================
 
     Use it to predict some images from a trained network.
-
-    :example:
-
-    >>> python predict.py with utils/testing_config.json
-    ...
 """
 
 import os
@@ -91,6 +86,7 @@ def run(prediction_path: str, log_path: str, img_size: int, colors: list,
                 polygons = get_predicted_polygons(output[0].cpu().numpy(), min_cc, classes_names)
                 polygons = pr_utils.resize_polygons(polygons, input_size, img_size)
 
+                polygons['img_size'] = [int(element) for element in input_size]
                 pr_utils.save_prediction(polygons,
                     os.path.join(log_path, prediction_path, set, data['name'][0]))
                 if set in save_image:

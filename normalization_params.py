@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+    The normalization params module
+    ======================
+
+    Use it to get the mean and standard deviation of the training set.
+"""
+
 import logging
 import numpy as np
 from tqdm import tqdm

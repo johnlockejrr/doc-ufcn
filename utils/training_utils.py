@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
-import utils.pixel_metrics as p_metrics
+import utils.training_pixel_metrics as p_metrics
 
 # Useful functions.
 
