@@ -43,8 +43,7 @@ def run(log_path: str, classes_names: list, params: dict):
                 } for iou in range(50, 100, 5)
             } for channel in classes_names[1:]}
         number_of_gt = {channel: 0 for channel in classes_names[1:]}
-        for img_name in tqdm(os.listdir(label), desc=set):
-            #print(img_name)
+        for img_name in tqdm(os.listdir(label), desc="Evaluation (prog) "+set):
             gt_regions = ev_utils.read_json(os.path.join(label, img_name))
             pred_regions = ev_utils.read_json(os.path.join(log_path, params.prediction_path, set, img_name))
             assert(gt_regions['img_size'] == pred_regions['img_size'])

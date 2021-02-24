@@ -87,9 +87,13 @@ def save_prediction_image(polygons, colors, input_size, filename: str):
     :param filename: The filename to save the prediction image.
     """
     image = np.zeros((input_size[0], input_size[1], 3))
-    for index, channel in enumerate(polygons.keys(), 1):
+    index = 1
+    for channel in polygons.keys():
+        if channel == 'img_size':
+            continue
         color = [int(element) for element in colors[index]]
         for polygon in polygons[channel]:
             cv2.drawContours(image, [np.array(polygon['polygon'])], 0, color, -1)
+        index += 1
     io.imsave(filename, np.uint8(image))
 

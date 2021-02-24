@@ -177,12 +177,13 @@ def training_initialization(classes_names: int, learning_rate: float,
     else:
     # Restore model to resume training.
         checkpoint, net, optimizer = model.restore_model(
-            net, optimizer, log_path, restore_model)
+            net, optim.Adam(net.parameters(), lr=learning_rate),
+            log_path, restore_model)
         tr_params = {
             'net': net,
             'softmax': softmax,
             'criterion': tr_utils.Diceloss(no_of_classes),
-            'optimizer': optim.Adam(net.parameters(), lr=learning_rate),
+            'optimizer': optimizer,
             'saved_epoch': checkpoint['epoch'],
             'best_loss': checkpoint['best_loss'],
         }
@@ -252,3 +253,5 @@ def run(params: Params, img_size: int, log_path: str, tb_path: str, no_of_epochs
             predict.run(params.prediction_path, log_path, img_size, colors,
                         classes_names, save_image, min_cc, loaders, pr_params)
 
+        if "evaluation" in steps:
+            evaluate.run(log_path, classes_names, params)
