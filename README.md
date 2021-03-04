@@ -1,11 +1,11 @@
-# U-FCN
+# Doc-UFCN
 
-Code to train and test U-FCN model.
+Code to train and test Doc-UFCN model.
 
 
 ## Introduction
 
-The U-FCN tool is split into three parts:
+The Doc-UFCN tool is split into three parts:
 
 - The code to train the model on a given dataset;
 - The code to predict the segmentation of images according to the trained model;
@@ -16,8 +16,8 @@ The U-FCN tool is split into three parts:
 First of all, one needs an environment to run the three experiments presented before. Create a new environment and install the needed packages:
 
 ```
-$ virtualenv -p python3 ufcn
-$ source ufcn/bin/activate
+$ virtualenv -p python3 doc-ufcn
+$ source doc-ufcn/bin/activate
 $ pip install -r requirements.txt
 ```
 
@@ -54,7 +54,7 @@ Different files must be updated according to the task one want to run. In the ro
 
 | Parameter         | Description                                                                                                          | Default value                                                   |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `experiment_name` | Name of the experiment                                                                                               | `ufcn`                                                          |
+| `experiment_name` | Name of the experiment                                                                                               | `doc-ufcn`                                                      |
 | `classes_names`   | List with the names of the classes / **must be in the same order** as the colors defined in the `./data/classes.txt` | `["background", "text_line"]`                                   |
 | `img_size`        | Network input size / **must be the same** as the one used during the label generation                                | `768`                                                           |
 | `no_of_epochs`    | Number of epochs to train the model                                                                                  | `200`                                                           |
@@ -63,7 +63,8 @@ Different files must be updated according to the task one want to run. In the ro
 | `save_image`      | List with the sets ["train", "val", "test"] for which we want to save the predicted masks.                           | `["test"]`                                                      |
 | `steps`           | List with the steps to run ["normalization_params", "train", "prediction", "evaluation"]                             | `["normalization_params", "train", "prediction", "evaluation"]` |
 | `omniboard`       | Whether to use Omniboard observer                                                                                    | `false`                                                         |
-| `restore_model`   | Path to the last saved model to resume training                                                                      | `None`                                                                |
+| `restore_model`   | Path to the last saved model to resume training                                                                      | `None`                                                          |
+| `same_data`       | Whether the training data are the same as the one used to trained the restored model                                 | `True`                                                          | 
 
 Note: All the steps are dependant, e.g to run the `"prediction"` step, one **needs** the results of the `"normalization_params"` and `"train"` steps.
 

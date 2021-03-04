@@ -1,5 +1,5 @@
 {
-  "experiment_name": "ufcn",
+  "experiment_name": "doc-ufcn",
   "classes_names": ["background", "text_line"],
   "img_size": 768,
   "no_of_epochs": 200,

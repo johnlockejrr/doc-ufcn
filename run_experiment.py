@@ -24,7 +24,7 @@ from utils.params_config import Params
 import utils.preprocessing as pprocessing
 import utils.training_utils as tr_utils
 
-ex = Experiment('U-FCN model')
+ex = Experiment('Doc-UFCN model')
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 mongo_url='mongodb://user:password@omniboard.vpn/sacred'
@@ -47,9 +47,11 @@ def default_config():
     :params: Parameters to use during all the experiment steps.
     :learning_rate: Initial learning rate to use during training.
     :restore_model: Path to the model to restore to resume a training.
+    :param same_data: Indicated whether the model to train uses the same data as
+                      the model to restore.
     :steps: List of the steps to run.
     """
-    experiment_name = 'ufcn'
+    experiment_name = 'doc-ufcn'
     log_path = 'runs/'+experiment_name.lower().replace(' ', '_').replace('-', '_')
     tb_path = 'events/'
     classes_names = ["Background", "Text_line"]
@@ -61,6 +63,7 @@ def default_config():
     params = Params().to_dict()
     learning_rate = 5e-3
     restore_model = None
+    same_data = True
     steps = ["normalization_params", "train", "prediction", "evaluation"]
     omniboard = False
     if "train" in steps and omniboard is True:
@@ -151,12 +154,15 @@ def prediction_loaders(norm_params: dict, params: Params, img_size: int) -> dict
 
 @ex.capture
 def training_initialization(classes_names: int, learning_rate: float,
-                            restore_model: bool, log_path: str) -> dict:
+                            restore_model: bool, same_data: bool,
+                            log_path: str) -> dict:
     """
     Initialize the training step.
     :param classes_names: The names of the classes involved during the experiment.
     :param learning_rate: Initial learning rate to use during training.
     :param restore_model: Path to the model to restore to resume a training.
+    :param same_data: Indicated whether the model to train uses the same data as
+                      the model the restore. 
     :param log_path: Path to save the experiment information and model.
     :return tr_params: A dictionary with the training parameters.
     """
@@ -185,7 +191,7 @@ def training_initialization(classes_names: int, learning_rate: float,
             'criterion': tr_utils.Diceloss(no_of_classes),
             'optimizer': optimizer,
             'saved_epoch': checkpoint['epoch'],
-            'best_loss': checkpoint['best_loss'],
+            'best_loss': checkpoint['best_loss'] if same_data else 10e5,
         }
     return tr_params
 
