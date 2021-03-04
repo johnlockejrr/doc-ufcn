@@ -34,79 +34,43 @@ class BaseParams:
         return result
 
 
-class TrainingParams(BaseParams):
+class Params(BaseParams):
     """
-    This is a class for the configuration parameters of the training step.
+    This is a class for the configuration parameters.
+    :param mean: Path to the file containing the mean values of training set.
+    :param str: Path to the file containing the standard deviation values of training set.
+    :param model_path: Path to store the obtained model.
+    :param train_image_path: Path to the directory containing training images.
+    :param train_mask_path: Path to the directory containing training masks. 
+    :param val_image_path: Path to the directory containing validation images. 
+    :param val_mask_path: Path to the directory containing validation masks. 
+    :param test_image_path: Path to the directory containing testing images. 
+    :param train_image_path: Path to the directory containing training images.
+    :param classes_files: File containing the color codes of the classes involved
+                          in the experiment.
+    ;param prediction_path: Path to the directory to save the predictions. 
     """
     def __init__(self, **kwargs):
-        """
-        Constructor of the TrainingParams class.
-        :param model_path: The path to the trained model.
-        :param train_frame_path: The directory containing the training images.
-        :param train_mask_path: The directory containing the labels of the
-                                training images.
-        :param val_frame_path: The directory containing the validation images.
-        :param val_mask_path: The directory containing the labels of the
-                              validation images.
-        :param classes_file: The text file containing the color codes of
-                             the different classes.
-        """
+
+        self.mean = kwargs.get('mean', './data/mean')
+        self.std = kwargs.get('std', './data/std')
         self.model_path = kwargs.get('model_path', 'model.pth')
-        self.train_frame_path = kwargs.get('train_frame_path',
+        self.train_image_path = kwargs.get('train_image_path',
                                            './data/train/images/')
         self.train_mask_path = kwargs.get('train_mask_path',
                                           './data/train/labels/')
-        self.val_frame_path = kwargs.get('val_frame_path',
+        self.train_gt_path = kwargs.get('train_gt_path',
+                                        './data/train/labels_json/')
+        self.val_image_path = kwargs.get('val_image_path',
                                          './data/val/images/')
         self.val_mask_path = kwargs.get('val_mask_path',
                                         './data/val/labels/')
+        self.val_gt_path = kwargs.get('val_gt_path',
+                                      './data/val/labels_json/')
+        self.test_image_path = kwargs.get('test_image_path',
+                                         './data/test/images/')
+        self.test_gt_path = kwargs.get('test_gt_path',
+                                       './data/test/labels_json/')
         self.classes_file = kwargs.get('classes_dir', './data/classes.txt')
-
-
-class PredictionParams(BaseParams):
-    """
-    This is a class for the configuration parameters of the prediction step.
-    """
-    def __init__(self, **kwargs):
-        """
-        Constructor of the PredictionParams class.
-        :param model_path: The path to the trained model.
-        :param test_frame_path: The directory containing the testing images.
-        :param predictions_path: The directory to save the predicted images.
-        :param predictions_pp_path: The directory to save the postprocessed
-                                    predictions images.
-        :param classes_file: The text file containing the color codes of
-                             the different classes.
-        """
-        self.model_path = kwargs.get('model_path', 'model.pth')
-        self.test_frame_path = kwargs.get('test_frame_path',
-                                          './data/test/images/')
-        self.predictions_path = kwargs.get('predictions_path',
-                                           'res/predictions/')
-        self.predictions_pp_path = kwargs.get('predictions_pp_path',
-                                              'res/predictions_pp/')
-        self.classes_file = kwargs.get('classes_dir', './data/classes.txt')
-
-
-class TestParams(BaseParams):
-    """
-    This is a class for the configuration parameters of the evaluation step.
-    """
-    def __init__(self, **kwargs):
-        """
-        Constructor of the TestParams class.
-        :param model_path: The path to the trained model.
-        :param test_frame_path: The directory containing the testing images.
-        :param test_mask_path: The directory containing the labels of the
-                               testing images.
-        :param results_dir: The directory to save the results.
-        :param classes_file: The text file containing the color codes of
-                             the different classes.
-        """
-        self.model_path = kwargs.get('model_path', 'model.pth')
-        self.test_frame_path = kwargs.get('test_frame_path',
-                                          './data/test/images/')
-        self.test_mask_path = kwargs.get('test_mask_path',
-                                         './data/test/labels/')
-        self.results_dir = kwargs.get('results_dir', 'res/')
-        self.classes_file = kwargs.get('classes_dir', './data/classes.txt')
+        self.prediction_path = kwargs.get('prediction_path', 'prediction')
+        self.evaluation_path = kwargs.get('evaluation_path', 'results')

@@ -15,7 +15,6 @@ import time
 import copy
 import torch
 import torch.nn as nn
-from torchviz import make_dot
 
 
 class Net(nn.Module):
@@ -115,31 +114,27 @@ class Net(nn.Module):
         return x
 
 
-def generate_model_graph(net, img_size: int):
+def weights_init(model):
     """
-    Generate the graph of the model.
-    :param net: The network we want the graph.
-    :param img_size: The size in which the images are resized.
+    Initialize the model weights.
+    :param model: The model.
     """
-    fake_input = torch.zeros(1, 3, img_size, img_size, dtype=torch.float,
-                             requires_grad=False)
-    fake_output = net(fake_input)
-    graph = make_dot(fake_output)
-    graph.format = 'svg'
-    graph.render(filename='graph')
+    if isinstance(model, (nn.Conv2d, nn.ConvTranspose2d)):
+        nn.init.xavier_uniform_(model.weight.data)
 
 
-def load_network(no_of_classes: int, device: str, ex):
+def load_network(no_of_classes: int, ex):
     """
     Load the network for the experiment.
     :param no_of_classes: The number of classes involved in the experiment.
-    :param device: The device used to run the experiment.
+    :param ex: The Sacred object to log information.
     :return net: The loaded network.
     :return last_layer: The last activation function to apply.
     """
     # Define the network.
     net = Net(no_of_classes)
     # Allow parallel running if more than 1 gpu available.
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     logging.info('Running on %s', device)
     if torch.cuda.device_count() > 1:
         logging.info("Let's use %d GPUs", torch.cuda.device_count())
@@ -150,13 +145,16 @@ def load_network(no_of_classes: int, device: str, ex):
     return net, last_layer
 
 
-def restore_model(net, log_path: str, model_path: str):
+def restore_model(net, optimizer, log_path: str, model_path: str):
     """
     Load the model weights.
     :param net: The loaded model.
+    :param optimizer: The loaded optimizer.
     :param log_path: The directory containing the model to restore.
     :param model_path: The name of the model to restore.
+    :return checkpoint: The loaded checkpoint.
     :return net: The restored model.
+    :return optimizer: The restored optimizer.
     """
     starting_time = time.time()
     if not os.path.isfile(os.path.join(log_path, model_path)):
@@ -172,42 +170,15 @@ def restore_model(net, log_path: str, model_path: str):
         net_state_dict = dict(
             ('module.'+key, value) for (key, value)
             in checkpoint['state_dict'].items())
-        logging.info('Loaded epoch %d', checkpoint['epoch'])
         net.load_state_dict(net_state_dict)
-        logging.info('Loaded model in %1.5fs', (time.time() - starting_time))
-        return net
-
-
-def restore_model_parameters(net, optimizer, log_path: str, model_path: str):
-    """
-    Load the model weights to resume a training.
-    :param net: The loaded model.
-    :param optimizer: The optimizer used during training.
-    :param log_path: The directory containing the model to restore.
-    :param model_path: The name of the model to restore.
-    :return checkpoint: The loaded checkpoint.
-    :return net: The restored model.
-    :return optimizer: The restored optimizer.
-    """
-    # Restore model to continue training
-    if os.path.isfile(os.path.join(log_path, 'last_'+model_path)):
-        checkpoint = torch.load(os.path.join(log_path, 'last_'+model_path))
-        net_state_dict = dict(
-            ('module.'+key, value) for (key, value)
-            in checkpoint['state_dict'].items())
-        net.load_state_dict(net_state_dict)
-        optimizer.load_state_dict(checkpoint['optimizer'])
-        logging.info('Loaded checkpoint %s (epoch %d)',
-                     'last_'+model_path, checkpoint['epoch'])
+        if optimizer is not None:
+            optimizer.load_state_dict(checkpoint['optimizer'])
+        logging.info('Loaded checkpoint %s (epoch %d) in %1.5fs',
+                     model_path, checkpoint['epoch'], (time.time() - starting_time))
         return checkpoint, net, optimizer
-    else:
-        logging.error('No checkpoint found at %s',
-                      os.path.join(log_path, 'last_'+model_path))
-        sys.exit()
 
 
-def save_model(epoch: int, model, loss: float, optimizer, filename: str,
-               log_path: str):
+def save_model(epoch: int, model, loss: float, optimizer, filename: str):
     """
     Save the given model.
     :param epoch: The current epoch.
@@ -215,11 +186,9 @@ def save_model(epoch: int, model, loss: float, optimizer, filename: str,
     :param loss: The loss of the current epoch.
     :param optimizer: The optimizer state dict.
     :param filename: The name of the model file.
-    :param log_path: The directory of the training information for
-                     the current experiment.
     """
     model_params = {'epoch': epoch,
                     'state_dict': copy.deepcopy(model),
                     'best_loss': loss,
                     'optimizer': copy.deepcopy(optimizer)}
-    torch.save(model_params, os.path.join(log_path, filename))
+    torch.save(model_params, filename)

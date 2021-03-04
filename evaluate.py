@@ -2,211 +2,85 @@
 # -*- coding: utf-8 -*-
 
 """
-    The evaluate module
+    The evaluation module
     ======================
 
-    Use it to evaluate a trained network on testing images.
-
-    :example:
-
-    >>> python evaluate.py with utils/testing_config.json
+    Use it to evaluation a trained network.
 """
 
 import os
 import logging
-import json
 import time
-import torch
 import cv2
 import numpy as np
 from tqdm import tqdm
-from sacred import Experiment
-import utils.metrics as m
-import utils.utils as utils
-from utils.data import load_data
-from utils.model import load_network, restore_model
-from utils.params_config import TestParams
-from utils.postprocessing import post_processing
-
-ex = Experiment('Evaluation')
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+from shapely.geometry import Polygon
+import torch
+import utils.evaluation_utils as ev_utils
+import utils.pixel_metrics as p_metrics
+import utils.object_metrics as o_metrics
 
 
-@ex.config
-def default_config():
+def run(log_path: str, classes_names: list, params: dict):
     """
-    Define the default configuration for the experiment.
+    Run the evaluation.
+    :param log_path: Path to save the evaluation results and load the model.
+    :param classes_names: The names of the classes involved during the experiment.
+    :param params: The evaluation parameters.
     """
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    logging.info('Running on %s', device)
-    params = TestParams().to_dict()
-    img_size = 384
-    experiment_name = 'ufcn'
-    log_path = 'runs/'+experiment_name.lower().replace(' ', '_').replace('-', '_')
-    no_of_classes = 2
-    classes_names = ["Background", "Text_line"]
-    normalization_params = {"mean": [0, 0, 0], "std": [1, 1, 1]}
-    min_cc = 0
-
-
-@ex.capture
-def initialize_experiment(classes: list, params: TestParams, img_size: int,
-                          no_of_classes: int, device: str,
-                          normalization_params: dict):
-    """
-    Initialize the experiment.
-    Load the data into batches and load the network.
-    :param classes: The color codes of the different classes.
-    :param params: The dictionnary containing the parameters
-                   of the experiment.
-    :param img_size: The size in which the images will be resized.
-    :param no_of_classes: The number of classes involved in the experiment.
-    :param device: The device used to run the experiment.
-    :param normalization_params: The mean values and standard deviations used
-                                 to normalize the images.
-    :return loader: The loader containing the pre-processed images.
-    :return net: The loaded network.
-    :return last_layer: The last activation function to apply.
-    """
-    params = TestParams.from_dict(params)
-    loader = load_data(params.test_frame_path, img_size,
-                       normalization_params['mean'],
-                       normalization_params['std'], classes,
-                       mask_path=params.test_mask_path, shuffle=False)
-    net, last_layer = load_network(no_of_classes, device, ex)
-    return loader, net, last_layer
-
-
-@ex.capture
-def load_one_batch(probs: np.ndarray, min_cc: int) -> list:
-    """
-    Predict the images and prepare the label.
-    :param probs: The probabilities of the predicted batch images.
-    :param min_cc: The minimum size of the small connected
-                   components to remove.
-    :return predictions: A list of the predictions for the current
-                         batch images with the corresponding labels
-                         and probabilities.
-    """
-    predictions = []
-    for pred in range(probs.shape[0]):
-        probas = probs[pred, :, :, :]
-        max_probas = np.argmax(probas, axis=0)
-        for channel in range(1, probas.shape[0]):
-            # Keep pixels with highest probability.
-            probas_channel = np.uint8(max_probas == channel) \
-                                 * probas[channel, :, :]
-            # Remove small connected components.
-            if min_cc > 0:
-                bin_img = probas_channel.copy()
-                bin_img[bin_img > 0] = 1
-                _, labeled_cc = cv2.connectedComponents(np.uint8(bin_img),
-                                                        connectivity=8)
-                for lab in np.unique(labeled_cc):
-                    if np.sum(labeled_cc == lab) < min_cc:
-                        labeled_cc[labeled_cc == lab] = 0
-                probas_channel = probas_channel * (labeled_cc > 0)
-            probas[channel, :, :] = probas_channel
-        # Generate prediction with post processing.
-        predictions.append({
-            'probas': probas,
-            'prediction': np.argmax(probas, axis=0),
-            'prediction_pp': post_processing(probas, eval_step=True),
-        })
-    return predictions
-
-
-@ex.automain
-def run(params: TestParams, device: str, log_path: str, no_of_classes: int,
-        classes_names: list):
-    """
-    Main function. Run the evaluation over all the images.
-    :param params: The dictionnary containing the parameters
-                   of the experiment.
-    :param device: The device used to run the experiment.
-    :param log_path: The directory to save the predictions for
-                     the current experiment.
-    :param no_of_classes: The number of classes involved in the experiment.
-    :param classes_names: The names of the classes involved in the experiment.
-    """
-    params = TestParams.from_dict(params)
-    # Get the possible colors.
-    colors = utils.get_classes_colors(params.classes_file)
-
-    test_loader, net, last_layer = initialize_experiment(colors)
-    net = restore_model(net, log_path, params.model_path)
-    net.eval()
-    # Create folder to save the results.
-    os.makedirs(os.path.join(log_path, params.results_dir), exist_ok=True)
-
+    # Run evaluation.
     logging.info('Starting evaluation')
     starting_time = time.time()
-    # Initialize results objects.
-    confusion_matrix = np.zeros((no_of_classes, no_of_classes))
-    results = {
-        'pixel': {name: {channel: [] for channel in classes_names}
-                  for name in ['iou', 'precision', 'recall', 'fscore']},
-        'object': {name: {channel: [] for channel in classes_names[1:]}
-                   for name in ['precision', 'recall', 'fscore', 'AP']},
-    }
-    rank_scores = {
-        channel: {
-            iou: {
-                rank: {'True': 0, 'Total': 0} for rank in range(95, 45, -5)
-            } for iou in range(50, 100, 5)
-        } for channel in classes_names[1:]}
-    positives_examples = {channel: 0 for channel in classes_names[1:]}
-    # Evaluate the predictions.
-    with torch.no_grad():
-        for data in tqdm(test_loader, desc="Evaluating"):
-            image, label = data['image'].to(device), data['label'].to(device)
-            probas = last_layer(net(image.float()))
+    
+    for set, label in zip(['train', 'val', 'test'],
+                          [params.train_gt_path, params.val_gt_path, params.test_gt_path]):
+        pixel_metrics = {channel: {metric: [] for metric in ['iou', 'precision', 'recall', 'fscore']} for channel in classes_names[1:]}
+        object_metrics = {channel: {metric: {} for metric in ['precision', 'recall', 'fscore', 'AP']} for channel in classes_names[1:]}
+        rank_scores = {
+            channel: {
+                iou: {
+                    rank: {'True': 0, 'Total': 0} for rank in range(100, -5, -5)
+                } for iou in range(50, 100, 5)
+            } for channel in classes_names[1:]}
+        number_of_gt = {channel: 0 for channel in classes_names[1:]}
+        for img_name in tqdm(os.listdir(label), desc="Evaluation (prog) "+set):
+            gt_regions = ev_utils.read_json(os.path.join(label, img_name))
+            pred_regions = ev_utils.read_json(os.path.join(log_path, params.prediction_path, set, img_name))
+            assert(gt_regions['img_size'] == pred_regions['img_size'])
+            gt_polys = ev_utils.get_polygons(gt_regions, classes_names)
+            pred_polys = ev_utils.get_polygons(pred_regions, classes_names)
 
-            input_size = [element.numpy()[0] for element in data['size']]
-            probas = utils.back_to_original_size(probas, input_size)
+            pixel_metrics = p_metrics.compute_metrics(gt_polys, pred_polys, classes_names[1:], pixel_metrics)
 
-            for index, prediction in enumerate(load_one_batch(probas)):
-                current_label = cv2.resize(label[index, :, :].cpu().numpy(),
-                                           (input_size[1], input_size[0]),
-                                           interpolation=cv2.INTER_NEAREST)
-                pixel_m = m.PixelMetrics(prediction['prediction'],
-                                         current_label, classes_names)
-                object_m = m.ObjectMetrics(prediction['prediction'],
-                                           current_label, classes_names,
-                                           prediction['probas'])
+            image_rank_scores = o_metrics.compute_rank_scores(gt_polys, pred_polys, classes_names[1:])
+            rank_scores = o_metrics.update_rank_scores(rank_scores, image_rank_scores, classes_names[1:])
+            number_of_gt = {channel: number_of_gt[channel]+len(gt_polys[channel]) for channel in classes_names[1:]}
+        
+        object_metrics = o_metrics.get_mean_results(rank_scores, number_of_gt, classes_names[1:], object_metrics)
 
-                results['pixel'], confusion_matrix = pixel_m.update_results(
-                    results['pixel'], confusion_matrix)
-                rank_scores, positives_examples = object_m.update_rank_scores(
-                    rank_scores, positives_examples)
+        # Print the results.
+        print(set)
+        for channel in classes_names[1:]:
+            print(channel)
+            print('IoU       = ', np.round(np.mean(pixel_metrics[channel]['iou']), 4))
+            print('Precision = ', np.round(np.mean(pixel_metrics[channel]['precision']), 4))
+            print('Recall    = ', np.round(np.mean(pixel_metrics[channel]['recall']), 4))
+            print('F-score   = ', np.round(np.mean(pixel_metrics[channel]['fscore']), 4))
 
-    # Get the mean results over the test set.
-    results['pixel'] = pixel_m.get_mean_results(results['pixel'])
-    results['object'] = object_m.get_mean_results(rank_scores,
-                                                  positives_examples,
-                                                  results['object'])
-    # Print the results.
-    for item, value in results['pixel'].items():
-        print('  '+item, value)
-    for channel in classes_names[1:]:
-        aps = results['object']['AP'][channel]
-        print(channel.lower()+'  AP [0.5,0.95] = ',
-              np.round(np.mean(list(aps.values())), 4))
-        print(channel.lower()+'  AP [IOU=0.50] = ', np.round(aps[50], 4))
-        print(channel.lower()+'  AP [IOU=0.75] = ', np.round(aps[75], 4))
-        print(channel.lower()+'  AP [IOU=0.95] = ', np.round(aps[95], 4))
-        print('\n')
-    # Save the results : confusion matrix / json file / curves.
-    utils.plot_matrix(confusion_matrix,
-                      os.path.join(log_path, params.results_dir),
-                      classes_names)
-    utils.save_results(results, classes_names,
-                       os.path.join(log_path, params.results_dir))
-    with open(os.path.join(log_path, params.results_dir,
-                           'results.json'), 'w') as json_file:
-        json.dump(results, json_file, indent=4)
+            aps = object_metrics[channel]['AP']
+            print('AP [IOU=0.50] = ', np.round(aps[50], 4))
+            print('AP [IOU=0.75] = ', np.round(aps[75], 4))
+            print('AP [IOU=0.95] = ', np.round(aps[95], 4))
+            print('AP [0.5,0.95] = ', np.round(np.mean(list(aps.values())), 4))
+            print('\n')
+
+        os.makedirs(os.path.join(log_path, params.evaluation_path, set), exist_ok=True)
+        #ev_utils.save_graphical_results(object_metrics, classes_names[1:],
+        #                                os.path.join(log_path, params.evaluation_path, set))
+        ev_utils.save_results(pixel_metrics, object_metrics, classes_names[1:],
+                              os.path.join(log_path, params.evaluation_path, set))
 
     end = time.gmtime(time.time() - starting_time)
-    logging.info('Finished evaluating in %2d:%2d:%2d',
+    logging.info('Finished predicting in %2d:%2d:%2d',
                  end.tm_hour, end.tm_min, end.tm_sec)
+
