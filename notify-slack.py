@@ -21,7 +21,7 @@ SLACK_BOT_USERNAME="Bash Notifier"
 SLACK_WEBHOOK_SERVICE = config_path.read_text().strip()
 SLACK_URL=f"https://hooks.slack.com/services/{SLACK_WEBHOOK_SERVICE}"
 LOG_PATH = Path("DLA_train.log")
-CER_WER_LENGTH = 18
+DLA_LENGTH = 18
 
 ICONS = {
     "INFO": ':information_source: ',
@@ -76,7 +76,7 @@ def main():
                         help="Number of lines to be included from the end of the log file."
                              "Use 0 to not include a log file.",
                         type=int,
-                        default=CER_WER_LENGTH)
+                        default=DLA_LENGTH)
     args = parser.parse_args()
     run(**vars(args))
 

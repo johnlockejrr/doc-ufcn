@@ -46,13 +46,15 @@ def get_polygons(regions: dict, classes: list) -> dict:
 # Save the metrics.
 
 
-def save_results(pixel_results: dict, object_results: dict, classes: list, path: str):
+def save_results(pixel_results: dict, object_results: dict, classes: list,
+                 path: str, dataset: str):
     """
     Save the pixel and object results into a json file.
     :param pixel_results: The results obtained at pixel level.
     :param object_results: The results obtained at object level.
     :param classes: The classes names involved in the experiment.
     :param path: The path to the results directory.
+    :param dataset: The name of the current dataset.
     """
     json_dict = {channel: {} for channel in classes}
     
@@ -67,7 +69,7 @@ def save_results(pixel_results: dict, object_results: dict, classes: list, path:
         json_dict[channel]['AP@[.95]'] = np.round(aps[95], 4)
         json_dict[channel]['AP@[.5,.95]'] = np.round(np.mean(list(aps.values())), 4)
 
-    with open(os.path.join(path, 'results.json'), 'w') as json_file:
+    with open(os.path.join(path, dataset+'_results.json'), 'w') as json_file:
         json.dump(json_dict, json_file, indent=4)
 
 def save_graphical_results(results: dict, classes: list, path: str):

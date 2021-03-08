@@ -127,6 +127,7 @@ def run(model_path: str, log_path: str, tb_path: str, no_of_epochs: int,
     writer = SummaryWriter(os.path.join(log_path, tb_path))
     logging.info('Starting training')
     starting_time = time.time()
+
     for epoch in range(1, no_of_epochs+1):
         current_epoch = epoch + tr_params['saved_epoch']
         # Run training.
