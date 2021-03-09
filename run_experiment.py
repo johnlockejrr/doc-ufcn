@@ -190,7 +190,7 @@ def training_loaders(colors: list, norm_params: dict, exp_data_paths: dict,
             images, masks,
             colors, transform=transforms.Compose([
                 pprocessing.Rescale(global_params['img_size']),
-                pprocessing.Pad(global_params['img_size'], norm_params['mean'],),
+                pprocessing.Pad(global_params['img_size'], norm_params['mean']),
                 pprocessing.Normalize(norm_params['mean'], norm_params['std']),
                 pprocessing.ToTensor()])
         )
@@ -217,7 +217,7 @@ def prediction_loaders(norm_params: dict, exp_data_paths: dict,
             images,
             transform=transforms.Compose([
                 pprocessing.Rescale(global_params['img_size']),
-                pprocessing.Pad(global_params['img_size'], norm_params['mean'],),
+                pprocessing.Pad(global_params['img_size'], norm_params['mean']),
                 pprocessing.Normalize(norm_params['mean'], norm_params['std']),
                 pprocessing.ToTensor()])
         )

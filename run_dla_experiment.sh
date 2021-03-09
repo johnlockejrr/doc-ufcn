@@ -28,11 +28,6 @@ then
    helpFunction
 fi
 
-if [ -z $STY ]
-then
-    exec screen -dm -S dla-training /bin/bash "$0"
-fi
-
 python3 retrieve_experiments_configs.py --config "$config"
 
 index=1

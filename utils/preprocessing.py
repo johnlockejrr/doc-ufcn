@@ -37,11 +37,10 @@ class TrainingDataset(Dataset):
             for element in os.listdir(dir)
         ]
         self.masks_dir = masks_dir
-        self.masks = [
-            dir/element
+        self.masks = {
+            dir.parent.parent.name: dir
             for dir in self.masks_dir
-            for element in os.listdir(dir)
-        ]
+        }
         self.colors = colors
         self.transform = transform
 
@@ -60,13 +59,14 @@ class TrainingDataset(Dataset):
         """
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        image = cv2.imread(str(self.images[idx][1]))
+        img_name = self.images[idx]
+        image = cv2.imread(str(img_name[1]))
 
         if len(image.shape) < 3:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        label = rgb_to_gray_array(io.imread(str(self.masks[idx])))
+        label = rgb_to_gray_array(io.imread(str(self.masks[img_name[0]]/img_name[1].name)))
         # Transform the label into a categorical label.
         new_label = np.zeros_like(label)
         for index, value in enumerate(self.colors):
@@ -168,7 +168,6 @@ class Rescale():
             if max(sample['mask'].shape[:2]) != self.output_size:
                 mask = cv2.resize(sample['mask'], (new_size[1], new_size[0]))
                 sample['mask'] = mask
-
         return sample
 
 
@@ -178,7 +177,7 @@ class Pad():
     """
     def __init__(self, output_size: int, mean: list):
         """
-        Constructor of the Rescale class.
+        Constructor of the Pad class.
         :param output_size: The desired new size.
         :param mean: The mean value of the training set used as padding value.
         """
@@ -192,7 +191,7 @@ class Pad():
         Pad the sample image and mask (if given) with the mean value of training set.
         :param sample: The sample to pad.
         :return sample: The padded sample.
-        """        
+        """
         # Compute the padding parameters.
         delta_w = self.output_size - sample['image'].shape[1]
         delta_h = self.output_size - sample['image'].shape[0]
@@ -210,7 +209,6 @@ class Pad():
                 mask = cv2.copyMakeBorder(sample['mask'], top, bottom, left, right,
                                           cv2.BORDER_CONSTANT, value=0)
                 sample['mask'] = mask
-
         return sample
 
 

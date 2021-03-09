@@ -74,7 +74,7 @@ def run_one_epoch(loader, params: dict, writer, epochs: list,
     else:
         t.set_description("VALID (prog) {}/{}".format(epoch, no_of_epochs+epochs[1]))
 
-    for index, data in enumerate(t):   
+    for index, data in enumerate(t):
         params['optimizer'].zero_grad()
 
         output = params['softmax'](params['net'](data['image'].to(device).float()))
@@ -153,6 +153,7 @@ def run(model_path: str, log_path: str, tb_path: str, no_of_epochs: int,
                 model.save_model(current_epoch+1, tr_params['net'].module.state_dict(), epoch_values['loss'],
                                  tr_params['optimizer'].state_dict(), os.path.join(log_path, model_path))
                 logging.info('Best model (epoch %d) saved', current_epoch)
+
     # Save last model.
     path = os.path.join(log_path, 'last_'+model_path).replace('model', 'model_0')
     index = 1
