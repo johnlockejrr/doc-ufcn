@@ -71,14 +71,23 @@ def run(prediction_path: str, log_path: str, img_size: int, colors: list,
 
     logging.info('Starting predicting')
     starting_time = time.time()
+
     with torch.no_grad():
         for set, loader in zip(['train', 'val', 'test'],
                                loaders.values()):
+            seen_datasets = []
             # Create folders to save the predictions.
             os.makedirs(os.path.join(log_path, prediction_path, set),
                         exist_ok=True)
 
             for i, data in enumerate(tqdm(loader, desc="Prediction (prog) "+set), 0):
+                # Create dataset folders to save the predictions.
+                if data['dataset'][0] not in seen_datasets:
+                    os.makedirs(os.path.join(log_path, prediction_path, set, data['dataset'][0]),
+                                exist_ok=True)
+                    seen_datasets.append(data['dataset'][0])
+                    
+                # Generate and save the predictions.
                 output = pr_params['softmax'](pr_params['net'](data['image'].to(device).float()))
                 input_size = [element.numpy()[0] for element in data['size'][:2]]
 
@@ -88,11 +97,11 @@ def run(prediction_path: str, log_path: str, img_size: int, colors: list,
 
                 polygons['img_size'] = [int(element) for element in input_size]
                 pr_utils.save_prediction(polygons,
-                    os.path.join(log_path, prediction_path, set, data['name'][0]))
+                    os.path.join(log_path, prediction_path, set, data['dataset'][0], data['name'][0]))
                 if set in save_image:
                     pr_utils.save_prediction_image(polygons, colors, input_size,
-                                                   os.path.join(log_path, prediction_path,
-                                                                set, data['name'][0]))
+                                                   os.path.join(log_path, prediction_path, set,
+                                                                data['dataset'][0], data['name'][0]))
 
     end = time.gmtime(time.time() - starting_time)
     logging.info('Finished predicting in %2d:%2d:%2d',

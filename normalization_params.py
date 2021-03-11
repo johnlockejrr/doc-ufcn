@@ -8,6 +8,7 @@
     Use it to get the mean and standard deviation of the training set.
 """
 
+import os
 import logging
 import numpy as np
 from tqdm import tqdm
@@ -16,15 +17,17 @@ from torch.utils.data import DataLoader
 from utils.params_config import Params
 import utils.preprocessing as pprocessing
 
-def run(params: Params, img_size: int):
+def run(log_path: str, data_paths: dict, params: Params, img_size: int):
     """
     Compute the normalization parameters: mean and standard deviation on
     train set.
+    :param log_path: Path to save the experiment information and model.
+    :param data_paths: Path to the data folders.
     :param params: Parameters to use to find the mean and std values.
     :param img_size: The network input image size.
     """
     dataset = pprocessing.PredictionDataset(
-        params.train_image_path,
+        data_paths['train']['image'],
         transform=transforms.Compose([pprocessing.Rescale(img_size),
                                       pprocessing.ToTensor()]))
     loader = DataLoader(dataset, batch_size=1,
@@ -44,10 +47,10 @@ def run(params: Params, img_size: int):
     logging.info('Mean: {}'.format(np.uint8(mean)))
     logging.info(' Std: {}'.format(np.uint8(std)))
     
-    with open(params.mean, 'w') as file:
+    with open(os.path.join(log_path, params.mean), 'w') as file:
         for value in mean:
             file.write(str(np.uint8(value))+'\n')
 
-    with open(params.std, 'w') as file:
+    with open(os.path.join(log_path, params.std), 'w') as file:
         for value in std:
             file.write(str(np.uint8(value))+'\n')

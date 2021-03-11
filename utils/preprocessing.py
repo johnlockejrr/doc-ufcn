@@ -25,13 +25,22 @@ class TrainingDataset(Dataset):
                  transform: list = None):
         """
         Constructor of the TrainingDataset class.
-        :param images_dir: The directory containing the images.
-        :param masks_dir: The directory containing the masks of the images.
+        :param images_dir: The directories containing the images.
+        :param masks_dir: The directories containing the masks of the images.
         :param colors: The color codes of the different classes.
         :param transform: The list of the transformations to apply.
         """
         self.images_dir = images_dir
+        self.images = [
+            (dir.parent.parent.name, dir/element)
+            for dir in self.images_dir
+            for element in os.listdir(dir)
+        ]
         self.masks_dir = masks_dir
+        self.masks = {
+            dir.parent.parent.name: dir
+            for dir in self.masks_dir
+        }
         self.colors = colors
         self.transform = transform
 
@@ -40,7 +49,7 @@ class TrainingDataset(Dataset):
         Get the size of the dataset.
         :return: The size of the dataset.
         """
-        return len(os.listdir(self.images_dir))
+        return len(self.images)
 
     def __getitem__(self, idx: int) -> dict:
         """
@@ -50,15 +59,14 @@ class TrainingDataset(Dataset):
         """
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        img_name = os.listdir(self.images_dir)[idx]
-        image = cv2.imread(os.path.join(self.images_dir, img_name))
+        img_name = self.images[idx]
+        image = cv2.imread(str(img_name[1]))
 
         if len(image.shape) < 3:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        label = rgb_to_gray_array(io.imread(os.path.join(self.masks_dir,
-                                                         img_name)))
+        label = rgb_to_gray_array(io.imread(str(self.masks[img_name[0]]/img_name[1].name)))
         # Transform the label into a categorical label.
         new_label = np.zeros_like(label)
         for index, value in enumerate(self.colors):
@@ -81,10 +89,15 @@ class PredictionDataset(Dataset):
     def __init__(self, images_dir: str, transform: list = None):
         """
         Constructor of the PredictionDataset class.
-        :param images_dir: The directory containing the images.
+        :param images_dir: The directories containing the images.
         :param transform: The list of the transformations to apply.
         """
         self.images_dir = images_dir
+        self.images = [
+            (dir.parent.parent.name, dir/element)
+            for dir in self.images_dir
+            for element in os.listdir(dir)
+        ]
         self.transform = transform
 
     def __len__(self) -> int:
@@ -92,7 +105,7 @@ class PredictionDataset(Dataset):
         Get the size of the dataset.
         :return: The size of the dataset.
         """
-        return len(os.listdir(self.images_dir))
+        return len(self.images)
 
     def __getitem__(self, idx: int) -> dict:
         """
@@ -102,15 +115,16 @@ class PredictionDataset(Dataset):
         """
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        img_name = os.listdir(self.images_dir)[idx]
-        image = cv2.imread(os.path.join(self.images_dir, img_name))
+        img_name = self.images[idx][1]
+        image = cv2.imread(str(img_name))
 
         if len(image.shape) < 3:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        sample = {'image': image, 'name': img_name, 'size': image.shape}
-        
+        sample = {'image': image, 'name': img_name.name,
+                  'dataset': self.images[idx][0], 'size': image.shape}
+
         # Apply the transformations.
         if self.transform:
             sample = self.transform(sample)
@@ -154,7 +168,6 @@ class Rescale():
             if max(sample['mask'].shape[:2]) != self.output_size:
                 mask = cv2.resize(sample['mask'], (new_size[1], new_size[0]))
                 sample['mask'] = mask
-
         return sample
 
 
@@ -164,7 +177,7 @@ class Pad():
     """
     def __init__(self, output_size: int, mean: list):
         """
-        Constructor of the Rescale class.
+        Constructor of the Pad class.
         :param output_size: The desired new size.
         :param mean: The mean value of the training set used as padding value.
         """
@@ -178,7 +191,7 @@ class Pad():
         Pad the sample image and mask (if given) with the mean value of training set.
         :param sample: The sample to pad.
         :return sample: The padded sample.
-        """        
+        """
         # Compute the padding parameters.
         delta_w = self.output_size - sample['image'].shape[1]
         delta_h = self.output_size - sample['image'].shape[0]
@@ -196,7 +209,6 @@ class Pad():
                 mask = cv2.copyMakeBorder(sample['mask'], top, bottom, left, right,
                                           cv2.BORDER_CONSTANT, value=0)
                 sample['mask'] = mask
-
         return sample
 
 
