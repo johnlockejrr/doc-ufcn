@@ -45,7 +45,7 @@ def run(config):
             for set in ['train', 'val', 'test']:
                 json_dict['data_paths'][set] = {}
                 if set in ['train', 'val']:
-                    for folder, key in zip(['images', 'labels_line_768', 'labels_json'], ['image', 'mask', 'json']):
+                    for folder, key in zip(['images', 'labels', 'labels_json'], ['image', 'mask', 'json']):
                         if row[set] != '':
                             json_dict['data_paths'][set][key] = [
                                 os.path.join(element, set, folder) for element in row[set].split(';')]
