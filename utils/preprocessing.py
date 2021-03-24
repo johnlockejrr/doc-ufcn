@@ -12,7 +12,6 @@ import os
 import cv2
 import torch
 import numpy as np
-from skimage import io
 from torch.utils.data import Dataset
 from .utils import rgb_to_gray_array, rgb_to_gray_value
 
@@ -60,13 +59,18 @@ class TrainingDataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
         img_name = self.images[idx]
-        image = cv2.imread(str(img_name[1]))
 
+        image = cv2.imread(str(img_name[1]))
         if len(image.shape) < 3:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-        label = rgb_to_gray_array(io.imread(str(self.masks[img_name[0]]/img_name[1].name)))
+        
+        label = cv2.imread(str(self.masks[img_name[0]]/img_name[1].name))
+        if len(label.shape) < 3:
+            label = cv2.cvtColor(label, cv2.COLOR_GRAY2RGB)
+        label = cv2.cvtColor(label, cv2.COLOR_BGR2RGB)
+        label = rgb_to_gray_array(label)
+        
         # Transform the label into a categorical label.
         new_label = np.zeros_like(label)
         for index, value in enumerate(self.colors):
@@ -173,42 +177,36 @@ class Rescale():
 
 class Pad():
     """
-    The Pad class is used to pad the image and mask (if given) of a sample.
+    The Pad class is used to pad the image of a sample to make it divisible by 8.
     """
-    def __init__(self, output_size: int, mean: list):
+    def __init__(self):
         """
         Constructor of the Pad class.
-        :param output_size: The desired new size.
-        :param mean: The mean value of the training set used as padding value.
         """
-        assert isinstance(output_size, int)
-        self.output_size = output_size
-        assert isinstance(mean, list)
-        self.mean = mean
+        pass
 
     def __call__(self, sample: dict) -> dict:
         """
-        Pad the sample image and mask (if given) with the mean value of training set.
+        Pad the sample image with zeros.
         :param sample: The sample to pad.
         :return sample: The padded sample.
         """
         # Compute the padding parameters.
-        delta_w = self.output_size - sample['image'].shape[1]
-        delta_h = self.output_size - sample['image'].shape[0]
+        delta_w = 0
+        delta_h = 0
+        if sample['image'].shape[0] % 8 != 0:
+            delta_h = int(8 * np.ceil(sample['image'].shape[0] / 8)) - sample['image'].shape[0]
+        if sample['image'].shape[1] % 8 != 0:
+            delta_w = int(8 * np.ceil(sample['image'].shape[1] / 8)) - sample['image'].shape[1]
+
         top, bottom = delta_h // 2, delta_h - (delta_h // 2)
         left, right = delta_w // 2, delta_w - (delta_w // 2)
-        
-        # Add padding to have same size images.
-        if sample['image'].shape[0] != self.output_size or sample['image'].shape[1] != self.output_size:
-            image = cv2.copyMakeBorder(sample['image'], top, bottom, left, right,
-                                       cv2.BORDER_CONSTANT, value=self.mean)
-            sample['image'] = image
 
-        if 'mask' in sample.keys():
-            if sample['mask'].shape[0] != self.output_size or sample['mask'].shape[1] != self.output_size:
-                mask = cv2.copyMakeBorder(sample['mask'], top, bottom, left, right,
-                                          cv2.BORDER_CONSTANT, value=0)
-                sample['mask'] = mask
+        # Add padding to have same size images.
+        image = cv2.copyMakeBorder(sample['image'], top, bottom, left, right,
+                                   cv2.BORDER_CONSTANT, value=[0, 0, 0])
+        sample['image'] = image
+        sample['padding'] = {'top': top, 'left': left}
         return sample
 
 

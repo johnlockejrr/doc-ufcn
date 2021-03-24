@@ -93,7 +93,7 @@ def run(prediction_path: str, log_path: str, img_size: int, colors: list,
 
                 assert(output.shape[0] == 1)
                 polygons = get_predicted_polygons(output[0].cpu().numpy(), min_cc, classes_names)
-                polygons = pr_utils.resize_polygons(polygons, input_size, img_size)
+                polygons = pr_utils.resize_polygons(polygons, input_size, img_size, data['padding'])
 
                 polygons['img_size'] = [int(element) for element in input_size]
                 pr_utils.save_prediction(polygons,

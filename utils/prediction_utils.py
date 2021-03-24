@@ -14,23 +14,19 @@ import numpy as np
 import imageio as io
 
 
-def resize_polygons(polygons: dict, image_size: tuple,
-                    input_size: tuple) -> dict:
+def resize_polygons(polygons: dict, image_size: tuple, input_size: tuple,
+                    padding: tuple) -> dict:
     """
     Resize the detected polygons to the original input image size.
     :param polygons: The polygons to resize.
     :param image_size: The original input image size.
     :param input_size: The network input size.
+    :param padding: The padding of the input image.
     :return polygons: The resized detected polygons.
     """
     # Compute the small size image.
     ratio = float(input_size) / max(image_size)
     new_size = tuple([int(x * ratio) for x in image_size])
-    # Extract the small image.
-    delta_w = input_size - new_size[1]
-    delta_h = input_size - new_size[0]
-    top = delta_h // 2
-    left = delta_w // 2
     # Compute resizing ratio
     ratio = [element / float(new) for element, new in zip(image_size, new_size)]
 
@@ -38,8 +34,8 @@ def resize_polygons(polygons: dict, image_size: tuple,
         for index, polygon in enumerate(polygons[channel]):
             x_points = [element[0][1] for element in polygon['polygon']]
             y_points = [element[0][0] for element in polygon['polygon']]
-            x_points = [int((element - top) * ratio[0]) for element in x_points]
-            y_points = [int((element - left) * ratio[1]) for element in y_points]
+            x_points = [int((element - padding['top']) * ratio[0]) for element in x_points]
+            y_points = [int((element - padding['left']) * ratio[1]) for element in y_points]
             
             x_points = [int(element) if element < image_size[0] else int(image_size[0]) for element in x_points]
             y_points = [int(element) if element < image_size[1] else int(image_size[1]) for element in y_points]
