@@ -140,9 +140,7 @@ def load_network(no_of_classes: int, ex):
         logging.info("Let's use %d GPUs", torch.cuda.device_count())
         net = nn.DataParallel(net)
         ex.log_scalar('gpus.number', torch.cuda.device_count())
-    net.to(device)
-    last_layer = nn.Softmax(dim=1)
-    return net, last_layer
+    return net.to(device), nn.Softmax(dim=1).to(device)
 
 
 def restore_model(net, optimizer, log_path: str, model_path: str):

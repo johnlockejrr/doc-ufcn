@@ -38,7 +38,7 @@ def default_config():
     """
     Define the default configuration for the experiment.
     :classes_names: The names of the classes involved during the experiment.
-    :classes_file: File containing the classes color codes.
+    :classes_colors: The classes color codes.
     :img_size: Network input size.
     :no_of_epochs: Total number of epochs to run.
     :batch_size: Size of the batch to use during training.
@@ -55,14 +55,13 @@ def default_config():
     :steps: List of the steps to run.
     :data_paths: Path to the experiment data folders.
     :restore_model: Path to the model to restore to resume a training.
-    :same_data: Indicated whether the model to train uses the same data as
-                the model to restore.
+    :loss: Indicates whether to use 'initial' or 'best' saved loss.
 
     """
     # Load the global experiments parameters from experiments_config.json.
     global_params = {
         "classes_names": ["background", "text_line"],
-        "classes_file": "./data/classes.txt",
+        "classes_colors": [[0, 0, 0], [0, 0, 255]],
         "img_size": 768,
         "no_of_epochs": 100,
         "batch_size": 4,
@@ -71,7 +70,6 @@ def default_config():
         "min_cc": 0,
         "save_image": []
     }
-    classes_file = Path(global_params['classes_file']).expanduser()
     params = Params().to_dict()
 
     # Load the current experiment parameters.
@@ -106,14 +104,10 @@ def default_config():
 
     training = {
         "restore_model": None,
-        "same_data": True,
+        "loss": 'initial',
     }
-    if training['same_data'] in ['true', 'True']:
-        training['same_data'] = True
-    elif training['same_data'] in ['false', 'False']:
-        training['same_data'] = False
-    else:
-        training['same_data'] = None
+    training['loss'] = training['loss'].lower()
+    assert training['loss'] in ['initial', 'best']
     if "train" in steps and global_params['omniboard'] is True:
         ex.observers.append(MongoObserver(mongo_url))
 
@@ -172,11 +166,9 @@ def get_mean_std(log_path: str, params: Params) -> dict:
 
 
 @ex.capture
-def training_loaders(colors: list, norm_params: dict, exp_data_paths: dict,
-                     global_params: dict) -> dict:
+def training_loaders(norm_params: dict, exp_data_paths: dict, global_params: dict) -> dict:
     """
     Generate the loaders to use during the training step.
-    :param colors: Colors of the classes used during the experiment.
     :param norm_params: The mean and std values used during image normalization.
     :param exp_data_paths: Path to the data folders.
     :param global_params: Global parameters of the experiment entered by the used.
@@ -188,14 +180,13 @@ def training_loaders(colors: list, norm_params: dict, exp_data_paths: dict,
                                   [exp_data_paths['train']['mask'], exp_data_paths['val']['mask']]):
         dataset = pprocessing.TrainingDataset(
             images, masks,
-            colors, transform=transforms.Compose([
+            global_params['classes_colors'], transform=transforms.Compose([
                 pprocessing.Rescale(global_params['img_size']),
-                pprocessing.Pad(global_params['img_size'], norm_params['mean']),
-                pprocessing.Normalize(norm_params['mean'], norm_params['std']),
-                pprocessing.ToTensor()])
+                pprocessing.Normalize(norm_params['mean'], norm_params['std'])])
         )
         loaders[set+'_loader'] = DataLoader(dataset, batch_size=global_params['batch_size'],
-                                            shuffle=True, num_workers=2, pin_memory=True)
+                                            shuffle=True, num_workers=2, pin_memory=True,
+                                            collate_fn=utils.DLACollateFunction())
     return loaders
 
 
@@ -217,8 +208,8 @@ def prediction_loaders(norm_params: dict, exp_data_paths: dict,
             images,
             transform=transforms.Compose([
                 pprocessing.Rescale(global_params['img_size']),
-                pprocessing.Pad(global_params['img_size'], norm_params['mean']),
                 pprocessing.Normalize(norm_params['mean'], norm_params['std']),
+                pprocessing.Pad(),
                 pprocessing.ToTensor()])
         )
         loaders[set+'_loader'] = DataLoader(dataset, batch_size=1, shuffle=False,
@@ -260,7 +251,7 @@ def training_initialization(global_params: dict, training: dict, log_path: str) 
             'criterion': tr_utils.Diceloss(no_of_classes),
             'optimizer': optimizer,
             'saved_epoch': checkpoint['epoch'],
-            'best_loss': checkpoint['best_loss'] if training['same_data'] else 10e5,
+            'best_loss': checkpoint['best_loss'] if training['loss'] == 'best' else 10e5,
         }
     return tr_params
 
@@ -284,12 +275,11 @@ def prediction_initialization(params: dict, global_params: dict,
 
 
 @ex.automain
-def run(global_params: dict, classes_file: Path, params: Params, log_path: str,
+def run(global_params: dict, params: Params, log_path: str,
         tb_path: str, steps: list, exp_data_paths: dict, training: dict):
     """
     Main program.
     :param global_params: Global parameters of the experiment entered by the used.
-    :param classes_file: File containing the classes color codes.
     :param params: Global parameters of the experiment.
     :param log_path: Path to save the experiment information and model.
     :param tb_path: Path to save the Tensorboard events.
@@ -311,12 +301,10 @@ def run(global_params: dict, classes_file: Path, params: Params, log_path: str,
         if "train" in steps or "prediction" in steps:
             # Get the mean and std values.
             norm_params = get_mean_std()
-            # Get the possible colors.
-            colors = utils.get_classes_colors(classes_file)
 
         if "train" in steps:
             # Generate the loaders and start training.
-            loaders = training_loaders(colors, norm_params)
+            loaders = training_loaders(norm_params)
             tr_params = training_initialization()
             train.run(params.model_path, log_path, tb_path, global_params['no_of_epochs'],
                       norm_params, global_params['classes_names'], loaders, tr_params, ex)
@@ -326,8 +314,8 @@ def run(global_params: dict, classes_file: Path, params: Params, log_path: str,
             loaders = prediction_loaders(norm_params)
             pr_params = prediction_initialization()
             predict.run(params.prediction_path, log_path, global_params['img_size'],
-                        colors, global_params['classes_names'],  global_params['save_image'],
-                        global_params['min_cc'], loaders, pr_params)
+                        global_params['classes_colors'], global_params['classes_names'],
+                        global_params['save_image'], global_params['min_cc'], loaders, pr_params)
 
         if "evaluation" in steps:
             for set in exp_data_paths.keys():

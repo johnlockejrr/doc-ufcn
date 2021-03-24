@@ -62,8 +62,8 @@ def run(config):
             # Get restore model.
             if row['restore_model'] != '':
                 json_dict['training'] = {'restore_model': row['restore_model']}
-                if row['same_data'] != '':
-                    json_dict['training']['same_data'] = row['same_data']
+                if row['loss'] != '':
+                    json_dict['training']['loss'] = row['loss']
 
             # Save configuration file.
             json_file = str(index)+'_'+row['experiment_name']+'.json'

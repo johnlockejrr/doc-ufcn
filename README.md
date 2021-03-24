@@ -53,54 +53,30 @@ In addition, the evaluation is run over json files containing the polygons coord
 
 Different files must be updated according to the task one want to run. Since we can run multiple experiments at once, the first configuration file `experiments_config.json` allows to specify the common parameters to use for all the experiments:
 
-| Parameter       | Description                                                                                                        | Default value                 |
-| --------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
-| `classes_names` | List with the names of the classes / **must be in the same order** as the colors defined in the `classes.txt` file | `["background", "text_line"]` |
-| `classes_file`  | File containing the color codes of the classes                                                                     | `./data/classes`              |
-| `img_size`      | Network input size / **must be the same** as the one used during the label generation                              | `768`                         |
-| `no_of_epochs`  | Number of epochs to train the models                                                                               | `200`                         |
-| `batch_size`    | Size of batchs to use during training                                                                              | `4`                           |
-| `min_cc`        | Threshold to use when removing of small connected components                                                       | `50`                          |
-| `save_image`    | List with the sets ["train", "val", "test"] for which we want to save the predicted masks.                         | `["val", "test"]`             |
-| `omniboard`     | Whether to use Omniboard observer                                                                                  | `false`                       |
-
-### `classes.txt`
-
-In addition, one has to update/create the `./data/classes.txt` file. This text file declares the different classes used during the experiment. Each line must contain a single color code (RGB format) corresponding to a class. Here are presented two examples of contents that can be put in `classes.txt`. In this file, the background (black) must be defined by adding on the first line `0 0 0`.
-
-For a 2-classes line segmentation:
-
-```
-0 0 0
-0 0 255
-```
-
-For a global segmentation containing different classes:
-
-```
-0 0 0
-255 255 255
-0 255 0
-0 150 0
-```
-
-Note: These colors must be the same than the ones in the annotation images and be defined in the same order as in `classes_names` of `config.json` file.
-
-Note 2: One **must not** add an empty line at the end of the file.
+| Parameter        | Description                                                                                                        | Default value                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+| `classes_names`  | List with the names of the classes / **must be in the same order** as the colors defined in `classes_colors` field | `["background", "text_line"]` |
+| `classes_colors` | List with the color codes of the classes                                                                           | `[[0, 0, 0]], [0, 0, 255]]`   |
+| `img_size`       | Network input size / **must be the same** as the one used during the label generation                              | `768`                         |
+| `no_of_epochs`   | Number of epochs to train the models                                                                               | `200`                         |
+| `batch_size`     | Size of batchs to use during training                                                                              | `4`                           |
+| `min_cc`         | Threshold to use when removing of small connected components                                                       | `50`                          |
+| `save_image`     | List with the sets ["train", "val", "test"] for which we want to save the predicted masks.                         | `["val", "test"]`             |
+| `omniboard`      | Whether to use Omniboard observer                                                                                  | `false`                       |
 
 ### `experiments.csv`
 
 In the root directory, one has to create an `experiments.csv` file (see `example_experiments.csv`). It contains the experiments names as well as the paths to the datasets and parameters used to continue a training or to fine-tune a model.
 
-| Parameter         | Description                                                                          | Default value / example                            |
-| ----------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------- |
-| `experiment_name` | Name of the experiment                                                               |                                                    |
-| `steps`           | List of steps to run ["normalization_params", "train", "prediction", "evaluation"]   | `normalization_params;train;prediction;evaluation` |
-| `train`           | Paths to the training datasets                                                       | `path_to_dataset1;path_to_dataset_2`               |
-| `val`             | Paths to the validation datasets                                                     | `path_to_dataset1;path_to_dataset_2`               |
-| `test`            | Paths to the evaluation datasets                                                     | `path_to_dataset1;path_to_dataset_2`               |
-| `restore_model`   | Name of a saved model to resume or fine-tune a training                              |                                                    |
-| `same_data`       | Whether the training data are the same as the one used to trained the restored model | `True`                                             |
+| Parameter         | Description                                                                                      | Default value / example                            |
+| ----------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| `experiment_name` | Name of the experiment                                                                           |                                                    |
+| `steps`           | List of steps to run ["normalization_params", "train", "prediction", "evaluation"]               | `normalization_params;train;prediction;evaluation` |
+| `train`           | Paths to the training datasets                                                                   | `path_to_dataset1;path_to_dataset_2`               |
+| `val`             | Paths to the validation datasets                                                                 | `path_to_dataset1;path_to_dataset_2`               |
+| `test`            | Paths to the evaluation datasets                                                                 | `path_to_dataset1;path_to_dataset_2`               |
+| `restore_model`   | Name of a saved model to resume or fine-tune a training                                          |                                                    |
+| `loss`            | Whether to use an initial loss (`initial`) or the best (`best`) saved loss of the restored model | `initial`                                          |
 
 Note: All the steps are dependant, e.g to run the `"prediction"` step, one **needs** the results of the `"normalization_params"` and `"train"` steps.
 
@@ -108,18 +84,18 @@ Note: All the steps are dependant, e.g to run the `"prediction"` step, one **nee
 
 The `example_experiments.csv` file shows an example on how to build the experiments csv file.
 
-| experiment_name | steps                                              | train                                 | val                                   | test                                  | restore_model    | same_data |
+| experiment_name | steps                                              | train                                 | val                                   | test                                  | restore_model    | loss      |
 | --------------- | -------------------------------------------------- | ------------------------------------- | ------------------------------------- | ------------------------------------- | ---------------- | --------- |
 | exp1            | `normalization_params;train;prediction;evaluation` | `~/data/DLA/dataset1;~/data/dataset2` | `~/data/DLA/dataset1;~/data/dataset2` | `~/data/DLA/dataset3;~/data/dataset2` |                  |           |
 | exp1            | `prediction;evaluation`                            |                                       |                                       | `~/data/DLA/dataset4`                 |                  |           |
-| exp1            | `train;prediction;evaluation`                      | `~/data/DLA/dataset4`                 | `~/data/DLA/dataset4`                 | `~/data/DLA/dataset4`                 | `last_model.pth` | false     |
+| exp1            | `train;prediction;evaluation`                      | `~/data/DLA/dataset4`                 | `~/data/DLA/dataset4`                 | `~/data/DLA/dataset4`                 | `last_model.pth` | `initial` |
 | exp2            | `normalization_params;train;prediction;evaluation` | `~/data/DLA/dataset5`                 | `~/data/DLA/dataset5`                 | `~/data/DLA/dataset5`                 |                  |           |
 
 The first line will start a standard training on two datasets (dataset1 and dataset2) and will be tested also on two datasets (dataset2 and dataset3).
 
 The second line will use the model trained during the first experiment (same experiment_name) and only test it on another dataset (dataset4).
 
-The third line will also use the first trained model (same experiment_name) but will fine-tune it on dataset4. `restore_model` indicates which model to fine-tune and `same_data` indicates that the datasets used to fine-tune are not the same as the one used for first training.
+The third line will also use the first trained model (same experiment_name) but will fine-tune it on dataset4. `restore_model` indicates which model to fine-tune and `loss` indicates that the loss should be initialized (datasets used to fine-tune are not the same as the one used for first training).
 
 The last line will run a standard new training on dataset5.
 
