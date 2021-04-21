@@ -50,7 +50,7 @@ def get_predicted_polygons(probas: np.ndarray, min_cc: int, classes_names: list)
 
 def run(prediction_path: str, log_path: str, img_size: int, colors: list,
         classes_names: list, save_image: list, min_cc: int,
-        loaders: dict, pr_params: dict):
+        loaders: dict, net):
     """
     Run the prediction.
     :param prediction_path: The path to save the predictions.
@@ -62,12 +62,12 @@ def run(prediction_path: str, log_path: str, img_size: int, colors: list,
                        are generated and saved.
     :param min_cc: The threshold used to remove small connected components.
     :param loaders: The loaders containing the images to predict.
-    :param pr_params: The prediction parameters.
+    :param net: The loaded network.
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     # Run prediction.
-    pr_params['net'].eval()
+    net.eval()
 
     logging.info('Starting predicting')
     starting_time = time.time()
@@ -88,7 +88,7 @@ def run(prediction_path: str, log_path: str, img_size: int, colors: list,
                     seen_datasets.append(data['dataset'][0])
                     
                 # Generate and save the predictions.
-                output = pr_params['softmax'](pr_params['net'](data['image'].to(device).float()))
+                output = net(data['image'].to(device).float())
                 input_size = [element.numpy()[0] for element in data['size'][:2]]
 
                 assert(output.shape[0] == 1)

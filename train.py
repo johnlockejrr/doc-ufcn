@@ -16,6 +16,7 @@ import numpy as np
 from tqdm import tqdm
 import torch
 from torch.utils.tensorboard import SummaryWriter
+from torch.cuda.amp import autocast
 from utils import model
 from utils.params_config import Params
 import utils.training_pixel_metrics as p_metrics
@@ -76,9 +77,12 @@ def run_one_epoch(loader, params: dict, writer, epochs: list,
 
     for index, data in enumerate(t):
         params['optimizer'].zero_grad()
-
-        output = params['softmax'](params['net'](data['image'].to(device).float()))
-        loss = params['criterion'](output, data['mask'].to(device).long())
+        with autocast(enabled=params['use_amp']):
+            if params['use_amp']:
+                output = params['net'](data['image'].to(device).half())
+            else:
+                output = params['net'](data['image'].to(device).float())
+            loss = params['criterion'](output, data['mask'].to(device).long())
 
         for pred in range(output.shape[0]):
             current_pred = np.argmax(output[pred, :, :, :].cpu().detach().numpy(), axis=0)
@@ -93,8 +97,9 @@ def run_one_epoch(loader, params: dict, writer, epochs: list,
         t.set_postfix(values=str(display_values))
 
         if step == "Training":
-            loss.backward()
-            params['optimizer'].step()
+            params['scaler'].scale(loss).backward()
+            params['scaler'].step(params['optimizer'])
+            params['scaler'].update()
             # Display prediction images in Tensorboard all 100 mini-batches.
             if index == 0 or index % 100 == 99:
                 tr_utils.display_training(output, data['image'], data['mask'], writer,
@@ -107,8 +112,7 @@ def run_one_epoch(loader, params: dict, writer, epochs: list,
 
 
 def run(model_path: str, log_path: str, tb_path: str, no_of_epochs: int,
-        norm_params: dict, classes_names: list, loaders: dict, tr_params: dict,
-        ex):
+        norm_params: dict, classes_names: list, loaders: dict, tr_params: dict, ex):
     """
     Run the training.
     :param model_path: The path to save the trained model.
@@ -151,7 +155,8 @@ def run(model_path: str, log_path: str, tb_path: str, no_of_epochs: int,
             if epoch_values['loss'] < tr_params['best_loss']:
                 tr_params['best_loss'] = epoch_values['loss']
                 model.save_model(current_epoch+1, tr_params['net'].module.state_dict(), epoch_values['loss'],
-                                 tr_params['optimizer'].state_dict(), os.path.join(log_path, model_path))
+                                 tr_params['optimizer'].state_dict(), tr_params['scaler'].state_dict(),
+                                 os.path.join(log_path, model_path))
                 logging.info('Best model (epoch %d) saved', current_epoch)
 
     # Save last model.
@@ -162,7 +167,7 @@ def run(model_path: str, log_path: str, tb_path: str, no_of_epochs: int,
         index += 1
 
     model.save_model(current_epoch, tr_params['net'].module.state_dict(), epoch_values['loss'],
-                     tr_params['optimizer'].state_dict(), path)
+                     tr_params['optimizer'].state_dict(), tr_params['scaler'].state_dict(), path)
     logging.info('Last model (epoch %d) saved', current_epoch)
 
     end = time.gmtime(time.time() - starting_time)

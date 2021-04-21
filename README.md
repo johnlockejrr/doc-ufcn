@@ -61,8 +61,11 @@ Different files must be updated according to the task one want to run. Since we 
 | `no_of_epochs`   | Number of epochs to train the models                                                                               | `200`                         |
 | `batch_size`     | Size of batchs to use during training                                                                              | `4`                           |
 | `min_cc`         | Threshold to use when removing of small connected components                                                       | `50`                          |
-| `save_image`     | List with the sets ["train", "val", "test"] for which we want to save the predicted masks.                         | `["val", "test"]`             |
+| `save_image`     | List with the sets ["train", "val", "test"] for which we want to save the predicted masks                          | `["val", "test"]`             |
 | `omniboard`      | Whether to use Omniboard observer                                                                                  | `false`                       |
+| `use_amp`        | Whether to use Automatic Mixed Precision during training                                                           | `false`                       |
+
+Automatic Mixed Precision allows to speed up to training while using less memory (possibility to increase the batch size).
 
 ### `experiments.csv`
 

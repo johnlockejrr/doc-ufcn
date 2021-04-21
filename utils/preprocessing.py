@@ -64,7 +64,7 @@ class TrainingDataset(Dataset):
         if len(image.shape) < 3:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        
+
         label = cv2.imread(str(self.masks[img_name[0]]/img_name[1].name))
         if len(label.shape) < 3:
             label = cv2.cvtColor(label, cv2.COLOR_GRAY2RGB)

@@ -17,6 +17,7 @@ from sacred import Experiment
 from sacred.observers import MongoObserver
 import torch
 import torch.optim as optim
+from torch.cuda.amp import GradScaler
 from torch.utils.data import DataLoader
 from torchvision import transforms
 import normalization_params
@@ -47,6 +48,7 @@ def default_config():
     :min_cc: Threshold used to remove small connected components.
     :save_image: List of sets (train, val, test) for which the prediction images
                  are generated and saved.
+    :use_amp: Whether to use Automatic Mixed Precision.
     :params: Parameters to use during all the experiment steps.
     :experiment_name: The name of the experiment that is used to save all
                       the experiment information.
@@ -56,7 +58,6 @@ def default_config():
     :data_paths: Path to the experiment data folders.
     :restore_model: Path to the model to restore to resume a training.
     :loss: Indicates whether to use 'initial' or 'best' saved loss.
-
     """
     # Load the global experiments parameters from experiments_config.json.
     global_params = {
@@ -68,7 +69,8 @@ def default_config():
         "learning_rate": 5e-3,
         "omniboard": False,
         "min_cc": 0,
-        "save_image": []
+        "save_image": [],
+        "use_amp": False
     }
     params = Params().to_dict()
 
@@ -104,7 +106,7 @@ def default_config():
 
     training = {
         "restore_model": None,
-        "loss": 'initial',
+        "loss": 'initial'
     }
     training['loss'] = training['loss'].lower()
     assert training['loss'] in ['initial', 'best']
@@ -228,30 +230,32 @@ def training_initialization(global_params: dict, training: dict, log_path: str) 
     """
     no_of_classes = len(global_params['classes_names'])
     ex.log_scalar('no_of_classes', no_of_classes)
-    net, softmax = model.load_network(no_of_classes, ex)
+    net = model.load_network(no_of_classes, global_params['use_amp'], ex)
     
     if training['restore_model'] is None:
         net.apply(model.weights_init)
         tr_params = {
             'net': net,
-            'softmax': softmax,
             'criterion': tr_utils.Diceloss(no_of_classes),
             'optimizer': optim.Adam(net.parameters(), lr=global_params['learning_rate']),
             'saved_epoch': 0,
             'best_loss': 10e5,
+            'scaler': GradScaler(enabled=global_params['use_amp']),
+            'use_amp': global_params['use_amp']
         }
     else:
     # Restore model to resume training.
-        checkpoint, net, optimizer = model.restore_model(
+        checkpoint, net, optimizer, scaler = model.restore_model(
             net, optim.Adam(net.parameters(), lr=global_params['learning_rate']),
-            log_path, training['restore_model'])
+            GradScaler(enabled=global_params['use_amp']), log_path, training['restore_model'])
         tr_params = {
             'net': net,
-            'softmax': softmax,
             'criterion': tr_utils.Diceloss(no_of_classes),
             'optimizer': optimizer,
             'saved_epoch': checkpoint['epoch'],
             'best_loss': checkpoint['best_loss'] if training['loss'] == 'best' else 10e5,
+            'scaler': scaler,
+            'use_amp': global_params['use_amp']
         }
     return tr_params
 
@@ -264,14 +268,14 @@ def prediction_initialization(params: dict, global_params: dict,
     :param params: The global parameters of the experiment.
     :param global_params: Global parameters of the experiment entered by the used.
     :param log_path: Path to save the experiment information and model.
-    :return: A dictionary with the training parameters.
+    :return: A dictionary with the prediction parameters.
     """
     params = Params.from_dict(params)
     no_of_classes = len(global_params['classes_names'])
-    net, softmax = model.load_network(no_of_classes, ex)
+    net = model.load_network(no_of_classes, False, ex)
 
-    _, net, _ = model.restore_model(net, None, log_path, params.model_path)
-    return {'net': net, 'softmax': softmax}
+    _, net, _, _ = model.restore_model(net, None, None, log_path, params.model_path)
+    return net
 
 
 @ex.automain
@@ -312,10 +316,10 @@ def run(global_params: dict, params: Params, log_path: str,
         if "prediction" in steps:
             # Generate the loaders and start predicting.
             loaders = prediction_loaders(norm_params)
-            pr_params = prediction_initialization()
+            net = prediction_initialization()
             predict.run(params.prediction_path, log_path, global_params['img_size'],
                         global_params['classes_colors'], global_params['classes_names'],
-                        global_params['save_image'], global_params['min_cc'], loaders, pr_params)
+                        global_params['save_image'], global_params['min_cc'], loaders, net)
 
         if "evaluation" in steps:
             for set in exp_data_paths.keys():
