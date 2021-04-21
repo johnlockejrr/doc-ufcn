@@ -9,6 +9,7 @@
         "no_of_epochs": 200,
         "batch_size": 4,
         "min_cc": 50,
-        "save_image": ["val", "test"]
+        "save_image": ["val", "test"],
+        "use_amp": false
     }
 }
