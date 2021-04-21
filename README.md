@@ -65,7 +65,7 @@ Different files must be updated according to the task one want to run. Since we 
 | `omniboard`      | Whether to use Omniboard observer                                                                                  | `false`                       |
 | `use_amp`        | Whether to use Automatic Mixed Precision during training                                                           | `false`                       |
 
-Automatic Mixed Precision allows to speed up to training while using less memory (possibility to increase the batch size).
+Automatic Mixed Precision allows to speed up the training while using less memory (possibility to increase the batch size).
 
 ### `experiments.csv`
 
