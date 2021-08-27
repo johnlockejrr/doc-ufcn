@@ -130,7 +130,7 @@ class PredictionDataset(Dataset):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         sample = {'image': image, 'name': img_name.name,
-                  'dataset': self.images[idx][0], 'size': image[0:2]}
+                  'dataset': self.images[idx][0], 'size': image.shape[0:2]}
 
         # Apply the transformations.
         if self.transform:
