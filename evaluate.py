@@ -43,7 +43,7 @@ def run(log_path: str, classes_names: list, set: str, data_paths: dict,
     rank_scores = {
        channel: {
             iou: {
-                rank: {'True': 0, 'Total': 0} for rank in range(100, -5, -5)
+                rank: {'True': 0, 'Total': 0} for rank in range(95, -5, -5)
             } for iou in range(50, 100, 5)
         } for channel in classes_names[1:]}
     number_of_gt = {channel: 0 for channel in classes_names[1:]}

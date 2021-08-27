@@ -174,10 +174,18 @@ def restore_model(net, optimizer, scaler, log_path: str, model_path: str):
         else:
             checkpoint = torch.load(os.path.join(log_path, model_path),
                                     map_location=torch.device('cpu'))
-        net_state_dict = dict(
-            ('module.'+key, value) for (key, value)
-            in checkpoint['state_dict'].items())
-        net.load_state_dict(net_state_dict)
+        loaded_checkpoint = {}
+        if torch.cuda.device_count() > 1:
+            for key in checkpoint["state_dict"].keys():
+                if 'module' not in key:
+                    loaded_checkpoint['module.'+key] = checkpoint["state_dict"][key]
+                else:
+                    loaded_checkpoint = checkpoint["state_dict"]
+        else:
+            for key in checkpoint["state_dict"].keys():
+                loaded_checkpoint[key.replace("module.", "")] = checkpoint["state_dict"][key]
+        net.load_state_dict(loaded_checkpoint)
+
         if optimizer is not None:
             optimizer.load_state_dict(checkpoint['optimizer'])
         if scaler is not None:

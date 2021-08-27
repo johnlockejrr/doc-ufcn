@@ -68,14 +68,14 @@ def run_one_epoch(loader, params: dict, writer, epochs: list,
     """
     metrics = init_metrics(len(classes_names))
     epoch = epochs[0]
-    
+
     t = tqdm(loader)
     if step == 'Training':
         t.set_description("TRAIN (prog) {}/{}".format(epoch, no_of_epochs+epochs[1]))
     else:
         t.set_description("VALID (prog) {}/{}".format(epoch, no_of_epochs+epochs[1]))
 
-    for index, data in enumerate(t):
+    for index, data in enumerate(t, 1):
         params['optimizer'].zero_grad()
         with autocast(enabled=params['use_amp']):
             if params['use_amp']:
@@ -88,7 +88,7 @@ def run_one_epoch(loader, params: dict, writer, epochs: list,
             current_pred = np.argmax(output[pred, :, :, :].cpu().detach().numpy(), axis=0)
             current_label = data['mask'][pred, :, :].cpu().detach().numpy()
             batch_metrics = p_metrics.compute_metrics(current_pred, current_label,
-                                                     loss.item(), classes_names)
+                                                      loss.item(), classes_names)
             metrics = p_metrics.update_metrics(metrics, batch_metrics)
            
         epoch_values = tr_utils.get_epoch_values(metrics, classes_names, index+1)
@@ -137,7 +137,7 @@ def run(model_path: str, log_path: str, tb_path: str, no_of_epochs: int,
         # Run training.
         tr_params['net'].train()
         tr_params, epoch_values = run_one_epoch(
-            loaders['train_loader'], tr_params, writer,
+            loaders['train'], tr_params, writer,
             [current_epoch, tr_params['saved_epoch']],
             no_of_epochs, device, norm_params, classes_names, step="Training")
 
@@ -146,7 +146,7 @@ def run(model_path: str, log_path: str, tb_path: str, no_of_epochs: int,
         with torch.no_grad():
             # Run evaluation.
             tr_params['net'].eval()
-            epoch_values = run_one_epoch(loaders['val_loader'], tr_params, writer,
+            epoch_values = run_one_epoch(loaders['val'], tr_params, writer,
                                          [current_epoch, tr_params['saved_epoch']],
                                          no_of_epochs, device, norm_params,
                                          classes_names, step="Validation")
@@ -154,7 +154,7 @@ def run(model_path: str, log_path: str, tb_path: str, no_of_epochs: int,
             # Keep best model.
             if epoch_values['loss'] < tr_params['best_loss']:
                 tr_params['best_loss'] = epoch_values['loss']
-                model.save_model(current_epoch+1, tr_params['net'].module.state_dict(), epoch_values['loss'],
+                model.save_model(current_epoch+1, tr_params['net'].state_dict(), epoch_values['loss'],
                                  tr_params['optimizer'].state_dict(), tr_params['scaler'].state_dict(),
                                  os.path.join(log_path, model_path))
                 logging.info('Best model (epoch %d) saved', current_epoch)
@@ -166,7 +166,7 @@ def run(model_path: str, log_path: str, tb_path: str, no_of_epochs: int,
         path = path.replace(str(index-1), str(index))
         index += 1
 
-    model.save_model(current_epoch, tr_params['net'].module.state_dict(), epoch_values['loss'],
+    model.save_model(current_epoch, tr_params['net'].state_dict(), epoch_values['loss'],
                      tr_params['optimizer'].state_dict(), tr_params['scaler'].state_dict(), path)
     logging.info('Last model (epoch %d) saved', current_epoch)
 

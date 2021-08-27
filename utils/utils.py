@@ -8,7 +8,9 @@
     Generic functions used during all the steps.
 """
 
+import copy
 import torch
+import random
 import numpy as np
 
 # Useful functions.
@@ -36,6 +38,91 @@ def rgb_to_gray_array(rgb: np.ndarray) -> np.ndarray:
     gray_array = rgb[:, :, 0] * 0.299 + rgb[:, :, 1] * 0.587 \
         + rgb[:, :, 2] * 0.114
     return np.uint8(gray_array)
+
+
+def create_buckets(images_sizes, bin_size):
+    """
+    Group images into same size buckets.
+    :param images_sizes: The sizes of the images.
+    :param bin_size: The step between two buckets.
+    :return bucket: The images indices grouped by size.
+    """
+    max_size = max([image_size for image_size in images_sizes.values()])
+    min_size = min([image_size for image_size in images_sizes.values()])
+
+    bucket = {}
+    current = min_size + bin_size - 1
+    while(current < max_size):
+        bucket[current] = []
+        current += bin_size
+    bucket[max_size] = []
+
+    for index, value in images_sizes.items():
+        dict_index = (((value - min_size) // bin_size) + 1) * bin_size + min_size - 1
+        bucket[min(dict_index, max_size)].append(index)
+
+    bucket = {dict_index: values for dict_index, values in bucket.items() if len(values) > 0}
+    return bucket
+
+
+class Sampler(torch.utils.data.Sampler):
+
+    def __init__(self, data, bin_size=20, batch_size=None, nb_params=None):
+
+        self.bin_size = bin_size
+        self.batch_size = batch_size
+        self.nb_params = nb_params
+        
+        self.data_sizes = [image['size'] for image in data]
+
+        self.vertical = {index: image['size'][1] for index, image in enumerate(data) if image['size'][0] > image['size'][1]}
+        self.horizontal = {index: image['size'][0] for index, image in enumerate(data) if image['size'][0] <= image['size'][1]}
+
+        self.buckets = [create_buckets(self.vertical, self.bin_size), create_buckets(self.horizontal, self.bin_size)]
+
+
+    def __len__ (self):
+        return (len(self.vertical) + len(self.horizontal))
+
+
+    def __iter__(self):
+        buckets = copy.deepcopy(self.buckets)
+        for index, bucket in enumerate(buckets):
+            for key in bucket.keys():
+                random.shuffle(buckets[index][key])
+        
+        if self.batch_size is not None and self.nb_params is None:
+            final_indices = []
+            index_current = -1
+            for bucket in buckets:
+                current_batch_size = self.batch_size
+                for key in sorted(bucket.keys(), reverse=True):
+                    for index in bucket[key]:
+                        if current_batch_size + 1 > self.batch_size:
+                            current_batch_size = 0
+                            final_indices.append([])
+                            index_current += 1
+                        current_batch_size += 1
+                        final_indices[index_current].append(index)
+            random.shuffle(final_indices)
+        
+        elif self.nb_params is not None:
+            final_indices = []
+            index_current = -1
+            for bucket in buckets:
+                current_params = self.nb_params
+                for key in sorted(bucket.keys(), reverse=True):
+                    for index in bucket[key]:
+                        element_params = self.data_sizes[index][0] * self.data_sizes[index][1] * 3
+                        if current_params + element_params > self.nb_params:
+                            current_params = 0
+                            final_indices.append([])
+                            index_current += 1
+                        current_params += element_params
+                        final_indices[index_current].append(index)
+            random.shuffle(final_indices)
+
+        return iter(final_indices)
 
 
 def pad_images_masks(images: list, masks: list, image_padding_value: int, mask_padding_value: int):

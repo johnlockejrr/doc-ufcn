@@ -77,11 +77,14 @@ class TrainingDataset(Dataset):
             color = rgb_to_gray_value(value)
             new_label[label == color] = index
 
-        sample = {'image': image, 'mask': new_label}
-        
+        sample = {'image': image, 'mask': new_label, 'size': image.shape[0:2]}
+
         # Apply the transformations.
         if self.transform:
             sample = self.transform(sample)
+
+        sample['size'] = sample['image'].shape[0:2]
+
         return sample
 
 
@@ -127,7 +130,7 @@ class PredictionDataset(Dataset):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         sample = {'image': image, 'name': img_name.name,
-                  'dataset': self.images[idx][0], 'size': image.shape}
+                  'dataset': self.images[idx][0], 'size': image.shape[0:2]}
 
         # Apply the transformations.
         if self.transform:
