@@ -106,7 +106,7 @@ def default_config():
         }
     }
     exp_data_paths = {set:
-        {key: [Path(os.path.join(WORK, element)) for element in value]
+        {key: [Path(element).expanduser() for element in value]
         for key, value in paths.items()}
         for set, paths in data_paths.items()
     }
