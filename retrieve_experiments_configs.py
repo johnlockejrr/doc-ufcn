@@ -27,7 +27,7 @@ def run(config):
     Save each configuration into TMP_DIR/experiment_name file.
     """
     os.makedirs(TMP_DIR, exist_ok=True)
-    
+
     with open(config) as config_file:
         reader = csv.DictReader(config_file, delimiter=',')
         for index, row in enumerate(reader, 1):

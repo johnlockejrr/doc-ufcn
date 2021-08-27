@@ -59,13 +59,15 @@ Different files must be updated according to the task one want to run. Since we 
 | `classes_colors` | List with the color codes of the classes                                                                           | `[[0, 0, 0]], [0, 0, 255]]`   |
 | `img_size`       | Network input size / **must be the same** as the one used during the label generation                              | `768`                         |
 | `no_of_epochs`   | Number of epochs to train the models                                                                               | `200`                         |
-| `batch_size`     | Size of batchs to use during training                                                                              | `4`                           |
+| `batch_size`     | Size of batchs to use during training                                                                              | None                          |
+| `no_of_params`   | Maximum number of parameters supported by the CPU/GPU                                                              | None                          |
+| `bin_size`       | Size between two groups of images.                                                                                 | 20                            |
 | `min_cc`         | Threshold to use when removing of small connected components                                                       | `50`                          |
 | `save_image`     | List with the sets ["train", "val", "test"] for which we want to save the predicted masks                          | `["val", "test"]`             |
 | `omniboard`      | Whether to use Omniboard observer                                                                                  | `false`                       |
 | `use_amp`        | Whether to use Automatic Mixed Precision during training                                                           | `false`                       |
 
-Automatic Mixed Precision allows to speed up the training while using less memory (possibility to increase the batch size).
+Automatic Mixed Precision allows to speed up the training while using less memory (possibility to increase the batch size). Either the batch size or the number of parameters should be defined.
 
 ### `experiments.csv`
 

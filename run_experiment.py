@@ -12,6 +12,7 @@ import os
 import sys
 import json
 import logging
+from tqdm import tqdm
 from pathlib import Path
 from sacred import Experiment
 from sacred.observers import MongoObserver
@@ -43,6 +44,9 @@ def default_config():
     :img_size: Network input size.
     :no_of_epochs: Total number of epochs to run.
     :batch_size: Size of the batch to use during training.
+    :no_of_params: Maximum number of parameters the system can
+                   support (used to automatically compute batch size).
+    :bin_size: Step (in pixels) between two groups of images.
     :learning_rate: Initial learning rate to use during training.
     :omniboard: Whether to use Omniboard.
     :min_cc: Threshold used to remove small connected components.
@@ -65,13 +69,16 @@ def default_config():
         "classes_colors": [[0, 0, 0], [0, 0, 255]],
         "img_size": 768,
         "no_of_epochs": 100,
-        "batch_size": 4,
+        "batch_size": None,
+        "no_of_params": None,
+        "bin_size": 20,
         "learning_rate": 5e-3,
         "omniboard": False,
         "min_cc": 0,
         "save_image": [],
         "use_amp": False
     }
+    assert global_params['batch_size'] is not None or global_params['no_of_params'] is not None, "Please provide a batch size or a maximum number of parameters"
     params = Params().to_dict()
 
     # Load the current experiment parameters.
@@ -86,12 +93,12 @@ def default_config():
         "train": {
             "image": ["./data/train/images/"],
             "mask": ["./data/train/labels/"],
-            "json": []
+            "json": ["./data/train/labels_json/"]
         },
         "val": {
             "image": ["./data/val/images/"],
             "mask": ["./data/val/labels/"],
-            "json": []
+            "json": ["./data/val/labels_json/"]
         },
         "test": {
             "image": ["./data/test/images/"],
@@ -99,7 +106,7 @@ def default_config():
         }
     }
     exp_data_paths = {set:
-        {key: [Path(element).expanduser() for element in value]
+        {key: [Path(os.path.join(WORK, element)) for element in value]
         for key, value in paths.items()}
         for set, paths in data_paths.items()
     }
@@ -177,7 +184,9 @@ def training_loaders(norm_params: dict, exp_data_paths: dict, global_params: dic
     :return loaders: A dictionary with the loaders.
     """
     loaders = {}
-    for set, images, masks in zip(['train', 'val'],
+    t = tqdm(['train', 'val'])
+    t.set_description("Loading data")
+    for set, images, masks in zip(t,
                                   [exp_data_paths['train']['image'], exp_data_paths['val']['image']],
                                   [exp_data_paths['train']['mask'], exp_data_paths['val']['mask']]):
         dataset = pprocessing.TrainingDataset(
@@ -186,9 +195,12 @@ def training_loaders(norm_params: dict, exp_data_paths: dict, global_params: dic
                 pprocessing.Rescale(global_params['img_size']),
                 pprocessing.Normalize(norm_params['mean'], norm_params['std'])])
         )
-        loaders[set+'_loader'] = DataLoader(dataset, batch_size=global_params['batch_size'],
-                                            shuffle=True, num_workers=2, pin_memory=True,
-                                            collate_fn=utils.DLACollateFunction())
+        loaders[set] = DataLoader(dataset, num_workers=2, pin_memory=True,
+                                  batch_sampler=utils.Sampler(dataset, bin_size=global_params["bin_size"],
+                                                              batch_size=global_params["batch_size"],
+                                                              nb_params=global_params["no_of_params"]), 
+                                  collate_fn=utils.DLACollateFunction())
+        logging.info(f"{set}: Found {len(dataset)} images")
     return loaders
 
 

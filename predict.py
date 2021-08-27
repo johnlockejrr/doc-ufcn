@@ -86,7 +86,7 @@ def run(prediction_path: str, log_path: str, img_size: int, colors: list,
                     os.makedirs(os.path.join(log_path, prediction_path, set, data['dataset'][0]),
                                 exist_ok=True)
                     seen_datasets.append(data['dataset'][0])
-                    
+
                 # Generate and save the predictions.
                 output = net(data['image'].to(device).float())
                 input_size = [element.numpy()[0] for element in data['size'][:2]]

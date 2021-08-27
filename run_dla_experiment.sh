@@ -54,6 +54,3 @@ echo
 echo "Experiments done!"
 
 rm -r $TMP_DIR
-
-
-
