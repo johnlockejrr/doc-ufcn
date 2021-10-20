@@ -1,0 +1,44 @@
+stages:
+  - lint
+  - test
+
+test:
+  image: python:3.8
+
+  stage: test
+  cache:
+    paths:
+      - .cache/pip
+
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+  before_script:
+    - pip install tox
+
+  except:
+    - schedules
+
+  script:
+    - tox
+
+lint:
+  image: python:3
+
+  cache:
+    paths:
+      - .cache/pip
+      - .cache/pre-commit
+
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    PRE_COMMIT_HOME: "$CI_PROJECT_DIR/.cache/pre-commit"
+
+  before_script:
+    - pip install pre-commit
+
+  except:
+    - schedules
+
+  script:
+    - pre-commit run -a
