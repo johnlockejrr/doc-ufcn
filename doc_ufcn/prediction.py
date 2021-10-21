@@ -45,7 +45,7 @@ def compute_confidence(region, probs):
     by the number of pixels of the region.
     :param region: The region to compute the confidence.
     :param probs: The probability map used to compute the confidence score.
-    :return: The mean of the probabilities of the region.
+    :return: The mean of the region probabilities.
     """
     mask = np.zeros(probs.shape)
     cv2.drawContours(mask, [region], 0, 1, -1)
@@ -57,9 +57,9 @@ def resize_predicted_polygons(polygons, original_image_size, model_input_size, p
     """
     Resize the detected polygons to the original input image size.
     :param polygons: The polygons to resize.
-    :param original_image_size: The original input image size.
+    :param original_image_size: The original input size.
     :param model_input_size: The network input size.
-    :param padding: The padding of the input image.
+    :param padding: The padding applied to the input image.
     :return polygons: The resized detected polygons.
     """
     # Compute the small size image.

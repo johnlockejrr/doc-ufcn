@@ -17,6 +17,12 @@ logging.basicConfig(
 
 
 class DocUFCN:
+    """
+    The DocUFCN class is used to apply the Doc-UFCN model.
+    The class initializes useful parameters: number of classes,
+    model input size and the device.
+    """
+
     def __init__(self, no_of_classes, model_input_size, device):
         """
         Constructor of the DocUFCN class.
@@ -44,7 +50,6 @@ class DocUFCN:
         :param model_path: Path to the model.
         :param mean: The mean value to use to normalize the input image.
         :param std: The std value to use to normalize the input image.
-        :return net: The loaded model.
         """
         net = model.DocUFCNModel(self.no_of_classes)
         net.to(self.device)
@@ -87,6 +92,14 @@ class DocUFCN:
         mask_output=False,
         overlap_output=False,
     ):
+        """
+        Run prediction on an input image.
+        :param input_image: The image to predict.
+        :param min_cc: The threshold to remove small connected components.
+        :param raw_output: Return the raw probabilities.
+        :param mask_output: Return a mask with the detected objects.
+        :param overlap_output: Return the detected objects drawn over the input image.
+        """
         self.net.eval()
 
         assert isinstance(

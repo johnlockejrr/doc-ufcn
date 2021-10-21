@@ -54,7 +54,7 @@ def test_json():
 )
 def test_DocUFCN_wrong_no_of_classes(no_of_classes):
     """
-    Test of the DocUFCN init function: check that a wrong number of classes raise an exception.
+    Test of the DocUFCN init function: check that a wrong number of classes raises an exception.
     """
     with pytest.raises(AssertionError):
         main.DocUFCN(no_of_classes, 768, "cpu")
@@ -89,7 +89,7 @@ def test_DocUFCN_correct_no_of_classes(no_of_classes):
 )
 def test_DocUFCN_wrong_input_size(input_size):
     """
-    Test of the DocUFCN init function: check that a wrong input size raise an exception.
+    Test of the DocUFCN init function: check that a wrong input size raises an exception.
     """
     with pytest.raises(AssertionError):
         main.DocUFCN(2, input_size, "cpu")
@@ -104,7 +104,7 @@ def test_DocUFCN_wrong_input_size(input_size):
 )
 def test_DocUFCN_correct_input_size(input_size):
     """
-    Test of the DocUFCN init function: check that object is correctly created.
+    Test of the DocUFCN init function: check that the object is correctly created.
     """
     model = main.DocUFCN(2, input_size, "cpu")
     assert model.no_of_classes == 2

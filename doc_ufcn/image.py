@@ -13,6 +13,7 @@ def resize(input_image, network_size, padding):
     input size. Pad the image such that it is divisible by 8.
     :param input_image: The input image to resize.
     :param network_size: The input size of the model.
+    :param padding: The value to use as padding.
     :return: The resized input image and the padding sizes.
     """
     old_size = input_image.shape[:2]
@@ -48,7 +49,7 @@ def preprocess_image(input_image, model_input_size, mean, std):
     :param model_input_size: The size of the model input.
     :param mean: The mean value used to normalize the image.
     :param std: The standard deviation used to normalize the image.
-    :return: The resized, normalized input tensor.
+    :return: The resized, normalized and padded input tensor.
     """
     # Resize the image
     resized_image, padding = resize(input_image, model_input_size, padding=mean)

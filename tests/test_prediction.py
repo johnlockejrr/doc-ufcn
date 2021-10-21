@@ -388,7 +388,7 @@ def test_resize_predicted_polygons(
 def test_get_prediction_image(polygons, image_size, image, expected_image):
     """
     Test of the get_prediction_image function.
-    Check that the polygons are correctly drawn on mask or input image.
+    Check that the polygons are correctly drawn over a mask or an input image.
     """
     if image_size is None:
         image_size = image.shape
