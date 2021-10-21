@@ -23,7 +23,7 @@ test:
     - tox
 
 lint:
-  image: python:3
+  image: python:3.8
 
   cache:
     paths:
