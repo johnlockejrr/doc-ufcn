@@ -100,13 +100,18 @@ def get_prediction_image(polygons, image_size, image=None):
     :param image_size: The original input image size.
     :param image: The input image.
     """
-    thickness = 2
     if image is None:
-        image = np.zeros((image_size[0], image_size[1]))
+        mask = np.zeros((image_size[0], image_size[1]))
         thickness = -1
+    else:
+        mask = image
+        thickness = 2
+
     for channel in polygons.keys():
+        color = int(channel * 255 / len(polygons.keys()))
+        if image is not None:
+            color = [0, color, 0]
+        # Draw polygons.
         for polygon in polygons[channel]:
-            cv2.drawContours(
-                image, [np.array(polygon["polygon"])], 0, channel, thickness
-            )
-    return image
+            cv2.drawContours(mask, [np.array(polygon["polygon"])], 0, color, thickness)
+    return mask

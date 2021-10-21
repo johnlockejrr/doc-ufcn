@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import numpy as np
@@ -470,7 +471,7 @@ def test_preprocess_image(
     expected_preprocessed_image = np.array(
         expected_preprocessed_image, dtype=np.float32
     )
-    # assert preprocessed_image.shape == (1, *expected_preprocessed_image.shape)
+    assert preprocessed_image.shape == (1, *expected_preprocessed_image.shape)
     # Check the values.
     preprocessed_image = np.round(preprocessed_image[0], 4)
     assert np.array_equal(
