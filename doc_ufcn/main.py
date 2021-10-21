@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import os
 
 import cv2
 import numpy as np
@@ -26,9 +27,15 @@ class DocUFCN:
         """
         super(DocUFCN, self).__init__()
         self.no_of_classes = no_of_classes
-        assert self.no_of_classes > 0
-        assert isinstance(self.no_of_classes, int)
+        assert isinstance(
+            self.no_of_classes, int
+        ), "Number of classes must be an integer"
+        assert self.no_of_classes > 0, "Number of classes must be positive"
         self.model_input_size = model_input_size
+        assert isinstance(
+            self.model_input_size, int
+        ), "Model input size must be an integer"
+        assert self.model_input_size > 0, "Model input size must be positive"
         self.device = device
 
     def load(self, model_path, mean, std):
@@ -42,9 +49,8 @@ class DocUFCN:
         net = model.DocUFCNModel(self.no_of_classes)
         net.to(self.device)
         # Restore the model weights.
-        checkpoint = torch.load(
-            model_path, map_location=self.device
-        )  # TODO Check that the model exists
+        assert os.path.isfile(model_path)
+        checkpoint = torch.load(model_path, map_location=self.device)
         loaded_checkpoint = {}
         for key in checkpoint["state_dict"].keys():
             loaded_checkpoint[key.replace("module.", "")] = checkpoint["state_dict"][
@@ -54,6 +60,24 @@ class DocUFCN:
         logging.debug(f"Loaded model {model_path}")
         self.net = net
         self.mean, self.std = mean, std
+        assert isinstance(
+            mean, list
+        ), "mean must be a list of 3 integers (RGB) between 0 and 255"
+        assert (
+            len(mean) == 3
+        ), "mean must be a list of 3 integers (RGB) between 0 and 255"
+        assert all(
+            isinstance(element, int) and element >= 0 and element <= 255
+            for element in mean
+        ), "mean must be a list of 3 integers (RGB) between 0 and 255"
+        assert isinstance(
+            std, list
+        ), "std must be a list of 3 integers (RGB) between 0 and 255"
+        assert len(std) == 3, "std must be a list of 3 integers (RGB) between 0 and 255"
+        assert all(
+            isinstance(element, int) and element >= 0 and element <= 255
+            for element in std
+        ), "std must be a list of 3 integers (RGB) between 0 and 255"
 
     def predict(
         self,
@@ -64,13 +88,14 @@ class DocUFCN:
         overlap_output=False,
     ):
         self.net.eval()
-        input_size = (input_image.shape[0], input_image.shape[1])
 
+        assert isinstance(
+            input_image, np.ndarray
+        ), "Input image must be an np.array in RGB"
+        input_size = (input_image.shape[0], input_image.shape[1])
         input_image = np.asarray(input_image)
         if len(input_image.shape) < 3:
-            input_image = cv2.cvtColor(
-                input_image, cv2.COLOR_GRAY2RGB
-            )  # TODO Image should be in RGB
+            input_image = cv2.cvtColor(input_image, cv2.COLOR_GRAY2RGB)
 
         # Preprocess the input image.
         input_tensor, padding = image.preprocess_image(
@@ -88,6 +113,8 @@ class DocUFCN:
             )
 
         # Remove the small connected components.
+        assert isinstance(min_cc, int), "min_cc must be a positive integer"
+        assert min_cc > 0, "min_cc must be a positive integer"
         if min_cc > 0:
             for channel in range(1, self.no_of_classes):
                 predicted_polygons[channel] = [
@@ -118,4 +145,6 @@ class DocUFCN:
         if not raw_output:
             pred = None
 
-        return predicted_polygons, pred, mask * 255 / np.max(mask), overlap
+        if mask is not None:
+            return predicted_polygons, pred, mask * 255 / np.max(mask), overlap
+        return predicted_polygons, pred, mask, overlap

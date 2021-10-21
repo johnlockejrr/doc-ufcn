@@ -14,7 +14,9 @@ from doc_ufcn import model
         # 2 classes
         (2, 4096322),
         # Wrong number of classes
-        (2.5, "a"),
+        (2.5, None),
+        # Wrong number of classes
+        (-1, None),
         # 5 classes
         (5, 4098053),
     ],
@@ -26,6 +28,9 @@ def test_DocUFCNModel(no_of_classes, expected_no_of_params):
     """
     if isinstance(no_of_classes, float):
         with pytest.raises(ValueError):
+            net = model.DocUFCNModel(no_of_classes)
+    elif no_of_classes < 0:
+        with pytest.raises(RuntimeError):
             net = model.DocUFCNModel(no_of_classes)
     else:
         net = model.DocUFCNModel(no_of_classes)
