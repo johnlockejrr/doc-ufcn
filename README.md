@@ -4,9 +4,9 @@ This library contains a public implementation of Doc-UFCN, a fully convolutional
 
 The model is designed to run various Document Layout Analysis (DLA) tasks like the text line detection or page segmentation.
 
-[Model schema](/resources/UFCN.png)
+![Model schema](/resources/UFCN.png)
 
-This library can be used by anyone that has an already trained Doc-UFCN model and want to apply it easily on document images. With only a few lines of code, the trained model is loaded, applied to an image and the detected objects along with some visualizations are obtained.
+This library can be used by anyone that has an already trained Doc-UFCN model and want to easily apply it to document images. With only a few lines of code, the trained model is loaded, applied to an image and the detected objects along with some visualizations are obtained.
 
 ### Getting started
 
@@ -18,7 +18,7 @@ pip install teklia-doc-ufcn
 
 ### Usage
 
-To apply Doc-UFCN to an image, first add a few imports and load an image. Note that the image should be in RGB.
+To apply Doc-UFCN to an image, one need to first add a few imports and to load an image. Note that the image should be in RGB.
 ```
 import cv2
 from doc_ufcn.main import DocUFCN
@@ -26,7 +26,7 @@ from doc_ufcn.main import DocUFCN
 image = cv2.cvtColor(cv2.imread(IMAGE_PATH), cv2.COLOR_BGR2RGB)
 ```
 
-Then you can initialize and load the trained model with the parameters used during training. The number of classes should include the background that must have been put as the first channel during training.
+Then one can initialize and load the trained model with the parameters used during training. The number of classes should include the background that must have been put as the first channel during training.
 ```
 nb_of_classes = 2
 mean = [0, 0, 0]
@@ -38,7 +38,7 @@ model = DocUFCN(nb_of_classes, input_size, 'cpu')
 model.load(model_path, mean, std)
 ```
 
-To run the inference on a GPU, you can replace `cpu` by the name of your GPU. In the end, run the prediction:
+To run the inference on a GPU, one can replace `cpu` by the name of the GPU. In the end, one can run the prediction:
 ```
 detected_polygons = model.predict(image)
 ```
@@ -59,14 +59,20 @@ When running inference on an image, the detected objects are returned as in the 
 }
 ```
 
-In addition, one can directly retrieve the raw probabilities output by the model using `raw_output=True`. A torch tensor of size `(nb_of_classes, height, width)` is then returned and can be used for further processing.
+In addition, one can directly retrieve the raw probabilities output by the model using `model.predict(image, raw_output=True)`. A tensor of size `(nb_of_classes, height, width)` is then returned along with the polygons and can be used for further processing.
 
 Lastly, two visualizations can be returned by the model:
-  * A mask of the detected objects;
-  * An overlap of the detected objects on the input image.
+  * A mask of the detected objects `mask_output=True`;
+  * An overlap of the detected objects on the input image `overlap_output=True`.
 
-[Mask of detected objects](/resources/mask.png)
-[Overlap with the detected objects](/resources/overlap.png)
+
+By default, only the detected polygons are returned, to return the four outputs, one can use:
+```
+detected_polygons, probabilities, mask, overlap = model.predict(image, raw_output, mask_output, overlap_output)
+```
+
+![Mask of detected objects](/resources/mask.png)
+![Overlap with the detected objects](/resources/overlap.png)
 
 ### Cite us!
 
