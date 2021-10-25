@@ -71,8 +71,8 @@ By default, only the detected polygons are returned, to return the four outputs,
 detected_polygons, probabilities, mask, overlap = model.predict(image, raw_output, mask_output, overlap_output)
 ```
 
-![Mask of detected objects](/resources/mask.png)
-![Overlap with the detected objects](/resources/overlap.png)
+![Mask of detected objects](resources/mask.png)
+![Overlap with the detected objects](resources/overlap.png)
 
 ### Cite us!
 
