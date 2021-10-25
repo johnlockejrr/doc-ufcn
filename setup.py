@@ -18,6 +18,8 @@ setup(
     name=MODULE,
     version=open("VERSION").read(),
     description="Doc-UFCN",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     author="Mélodie Boillet",
     author_email="boillet@teklia.com",
     install_requires=parse_requirements(),
