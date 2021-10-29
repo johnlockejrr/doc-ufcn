@@ -78,8 +78,10 @@ class Sampler(torch.utils.data.Sampler):
         self.vertical = {index: image['size'][1] for index, image in enumerate(data) if image['size'][0] > image['size'][1]}
         self.horizontal = {index: image['size'][0] for index, image in enumerate(data) if image['size'][0] <= image['size'][1]}
 
-        self.buckets = [create_buckets(self.vertical, self.bin_size), create_buckets(self.horizontal, self.bin_size)]
-
+        self.buckets = [
+            create_buckets(self.vertical, self.bin_size) if len(self.vertical) > 0 else {},
+            create_buckets(self.horizontal, self.bin_size) if len(self.horizontal) > 0 else {},
+        ]
 
     def __len__ (self):
         return (len(self.vertical) + len(self.horizontal))
