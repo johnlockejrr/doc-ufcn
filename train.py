@@ -101,7 +101,7 @@ def run_one_epoch(loader, params: dict, writer, epochs: list,
             params['scaler'].step(params['optimizer'])
             params['scaler'].update()
             # Display prediction images in Tensorboard all 100 mini-batches.
-            if index == 0 or index % 100 == 99:
+            if index == 1 or index % 100 == 99:
                 tr_utils.display_training(output, data['image'], data['mask'], writer,
                                           epoch, norm_params)
 
