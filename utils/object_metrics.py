@@ -93,9 +93,9 @@ def compute_rank_scores(labels: list, predictions: list, classes: list) -> dict:
         channel_scores = __rank_predicted_objects(labels[channel], predictions[channel])
         for iou in range(50, 100, 5):
             rank_scores = {
-                rank: {'True': 0, 'Total': 0} for rank in range(100, -5, -5)
+                rank: {'True': 0, 'Total': 0} for rank in range(95, -5, -5)
             }
-            for rank in range(100, -5, -5):
+            for rank in range(95, -5, -5):
                 rank_objects = list(filter(
                     lambda item: item[0] >= rank/100, channel_scores))
                 rank_scores[rank]['True'] = sum(x[1] > iou / 100
@@ -115,7 +115,7 @@ def update_rank_scores(global_scores: dict, image_scores: dict, classes: list) -
     """
     for channel in classes:
         for iou in range(50, 100, 5):
-            for rank in range(100, -5, -5):
+            for rank in range(95, -5, -5):
                 global_scores[channel][iou][rank]['True'] += \
                     image_scores[channel][iou][rank]['True']
                 global_scores[channel][iou][rank]['Total'] += \
@@ -131,7 +131,7 @@ def __init_results() -> dict:
     """
     return {
         iou: {
-            rank: 0 for rank in range(100, -5, -5)
+            rank: 0 for rank in range(95, -5, -5)
         } for iou in range(50, 100, 5)
     }
 
@@ -182,7 +182,7 @@ def get_mean_results(global_scores: dict, true_gt: dict, classes: list,
         fscores = __init_results()
         aps = {iou: 0 for iou in range(50, 100, 5)}
         for iou in range(50, 100, 5):
-            for rank in range(100, -5, -5):
+            for rank in range(95, -5, -5):
                 true_predicted = global_scores[channel][iou][rank]['True']
                 predicted = global_scores[channel][iou][rank]['Total']
 
