@@ -1,6 +1,6 @@
 stages:
-  - lint
   - test
+  - build
 
 test:
   image: python:3.8
@@ -24,6 +24,7 @@ test:
 
 lint:
   image: python:3.8
+  stage: test
 
   cache:
     paths:
