@@ -1,6 +1,6 @@
 stages:
-  - lint
   - test
+  - build
 
 test:
   image: python:3.8
@@ -24,6 +24,7 @@ test:
 
 lint:
   image: python:3.8
+  stage: test
 
   cache:
     paths:
@@ -42,3 +43,18 @@ lint:
 
   script:
     - pre-commit run -a
+
+docker-build:
+  stage: build
+  image: docker:19.03.1
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_HOST: tcp://docker:2375/
+
+  except:
+    - schedules
+
+  script:
+    - ci/build.sh
