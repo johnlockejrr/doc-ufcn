@@ -13,7 +13,7 @@ This library can be used by anyone that has an already trained Doc-UFCN model an
 To use Doc-UFCN in your own scripts, install it using pip:
 
 ```console
-pip install teklia-doc-ufcn
+pip install doc-ufcn
 ```
 
 ### Usage
