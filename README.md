@@ -67,8 +67,10 @@ Lastly, two visualizations can be returned by the model:
 
 
 By default, only the detected polygons are returned, to return the four outputs, one can use:
-```
-detected_polygons, probabilities, mask, overlap = model.predict(image, raw_output, mask_output, overlap_output)
+```python
+detected_polygons, probabilities, mask, overlap = model.predict(
+    image, raw_output, mask_output, overlap_output
+)
 ```
 
 ![Mask of detected objects](https://gitlab.com/teklia/doc-ufcn/-/raw/main/resources/mask.png)
@@ -80,7 +82,8 @@ If you want to cite us in one of your works, please use the following citation.
 ```latex
 @inproceedings{boillet2020,
     author = {Boillet, Mélodie and Kermorvant, Christopher and Paquet, Thierry},
-    title = {{Multiple Document Datasets Pre-training Improves Text Line Detection With Deep Neural Networks}},
+    title = {{Multiple Document Datasets Pre-training Improves Text Line Detection With
+              Deep Neural Networks}},
     booktitle = {2020 25th International Conference on Pattern Recognition (ICPR)},
     year = {2021},
     month = Jan,
