@@ -1,6 +1,7 @@
 stages:
   - test
   - build
+  - release
 
 test:
   image: python:3.8
@@ -58,3 +59,30 @@ docker-build:
 
   script:
     - ci/build.sh
+
+deploy-pypi:
+  stage: release
+  image: python:3.8
+  only:
+    - tags
+
+  environment:
+    name: pypi
+    url: https://pypi.org/project/doc-ufcn
+
+  before_script:
+    - pip install twine
+
+  script:
+    - python setup.py sdist bdist_wheel
+    - twine upload dist/*
+
+release-notes:
+  stage: release
+  image: registry.gitlab.com/teklia/devops:latest
+
+  only:
+    - tags
+
+  script:
+    - devops release-notes
