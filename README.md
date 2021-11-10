@@ -4,7 +4,7 @@ This Python 3 library contains a public implementation of Doc-UFCN, a fully conv
 
 The model is designed to run various Document Layout Analysis (DLA) tasks like the text line detection or page segmentation.
 
-![Model schema](https://gitlab.com/teklia/doc-ufcn/-/blob/main/resources/UFCN.png)
+![Model schema](https://gitlab.com/teklia/doc-ufcn/-/raw/main/resources/UFCN.png)
 
 This library can be used by anyone that has an already trained Doc-UFCN model and want to easily apply it to document images. With only a few lines of code, the trained model is loaded, applied to an image and the detected objects along with some visualizations are obtained.
 
@@ -71,8 +71,8 @@ By default, only the detected polygons are returned, to return the four outputs,
 detected_polygons, probabilities, mask, overlap = model.predict(image, raw_output, mask_output, overlap_output)
 ```
 
-![Mask of detected objects](https://gitlab.com/teklia/doc-ufcn/-/blob/main/resources/mask.png)
-![Overlap with the detected objects](https://gitlab.com/teklia/doc-ufcn/-/blob/main/resources/overlap.png)
+![Mask of detected objects](https://gitlab.com/teklia/doc-ufcn/-/raw/main/resources/mask.png)
+![Overlap with the detected objects](https://gitlab.com/teklia/doc-ufcn/-/raw/main/resources/overlap.png)
 
 ### Cite us!
 
