@@ -4,7 +4,7 @@ This Python 3 library contains a public implementation of Doc-UFCN, a fully conv
 
 The model is designed to run various Document Layout Analysis (DLA) tasks like the text line detection or page segmentation.
 
-![Model schema](resources/UFCN.png)
+![Model schema](https://gitlab.com/teklia/doc-ufcn/-/raw/main/resources/UFCN.png)
 
 This library can be used by anyone that has an already trained Doc-UFCN model and want to easily apply it to document images. With only a few lines of code, the trained model is loaded, applied to an image and the detected objects along with some visualizations are obtained.
 
@@ -13,7 +13,7 @@ This library can be used by anyone that has an already trained Doc-UFCN model an
 To use Doc-UFCN in your own scripts, install it using pip:
 
 ```console
-pip install teklia-doc-ufcn
+pip install doc-ufcn
 ```
 
 ### Usage
@@ -67,12 +67,14 @@ Lastly, two visualizations can be returned by the model:
 
 
 By default, only the detected polygons are returned, to return the four outputs, one can use:
-```
-detected_polygons, probabilities, mask, overlap = model.predict(image, raw_output, mask_output, overlap_output)
+```python
+detected_polygons, probabilities, mask, overlap = model.predict(
+    image, raw_output, mask_output, overlap_output
+)
 ```
 
-![Mask of detected objects](resources/mask.png)
-![Overlap with the detected objects](resources/overlap.png)
+![Mask of detected objects](https://gitlab.com/teklia/doc-ufcn/-/raw/main/resources/mask.png)
+![Overlap with the detected objects](https://gitlab.com/teklia/doc-ufcn/-/raw/main/resources/overlap.png)
 
 ### Cite us!
 
@@ -80,7 +82,8 @@ If you want to cite us in one of your works, please use the following citation.
 ```latex
 @inproceedings{boillet2020,
     author = {Boillet, Mélodie and Kermorvant, Christopher and Paquet, Thierry},
-    title = {{Multiple Document Datasets Pre-training Improves Text Line Detection With Deep Neural Networks}},
+    title = {{Multiple Document Datasets Pre-training Improves Text Line Detection With
+              Deep Neural Networks}},
     booktitle = {2020 25th International Conference on Pattern Recognition (ICPR)},
     year = {2021},
     month = Jan,

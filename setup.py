@@ -5,8 +5,6 @@ from pathlib import Path
 
 from setuptools import find_packages, setup
 
-MODULE = "doc_ufcn"
-
 
 def parse_requirements():
     path = Path(__file__).parent.resolve() / "requirements.txt"
@@ -15,7 +13,7 @@ def parse_requirements():
 
 
 setup(
-    name=MODULE,
+    name="doc-ufcn",
     version=open("VERSION").read(),
     description="Doc-UFCN",
     long_description=open("README.md").read(),
