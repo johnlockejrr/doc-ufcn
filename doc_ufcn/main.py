@@ -44,15 +44,17 @@ class DocUFCN:
         assert self.model_input_size > 0, "Model input size must be positive"
         self.device = device
 
-    def load(self, model_path, mean, std):
+    def load(self, model_path, mean, std, mode="eval"):
         """
         Load a trained model.
         :param model_path: Path to the model.
         :param mean: The mean value to use to normalize the input image.
         :param std: The std value to use to normalize the input image.
+        :param mode: The mode to load the model (train or eval).
         """
         net = model.DocUFCNModel(self.no_of_classes)
         net.to(self.device)
+        net.train() if mode == "train" else net.eval()
         # Restore the model weights.
         assert os.path.isfile(model_path)
         checkpoint = torch.load(model_path, map_location=self.device)

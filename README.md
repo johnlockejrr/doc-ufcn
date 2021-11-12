@@ -26,7 +26,7 @@ from doc_ufcn.main import DocUFCN
 image = cv2.cvtColor(cv2.imread(IMAGE_PATH), cv2.COLOR_BGR2RGB)
 ```
 
-Then one can initialize and load the trained model with the parameters used during training. The number of classes should include the background that must have been put as the first channel during training.
+Then one can initialize and load the trained model with the parameters used during training. The number of classes should include the background that must have been put as the first channel during training. By default, the model is loaded in evaluation mode. To load it in training mode, use `mode="train"`.
 ```python
 nb_of_classes = 2
 mean = [0, 0, 0]
@@ -35,7 +35,7 @@ input_size = 768
 model_path = "trained_model.pth"
 
 model = DocUFCN(nb_of_classes, input_size, 'cpu')
-model.load(model_path, mean, std)
+model.load(model_path, mean, std, mode="eval")
 ```
 
 To run the inference on a GPU, one can replace `cpu` by the name of the GPU. In the end, one can run the prediction:
