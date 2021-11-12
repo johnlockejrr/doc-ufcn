@@ -102,8 +102,6 @@ class DocUFCN:
         :param mask_output: Return a mask with the detected objects.
         :param overlap_output: Return the detected objects drawn over the input image.
         """
-        self.net.eval()
-
         assert isinstance(
             input_image, np.ndarray
         ), "Input image must be an np.array in RGB"
