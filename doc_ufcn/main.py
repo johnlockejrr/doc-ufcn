@@ -54,7 +54,14 @@ class DocUFCN:
         """
         net = model.DocUFCNModel(self.no_of_classes)
         net.to(self.device)
-        net.train() if mode == "train" else net.eval()
+
+        if mode == "train":
+            net.train()
+        elif mode == "eval":
+            net.eval()
+        else:
+            raise Exception("Unsupported mode")
+
         # Restore the model weights.
         assert os.path.isfile(model_path)
         checkpoint = torch.load(model_path, map_location=self.device)
