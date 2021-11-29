@@ -5,8 +5,17 @@ import os
 import requests
 import yaml
 
+assert os.environ.get("CI"), "Can only run on Gitlab CI"
+TOKEN = os.environ.get("CI_JOB_TOKEN")
+assert TOKEN, "Missing CI token"
+PROJECT_ID = os.environ.get("CI_PROJECT_ID")
+assert PROJECT_ID, "Missing CI project ID"
+
 
 def md5sum(path):
+    """
+    Calc the MD5 hash of a binary file
+    """
     with open(path, mode="rb") as f:
         d = hashlib.md5()
         while True:
@@ -17,22 +26,39 @@ def md5sum(path):
         return d.hexdigest()
 
 
-def upload(path, name, version):
-    token = os.environ.get("CI_JOB_TOKEN")
-    assert token, "Missing CI token"
-    project_id = os.environ.get("CI_PROJECT_ID")
-    assert project_id, "Missing CI project ID"
-
+def remote_parameters(name, version):
+    """
+    Fetch the parameters of a pre-existing model
+    stored on the package registry
+    """
     headers = {
-        "JOB-TOKEN": token,
+        "JOB-TOKEN": TOKEN,
+    }
+    url = f"https://gitlab.com/api/v4/projects/{PROJECT_ID}/packages/generic/{name}/{version}/parameters.yml"
+    r = requests.get(url, headers=headers)
+    if not r.ok:
+        # Normal case where the model is not available
+        if r.status_code == 404:
+            return
+        else:
+            r.raise_for_status()
+
+    # Parse the parameters as YAML
+    return yaml.safe_load(r.content)
+
+
+def upload(path, name, version):
+    """
+    Upload any file on the Gitlab generic package registry
+    """
+    headers = {
+        "JOB-TOKEN": TOKEN,
     }
     filename = os.path.basename(path)
-    url = f"https://gitlab.com/api/v4/projects/{project_id}/packages/generic/{name}/{version}/{filename}"
-    print(url)
-    r = requests.post(url, headers=headers, data=open(path, "rb"))
-    print(r)
-    print(r.content)
+    url = f"https://gitlab.com/api/v4/projects/{PROJECT_ID}/packages/generic/{name}/{version}/{filename}"
+    r = requests.put(url, headers=headers, data=open(path, "rb"))
     r.raise_for_status()
+    print(f"Uploaded {path}")
 
 
 def publish_model(model_name):
@@ -49,14 +75,16 @@ def publish_model(model_name):
     assert version, f"Missing version in {parameters_path}"
     print(f"Publishing {model_name} @ {version}")
 
-    # Hash model
-    model_hash = md5sum(model_path)
+    # Hash model and update the parameters file
+    parameters["md5sum"] = md5sum(model_path)
 
-    # Retrieve remote parameters to check for hash
+    # Retrieve remote parameters to check if they differ
+    if parameters == remote_parameters(model_name, version):
+        print("Model is already available, skipping.")
+        return
 
     # Add version to the parameters
     with open(parameters_path, "w") as f:
-        parameters["md5sum"] = model_hash
         yaml.safe_dump(parameters, f)
 
     # Upload the model on generic package registry
@@ -65,6 +93,5 @@ def publish_model(model_name):
 
 
 if __name__ == "__main__":
-    assert os.environ.get("CI"), "Can only run on Gitlab CI"
     for p in os.listdir("models"):
         publish_model(p)
