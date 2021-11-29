@@ -31,8 +31,8 @@ def upload(path, name, version):
     print(url)
     r = requests.post(url, headers=headers, data=open(path, "rb"))
     print(r)
-    r.raise_for_status()
     print(r.content)
+    r.raise_for_status()
 
 
 def publish_model(model_name):
