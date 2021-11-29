@@ -61,11 +61,11 @@ docker-build:
     - ci/build.sh
 
 deploy-models:
-  stage: build # release
+  stage: release
   image: python:3.8
 
-  # only:
-  #  - main
+  only:
+   - main
 
   before_script:
     - pip install pyyaml requests
