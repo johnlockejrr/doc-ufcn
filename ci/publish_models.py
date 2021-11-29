@@ -62,6 +62,11 @@ def upload(path, name, version):
 
 
 def publish_model(model_name):
+    """
+    Publish a single model on the Gitlab generic registry
+    - will publish model.pth & parameters.yml
+    - only if they are not already published for that version & model hash
+    """
 
     # Check required files are present
     model_path = os.path.join("models", model_name, "model.pth")
