@@ -60,6 +60,19 @@ docker-build:
   script:
     - ci/build.sh
 
+deploy-models:
+  stage: build # release
+  image: python:3.8
+
+  # only:
+  #  - main
+
+  before_script:
+    - pip install pyyaml requests
+
+  script:
+    - python ci/publish_models.py
+
 deploy-pypi:
   stage: release
   image: python:3.8
