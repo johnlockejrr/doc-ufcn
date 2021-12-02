@@ -1,5 +1,5 @@
 ---
-version: 0.0.1
+version: 0.0.2
 parameters:
   mean: [190, 182, 165]
   std: [48, 48, 45]
