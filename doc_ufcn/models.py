@@ -7,68 +7,63 @@ import os
 import requests
 import yaml
 
+from doc_ufcn.utils import md5sum
+
 logging.basicConfig(
     format="[%(levelname)s] %(message)s",
     level=logging.INFO,
 )
 
-PROJECT_ID = "30605923"
+# Gitlab project: https://gitlab.com/teklia/doc-ufcn
+GITLAB_PROJECT_ID = 30605923
 
 
 def download_model(name, version=None):
 
-    dir_path = os.path.join("doc-ufcn", "models", name)
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
+    base_dir = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+    dir_path = os.path.join(base_dir, "doc-ufcn", "models", name)
+    os.makedirs(dir_path, exist_ok=True)
+
     model_path = os.path.join(dir_path, "model.pth")
     parameters_path = os.path.join(dir_path, "parameters.yml")
 
-    # Check model name.
-    packages = requests.get(
-        f"https://gitlab.com/api/v4/projects/{PROJECT_ID}/packages/"
-    )
-    available_models = set(
-        [package["name"] for package in yaml.safe_load(packages.content)]
-    )
-    assert (
-        name in available_models
-    ), f"Model not in available models: {list(available_models)}"
-
-    # Check model version. If None, get latest version.
-    packages = requests.get(
-        f"https://gitlab.com/api/v4/projects/{PROJECT_ID}/packages/?package_name={name}&order_by=version&sort=desc"
-    )
+    # If no version given, get latest version.
     if version is None:
-        latest_package = yaml.safe_load(packages.content)[0]
-        version = latest_package["version"]
-    else:
-        available_versions = set(
-            [package["version"] for package in yaml.safe_load(packages.content)]
+        packages = requests.get(
+            f"https://gitlab.com/api/v4/projects/{GITLAB_PROJECT_ID}/packages/?package_name={name}&order_by=version&sort=desc"
         )
-        assert (
-            version in available_versions
-        ), f"Not existing version: {list(available_versions)}"
+        packages.raise_for_status()
+        packages = yaml.safe_load(packages.content)
+        assert len(packages) > 0, f"Model {name} not available"
+        version = packages[0]["version"]
+
+    # Download the parameters.
+    parameters = requests.get(
+        f"https://gitlab.com/api/v4/projects/{GITLAB_PROJECT_ID}/packages/generic/{name}/{version}/parameters.yml"
+    )
+    parameters.raise_for_status()
+    logging.info(f"Loaded parameters: {name} (version {version})")
+    parameters = yaml.safe_load(parameters.content)
+
+    # Check if model already in cache. Return the cached model and parameters.
+    if os.path.isfile(model_path) and os.path.isfile(parameters_path):
+        if md5sum(model_path) == parameters["md5sum"]:
+            with open(parameters_path, "r") as f:
+                params = yaml.safe_load(f)
+            logging.info(f"Loaded model from cache: {name} (version {version})")
+            return model_path, params["parameters"]
+
+    # Save the parameters and download the model if not in cache.
+    with open(parameters_path, "w") as f:
+        yaml.safe_dump(parameters, f)
 
     # Download the model and save it.
     model = requests.get(
-        f"https://gitlab.com/api/v4/projects/{PROJECT_ID}/packages/generic/{name}/{version}/model.pth"
+        f"https://gitlab.com/api/v4/projects/{GITLAB_PROJECT_ID}/packages/generic/{name}/{version}/model.pth"
     )
+    model.raise_for_status()
     logging.info(f"Loaded model: {name} (version {version})")
-    with open(model_path, "wb") as file:
-        file.write(model.content)
+    with open(model_path, "wb") as f:
+        f.write(model.content)
 
-    # Download the parameters and save them.
-    parameters = requests.get(
-        f"https://gitlab.com/api/v4/projects/{PROJECT_ID}/packages/generic/{name}/{version}/parameters.yml"
-    )
-    logging.info(f"Loaded parameters: {name} (version {version})")
-    parameters = yaml.safe_load(parameters.content)
-    with open(parameters_path, "w") as file:
-        yaml.safe_dump(parameters, file)
-
-    parameters = {
-        list(parameter.keys())[0]: list(parameter.values())[0]
-        for parameter in parameters["parameters"]
-    }
-
-    return model_path, parameters
+    return model_path, parameters["parameters"]
