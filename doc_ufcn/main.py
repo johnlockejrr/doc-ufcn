@@ -12,7 +12,7 @@ from doc_ufcn import image, model, prediction
 
 logging.basicConfig(
     format="[%(levelname)s] %(message)s",
-    level=logging.DEBUG,
+    level=logging.INFO,
 )
 
 
@@ -131,6 +131,7 @@ class DocUFCN:
             predicted_polygons = prediction.get_predicted_polygons(
                 pred, self.no_of_classes
             )
+            logging.info("Image processed")
 
         # Remove the small connected components.
         assert isinstance(min_cc, int), "min_cc must be a positive integer"
