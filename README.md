@@ -76,6 +76,23 @@ detected_polygons, probabilities, mask, overlap = model.predict(
 ![Mask of detected objects](https://gitlab.com/teklia/doc-ufcn/-/raw/main/resources/mask.png)
 ![Overlap with the detected objects](https://gitlab.com/teklia/doc-ufcn/-/raw/main/resources/overlap.png)
 
+### Models
+
+We provide an open-source model for the page detection task. To download the model and load it one can use:
+```python
+from doc_ufcn import models
+from doc_ufcn.main import DocUFCN
+
+model_path, parameters = models.download_model('generic_page_detection')
+
+model = DocUFCN(len(parameters['classes']), parameters['input_size'], 'cpu')
+model.load(model_path, parameters['mean'], parameters['std'])
+```
+By default, the most recent version of the model will be downloaded. One can also use a specific version using the following line:
+```python
+model_path, parameters = models.download_model('generic_page_detection', version="0.0.2")
+```
+
 ### Cite us!
 
 If you want to cite us in one of your works, please use the following citation.
