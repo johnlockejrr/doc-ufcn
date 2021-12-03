@@ -37,27 +37,23 @@ def download_model(name, version=None):
         assert len(packages) > 0, f"Model {name} not available"
         version = packages[0]["version"]
 
-    # Download the parameters.
+    # Download and save the parameters.
     parameters = requests.get(
         f"https://gitlab.com/api/v4/projects/{GITLAB_PROJECT_ID}/packages/generic/{name}/{version}/parameters.yml"
     )
     parameters.raise_for_status()
     logging.info(f"Loaded parameters: {name} (version {version})")
     parameters = yaml.safe_load(parameters.content)
-
-    # Check if model already in cache. Return the cached model and parameters.
-    if os.path.isfile(model_path) and os.path.isfile(parameters_path):
-        if md5sum(model_path) == parameters["md5sum"]:
-            with open(parameters_path, "r") as f:
-                params = yaml.safe_load(f)
-            logging.info(f"Loaded model from cache: {name} (version {version})")
-            return model_path, params["parameters"]
-
-    # Save the parameters and download the model if not in cache.
     with open(parameters_path, "w") as f:
         yaml.safe_dump(parameters, f)
 
-    # Download the model and save it.
+    # Check if model already in cache. Return the cached model and parameters.
+    if os.path.isfile(model_path):
+        if md5sum(model_path) == parameters["md5sum"]:
+            logging.info(f"Loaded model from cache: {name} (version {version})")
+            return model_path, parameters["parameters"]
+
+    # Download the model if not in cache and save it.
     model = requests.get(
         f"https://gitlab.com/api/v4/projects/{GITLAB_PROJECT_ID}/packages/generic/{name}/{version}/model.pth"
     )
