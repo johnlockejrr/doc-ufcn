@@ -16,6 +16,7 @@ logging.basicConfig(
 
 # Gitlab project: https://gitlab.com/teklia/doc-ufcn
 GITLAB_PROJECT_ID = 30605923
+PACKAGES_URL = f"https://gitlab.com/api/v4/projects/{GITLAB_PROJECT_ID}/packages/"
 
 
 def download_model(name, version=None):
@@ -30,7 +31,7 @@ def download_model(name, version=None):
     # If no version given, get latest version.
     if version is None:
         packages = requests.get(
-            f"https://gitlab.com/api/v4/projects/{GITLAB_PROJECT_ID}/packages/?package_name={name}&order_by=version&sort=desc"
+            PACKAGES_URL + f"?package_name={name}&order_by=version&sort=desc"
         )
         packages.raise_for_status()
         packages = yaml.safe_load(packages.content)
@@ -38,9 +39,7 @@ def download_model(name, version=None):
         version = packages[0]["version"]
 
     # Download and save the parameters.
-    parameters = requests.get(
-        f"https://gitlab.com/api/v4/projects/{GITLAB_PROJECT_ID}/packages/generic/{name}/{version}/parameters.yml"
-    )
+    parameters = requests.get(PACKAGES_URL + f"generic/{name}/{version}/parameters.yml")
     parameters.raise_for_status()
     logging.info(f"Loaded parameters: {name} (version {version})")
     parameters = yaml.safe_load(parameters.content)
@@ -48,15 +47,12 @@ def download_model(name, version=None):
         yaml.safe_dump(parameters, f)
 
     # Check if model already in cache. Return the cached model and parameters.
-    if os.path.isfile(model_path):
-        if md5sum(model_path) == parameters["md5sum"]:
-            logging.info(f"Loaded model from cache: {name} (version {version})")
-            return model_path, parameters["parameters"]
+    if os.path.isfile(model_path) and md5sum(model_path) == parameters["md5sum"]:
+        logging.info(f"Loaded model from cache: {name} (version {version})")
+        return model_path, parameters["parameters"]
 
     # Download the model if not in cache and save it.
-    model = requests.get(
-        f"https://gitlab.com/api/v4/projects/{GITLAB_PROJECT_ID}/packages/generic/{name}/{version}/model.pth"
-    )
+    model = requests.get(PACKAGES_URL + f"generic/{name}/{version}/model.pth")
     model.raise_for_status()
     logging.info(f"Loaded model: {name} (version {version})")
     with open(model_path, "wb") as f:
