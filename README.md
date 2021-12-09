@@ -18,10 +18,18 @@ pip install doc-ufcn
 
 ### Usage
 
-To apply Doc-UFCN to an image, one need to first add a few imports and to load an image. Note that the image should be in RGB.
+To apply Doc-UFCN to an image, one need to first add a few imports (optionally, set the logging config to make logs appear on stdout) and to load an image. Note that the image should be in RGB.
 ```python
 import cv2
+import logging
+import sys
 from doc_ufcn.main import DocUFCN
+
+logging.basicConfig(
+    format="[%(levelname)s] %(message)s",
+    stream=sys.stdout,
+    level=logging.INFO
+)
 
 image = cv2.cvtColor(cv2.imread(IMAGE_PATH), cv2.COLOR_BGR2RGB)
 ```
