@@ -10,11 +10,6 @@ import torch
 
 from doc_ufcn import image, model, prediction
 
-logging.basicConfig(
-    format="[%(levelname)s] %(message)s",
-    level=logging.INFO,
-)
-
 
 class DocUFCN:
     """
