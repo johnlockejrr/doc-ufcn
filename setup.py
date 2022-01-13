@@ -20,6 +20,7 @@ setup(
     long_description_content_type="text/markdown",
     author="Mélodie Boillet",
     author_email="boillet@teklia.com",
+    url="https://gitlab.com/teklia/dla/doc-ufcn",
     install_requires=parse_requirements(),
     packages=find_packages(),
 )
