@@ -9,7 +9,7 @@ import yaml
 
 from doc_ufcn.utils import md5sum
 
-# Gitlab project: https://gitlab.com/teklia/doc-ufcn
+# Gitlab project: https://gitlab.com/teklia/dla/doc-ufcn
 GITLAB_PROJECT_ID = 30605923
 PACKAGES_URL = f"https://gitlab.com/api/v4/projects/{GITLAB_PROJECT_ID}/packages/"
 
