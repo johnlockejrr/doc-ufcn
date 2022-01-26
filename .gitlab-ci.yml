@@ -67,6 +67,9 @@ deploy-models:
   only:
    - main
 
+  except:
+    - schedules
+
   before_script:
     - pip install pyyaml requests
 
@@ -76,6 +79,7 @@ deploy-models:
 deploy-pypi:
   stage: release
   image: python:3.8
+
   only:
     - tags
 
