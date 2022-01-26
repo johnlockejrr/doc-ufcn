@@ -77,7 +77,7 @@ Lastly, two visualizations can be returned by the model:
 By default, only the detected polygons are returned, to return the four outputs, one can use:
 ```python
 detected_polygons, probabilities, mask, overlap = model.predict(
-    image, raw_output, mask_output, overlap_output
+    image, raw_output=True, mask_output=True, overlap_output=True
 )
 ```
 
