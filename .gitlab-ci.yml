@@ -99,3 +99,13 @@ release-notes:
 
   script:
     - devops release-notes
+
+bump-python-deps:
+  stage: release
+  image: registry.gitlab.com/teklia/devops:latest
+
+  only:
+    - schedules
+
+  script:
+    - devops python-deps requirements.txt
