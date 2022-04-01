@@ -4,15 +4,15 @@ repos:
     hooks:
       - id: seed-isort-config
   - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v4.3.21
+    rev: v5.10.1
     hooks:
       - id: isort
   - repo: https://github.com/ambv/black
-    rev: 20.8b1
+    rev: 22.3.0
     hooks:
     - id: black
   - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.3
+    rev: 3.9.2
     hooks:
       - id: flake8
         additional_dependencies:
@@ -20,7 +20,7 @@ repos:
           - 'flake8-copyright==0.2.2'
           - 'flake8-debugger==3.1.0'
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.1.0
+    rev: v4.1.0
     hooks:
       - id: check-ast
       - id: check-docstring-first
@@ -37,7 +37,7 @@ repos:
       - id: check-json
       - id: requirements-txt-fixer
   - repo: https://github.com/codespell-project/codespell
-    rev: v1.17.1
+    rev: v2.1.0
     hooks:
       - id: codespell
         args: ['--write-changes']
