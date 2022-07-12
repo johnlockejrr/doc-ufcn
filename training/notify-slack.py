@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import requests
-from pathlib import Path
-import os
-import json
 import argparse
+import json
+import os
+from pathlib import Path
+
+import requests
 
 config_path = Path("~/.notify-slack-cfg").expanduser()
 if not config_path.exists():
@@ -16,17 +17,17 @@ if not config_path.exists():
     """
     raise ValueError(error_msg)
 
-SLACK_NOTIFY_ICON=":ubuntu:"
-SLACK_BOT_USERNAME="Bash Notifier"
+SLACK_NOTIFY_ICON = ":ubuntu:"
+SLACK_BOT_USERNAME = "Bash Notifier"
 SLACK_WEBHOOK_SERVICE = config_path.read_text().strip()
-SLACK_URL=f"https://hooks.slack.com/services/{SLACK_WEBHOOK_SERVICE}"
+SLACK_URL = f"https://hooks.slack.com/services/{SLACK_WEBHOOK_SERVICE}"
 LOG_PATH = Path("DLA_train.log")
 DLA_LENGTH = 18
 
 ICONS = {
-    "INFO": ':information_source: ',
-    "WARN": ':warning: ',
-    "ERROR": ':github_changes_requested: ',
+    "INFO": ":information_source: ",
+    "WARN": ":warning: ",
+    "ERROR": ":github_changes_requested: ",
 }
 
 
@@ -67,19 +68,24 @@ def run(message, log_file, number_of_lines):
 def main():
     parser = argparse.ArgumentParser("Send message to slack")
     parser.add_argument("message", help="Message to be sent to slack", type=str)
-    parser.add_argument("--log_file",
-                        help="Log file from where last N files will be included with the message. "
-                             "Use None as file name if don't want to include a log file.",
-                        type=Path,
-                        default=LOG_PATH)
-    parser.add_argument("-N", "--number_of_lines",
-                        help="Number of lines to be included from the end of the log file."
-                             "Use 0 to not include a log file.",
-                        type=int,
-                        default=DLA_LENGTH)
+    parser.add_argument(
+        "--log_file",
+        help="Log file from where last N files will be included with the message. "
+        "Use None as file name if don't want to include a log file.",
+        type=Path,
+        default=LOG_PATH,
+    )
+    parser.add_argument(
+        "-N",
+        "--number_of_lines",
+        help="Number of lines to be included from the end of the log file."
+        "Use 0 to not include a log file.",
+        type=int,
+        default=DLA_LENGTH,
+    )
     args = parser.parse_args()
     run(**vars(args))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

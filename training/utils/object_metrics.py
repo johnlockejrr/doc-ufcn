@@ -67,8 +67,7 @@ def __rank_predicted_objects(labels: list, predictions: list) -> dict:
     ious = __get_ious(labels, predictions)
 
     scores = {index: prediction[0] for index, prediction in enumerate(predictions)}
-    tuples_score_iou = [(v, ious[k])
-                        for k, v in scores.items()]
+    tuples_score_iou = [(v, ious[k]) for k, v in scores.items()]
     scores = sorted(tuples_score_iou, key=lambda item: (-item[0], -item[1]))
     return scores
 
@@ -84,23 +83,17 @@ def compute_rank_scores(labels: list, predictions: list, classes: list) -> dict:
     :return scores: The scores obtained for a each rank, IoU
                     threshold and class.
     """
-    scores = {
-        channel: {
-            iou: None for iou in range(50, 100, 5)
-        } for channel in classes
-    }
+    scores = {channel: {iou: None for iou in range(50, 100, 5)} for channel in classes}
     for channel in classes:
         channel_scores = __rank_predicted_objects(labels[channel], predictions[channel])
         for iou in range(50, 100, 5):
-            rank_scores = {
-                rank: {'True': 0, 'Total': 0} for rank in range(95, -5, -5)
-            }
+            rank_scores = {rank: {"True": 0, "Total": 0} for rank in range(95, -5, -5)}
             for rank in range(95, -5, -5):
-                rank_objects = list(filter(
-                    lambda item: item[0] >= rank/100, channel_scores))
-                rank_scores[rank]['True'] = sum(x[1] > iou / 100
-                                                for x in rank_objects)
-                rank_scores[rank]['Total'] = len(rank_objects)
+                rank_objects = list(
+                    filter(lambda item: item[0] >= rank / 100, channel_scores)
+                )
+                rank_scores[rank]["True"] = sum(x[1] > iou / 100 for x in rank_objects)
+                rank_scores[rank]["Total"] = len(rank_objects)
             scores[channel][iou] = rank_scores
     return scores
 
@@ -116,24 +109,22 @@ def update_rank_scores(global_scores: dict, image_scores: dict, classes: list) -
     for channel in classes:
         for iou in range(50, 100, 5):
             for rank in range(95, -5, -5):
-                global_scores[channel][iou][rank]['True'] += \
-                    image_scores[channel][iou][rank]['True']
-                global_scores[channel][iou][rank]['Total'] += \
-                    image_scores[channel][iou][rank]['Total']
+                global_scores[channel][iou][rank]["True"] += image_scores[channel][iou][
+                    rank
+                ]["True"]
+                global_scores[channel][iou][rank]["Total"] += image_scores[channel][
+                    iou
+                ][rank]["Total"]
     return global_scores
 
 
 def __init_results() -> dict:
     """
-    Initialize the results dictionnary by generating dictionary for
+    Initialize the results dictionary by generating dictionary for
     the different rank and Intersection-over-Union thresholds.
-    :return: The initialized results dictionnary.
+    :return: The initialized results dictionary.
     """
-    return {
-        iou: {
-            rank: 0 for rank in range(95, -5, -5)
-        } for iou in range(50, 100, 5)
-    }
+    return {iou: {rank: 0 for rank in range(95, -5, -5)} for iou in range(50, 100, 5)}
 
 
 def __get_average_precision(precisions: list, recalls: list) -> float:
@@ -154,20 +145,22 @@ def __get_average_precision(precisions: list, recalls: list) -> float:
         max_precision = np.max(precisions)
         argmax_precision = np.argmax(precisions)
         max_recall = recalls[argmax_precision]
-        rp_tuples.append({'p': max_precision, 'r': max_recall})
-        for _ in range(argmax_precision+1):
+        rp_tuples.append({"p": max_precision, "r": max_recall})
+        for _ in range(argmax_precision + 1):
             precisions.pop(0)
             recalls.pop(0)
-    rp_tuples[-1]['r'] = 1
+    rp_tuples[-1]["r"] = 1
 
-    ps = [rp_tuple['p'] for rp_tuple in rp_tuples]
-    rs = [rp_tuple['r'] for rp_tuple in rp_tuples]
+    ps = [rp_tuple["p"] for rp_tuple in rp_tuples]
+    rs = [rp_tuple["r"] for rp_tuple in rp_tuples]
     ps.insert(0, ps[0])
     rs.insert(0, 0)
     return np.trapz(ps, x=rs)
 
-def get_mean_results(global_scores: dict, true_gt: dict, classes: list,
-                     results: dict) -> dict:
+
+def get_mean_results(
+    global_scores: dict, true_gt: dict, classes: list, results: dict
+) -> dict:
     """
     Get the mean metrics values for all the set.
     :param global_scores: The overall computed scores.
@@ -183,21 +176,27 @@ def get_mean_results(global_scores: dict, true_gt: dict, classes: list,
         aps = {iou: 0 for iou in range(50, 100, 5)}
         for iou in range(50, 100, 5):
             for rank in range(95, -5, -5):
-                true_predicted = global_scores[channel][iou][rank]['True']
-                predicted = global_scores[channel][iou][rank]['Total']
+                true_predicted = global_scores[channel][iou][rank]["True"]
+                predicted = global_scores[channel][iou][rank]["Total"]
 
-                precisions[iou][rank] = true_predicted / predicted if predicted != 0 else 1
-                recalls[iou][rank] = true_predicted / true_gt[channel] if true_gt[channel] != 0 else 1
+                precisions[iou][rank] = (
+                    true_predicted / predicted if predicted != 0 else 1
+                )
+                recalls[iou][rank] = (
+                    true_predicted / true_gt[channel] if true_gt[channel] != 0 else 1
+                )
 
                 if precisions[iou][rank] + recalls[iou][rank] != 0:
-                    fscores[iou][rank] = 2 * \
-                        (precisions[iou][rank] * recalls[iou][rank]) / \
-                        (precisions[iou][rank] + recalls[iou][rank])
+                    fscores[iou][rank] = (
+                        2
+                        * (precisions[iou][rank] * recalls[iou][rank])
+                        / (precisions[iou][rank] + recalls[iou][rank])
+                    )
             aps[iou] = __get_average_precision(
-                list(precisions[iou].values()),
-                list(recalls[iou].values()))
-            results[channel]['precision'] = precisions
-            results[channel]['recall'] = recalls
-            results[channel]['fscore'] = fscores
-            results[channel]['AP'] = aps
+                list(precisions[iou].values()), list(recalls[iou].values())
+            )
+            results[channel]["precision"] = precisions
+            results[channel]["recall"] = recalls
+            results[channel]["fscore"] = fscores
+            results[channel]["AP"] = aps
     return results

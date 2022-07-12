@@ -8,11 +8,12 @@
     Use it to define, load and restore a model.
 """
 
-import sys
-import os
-import logging
-import time
 import copy
+import logging
+import os
+import sys
+import time
+
 import torch
 import torch.nn as nn
 from torch.cuda.amp import autocast
@@ -23,6 +24,7 @@ class Net(nn.Module):
     The Net class is used to generate a network.
     The class contains different useful layers.
     """
+
     def __init__(self, no_of_classes: int, use_amp: bool):
         """
         Constructor of the Net class.
@@ -40,8 +42,7 @@ class Net(nn.Module):
         self.conv_block1 = self.conv_block(256, 128)
         self.conv_block2 = self.conv_block(256, 64)
         self.conv_block3 = self.conv_block(128, 32)
-        self.last_conv = nn.Conv2d(64, no_of_classes, 3,
-                                   stride=1, padding=1)
+        self.last_conv = nn.Conv2d(64, no_of_classes, 3, stride=1, padding=1)
         self.softmax = nn.Softmax(dim=1)
 
     @staticmethod
@@ -55,18 +56,27 @@ class Net(nn.Module):
         :return: The sequence of the convolutions.
         """
         modules = []
-        modules.append(nn.Conv2d(input_size, output_size, 3, stride=1,
-                                 dilation=1, padding=1, bias=False))
-        modules.append(nn.BatchNorm2d(output_size,
-                                      track_running_stats=False))
+        modules.append(
+            nn.Conv2d(
+                input_size, output_size, 3, stride=1, dilation=1, padding=1, bias=False
+            )
+        )
+        modules.append(nn.BatchNorm2d(output_size, track_running_stats=False))
         modules.append(nn.ReLU(inplace=True))
         modules.append(nn.Dropout(p=0.4))
         for i in [2, 4, 8, 16]:
-            modules.append(nn.Conv2d(output_size, output_size, 3,
-                                     stride=1, dilation=i, padding=i,
-                                     bias=False))
-            modules.append(nn.BatchNorm2d(output_size,
-                                          track_running_stats=False))
+            modules.append(
+                nn.Conv2d(
+                    output_size,
+                    output_size,
+                    3,
+                    stride=1,
+                    dilation=i,
+                    padding=i,
+                    bias=False,
+                )
+            )
+            modules.append(nn.BatchNorm2d(output_size, track_running_stats=False))
             modules.append(nn.ReLU(inplace=True))
             modules.append(nn.Dropout(p=0.4))
         return nn.Sequential(*modules)
@@ -81,17 +91,16 @@ class Net(nn.Module):
         :return: The sequence of the convolutions.
         """
         return nn.Sequential(
-            nn.Conv2d(input_size, output_size, 3,
-                      stride=1, padding=1, bias=False),
+            nn.Conv2d(input_size, output_size, 3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(output_size, track_running_stats=False),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.4),
             # Does the upsampling.
-            nn.ConvTranspose2d(output_size, output_size,
-                               2, stride=2, bias=False),
+            nn.ConvTranspose2d(output_size, output_size, 2, stride=2, bias=False),
             nn.BatchNorm2d(output_size, track_running_stats=False),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=0.4))
+            nn.Dropout(p=0.4),
+        )
 
     def forward(self, x):
         """
@@ -142,11 +151,11 @@ def load_network(no_of_classes: int, use_amp: bool, ex):
     net = Net(no_of_classes, use_amp)
     # Allow parallel running if more than 1 gpu available.
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    logging.info('Running on %s', device)
+    logging.info("Running on %s", device)
     if torch.cuda.device_count() > 1:
         logging.info("Let's use %d GPUs", torch.cuda.device_count())
         net = nn.DataParallel(net)
-        ex.log_scalar('gpus.number', torch.cuda.device_count())
+        ex.log_scalar("gpus.number", torch.cuda.device_count())
     return net.to(device)
 
 
@@ -165,33 +174,39 @@ def restore_model(net, optimizer, scaler, log_path: str, model_path: str):
     """
     starting_time = time.time()
     if not os.path.isfile(os.path.join(log_path, model_path)):
-        logging.error('No model found at %s',
-                      os.path.join(log_path, model_path))
+        logging.error("No model found at %s", os.path.join(log_path, model_path))
         sys.exit()
     else:
         if torch.cuda.is_available():
             checkpoint = torch.load(os.path.join(log_path, model_path))
         else:
-            checkpoint = torch.load(os.path.join(log_path, model_path),
-                                    map_location=torch.device('cpu'))
+            checkpoint = torch.load(
+                os.path.join(log_path, model_path), map_location=torch.device("cpu")
+            )
         loaded_checkpoint = {}
         if torch.cuda.device_count() > 1:
             for key in checkpoint["state_dict"].keys():
-                if 'module' not in key:
-                    loaded_checkpoint['module.'+key] = checkpoint["state_dict"][key]
+                if "module" not in key:
+                    loaded_checkpoint["module." + key] = checkpoint["state_dict"][key]
                 else:
                     loaded_checkpoint = checkpoint["state_dict"]
         else:
             for key in checkpoint["state_dict"].keys():
-                loaded_checkpoint[key.replace("module.", "")] = checkpoint["state_dict"][key]
+                loaded_checkpoint[key.replace("module.", "")] = checkpoint[
+                    "state_dict"
+                ][key]
         net.load_state_dict(loaded_checkpoint)
 
         if optimizer is not None:
-            optimizer.load_state_dict(checkpoint['optimizer'])
+            optimizer.load_state_dict(checkpoint["optimizer"])
         if scaler is not None:
-            scaler.load_state_dict(checkpoint['scaler'])
-        logging.info('Loaded checkpoint %s (epoch %d) in %1.5fs',
-                     model_path, checkpoint['epoch'], (time.time() - starting_time))
+            scaler.load_state_dict(checkpoint["scaler"])
+        logging.info(
+            "Loaded checkpoint %s (epoch %d) in %1.5fs",
+            model_path,
+            checkpoint["epoch"],
+            (time.time() - starting_time),
+        )
         return checkpoint, net, optimizer, scaler
 
 
@@ -205,9 +220,11 @@ def save_model(epoch: int, model, loss: float, optimizer, scaler, filename: str)
     :param scaler: The scaler used for AMP.
     :param filename: The name of the model file.
     """
-    model_params = {'epoch': epoch,
-                    'state_dict': copy.deepcopy(model),
-                    'best_loss': loss,
-                    'optimizer': copy.deepcopy(optimizer),
-                    'scaler': scaler}
+    model_params = {
+        "epoch": epoch,
+        "state_dict": copy.deepcopy(model),
+        "best_loss": loss,
+        "optimizer": copy.deepcopy(optimizer),
+        "scaler": scaler,
+    }
     torch.save(model_params, filename)
