@@ -16,8 +16,9 @@
 import numpy as np
 
 
-def compute_metrics(labels: list, predictions: list, classes: list,
-                    global_metrics: dict) -> dict:
+def compute_metrics(
+    labels: list, predictions: list, classes: list, global_metrics: dict
+) -> dict:
     """
     Compute the pixel level metrics between prediction and label areas of
     a given page.
@@ -35,17 +36,17 @@ def compute_metrics(labels: list, predictions: list, classes: list,
         gt_area = np.sum([gt.area for _, gt in labels[channel]])
         pred_area = np.sum([pred.area for _, pred in predictions[channel]])
 
-        global_metrics[channel]['iou'].append(get_iou(inter, gt_area, pred_area))
+        global_metrics[channel]["iou"].append(get_iou(inter, gt_area, pred_area))
         precision = get_precision(inter, pred_area)
         recall = get_recall(inter, gt_area)
-        global_metrics[channel]['precision'].append(precision)
-        global_metrics[channel]['recall'].append(recall)
+        global_metrics[channel]["precision"].append(precision)
+        global_metrics[channel]["recall"].append(recall)
         if precision + recall != 0:
-            global_metrics[channel]['fscore'].append(
-                2*precision*recall / (precision+recall)
+            global_metrics[channel]["fscore"].append(
+                2 * precision * recall / (precision + recall)
             )
         else:
-            global_metrics[channel]['fscore'].append(0)
+            global_metrics[channel]["fscore"].append(0)
     return global_metrics
 
 
@@ -66,7 +67,7 @@ def get_iou(intersection: float, label_area: float, predicted_area: float) -> fl
     if intersection == 0 and union != 0:
         return 0
     # Objects to detect and/or predicted that intersect.
-    return intersection / union  
+    return intersection / union
 
 
 def get_precision(intersection: float, predicted_area: float) -> float:
@@ -95,5 +96,3 @@ def get_recall(intersection, label_area) -> float:
     if label_area == 0:
         return 1
     return intersection / label_area
-
-    

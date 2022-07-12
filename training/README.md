@@ -85,7 +85,7 @@ In the root directory, one has to create an `experiments.csv` file (see `example
 | `restore_model`   | Name of a saved model to resume or fine-tune a training                                          |                                                    |
 | `loss`            | Whether to use an initial loss (`initial`) or the best (`best`) saved loss of the restored model | `initial`                                          |
 
-Note: All the steps are dependant, e.g to run the `"prediction"` step, one **needs** the results of the `"normalization_params"` and `"train"` steps.
+Note: All the steps are dependent, e.g to run the `"prediction"` step, one **needs** the results of the `"normalization_params"` and `"train"` steps.
 
 #### Example
 

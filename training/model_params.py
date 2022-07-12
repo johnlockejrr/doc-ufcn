@@ -13,14 +13,16 @@
 """
 
 import logging
+
 import torch
 from sacred import Experiment
 from torchsummary import summary
 from utils.model import Net
 
-ex = Experiment('Get model parameters')
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+ex = Experiment("Get model parameters")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 @ex.config
@@ -29,7 +31,7 @@ def default_config():
     Define the default configuration for the experiment.
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    logging.info('Running on %s', device)
+    logging.info("Running on %s", device)
     img_size = 768
     no_of_classes = 2
 

@@ -45,12 +45,12 @@ for filename in ${TMP_DIR}/*; do
         && (python3 notify-slack.py "INFO: Experiment completed" --log_file DLA_train_"${index}".log) \
         || (python3 notify-slack.py "ERROR: Experiment failed" --log_file DLA_train_"${index}".log ; exit)
     fi
-    
+
     index=$((index+1))
 
 done
 
-echo 
+echo
 echo "Experiments done!"
 
 rm -r $TMP_DIR
