@@ -12,13 +12,10 @@ import logging
 import os
 import time
 
-import cv2
 import numpy as np
-import torch
 import utils.evaluation_utils as ev_utils
 import utils.object_metrics as o_metrics
 import utils.pixel_metrics as p_metrics
-from shapely.geometry import Polygon
 from tqdm import tqdm
 
 

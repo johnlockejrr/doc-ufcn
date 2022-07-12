@@ -11,12 +11,11 @@
 import json
 import os
 
-import cv2
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import ticker
-from shapely.geometry import MultiPolygon, Polygon
+from shapely.geometry import Polygon
 
 
 def read_json(filename: str) -> dict:

@@ -16,7 +16,6 @@ import cv2
 import numpy as np
 import torch
 import utils.prediction_utils as pr_utils
-from shapely.geometry import Polygon
 from tqdm import tqdm
 
 

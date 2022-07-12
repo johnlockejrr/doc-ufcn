@@ -10,7 +10,6 @@
 
 import logging
 import os
-import sys
 import time
 
 import numpy as np
@@ -21,7 +20,6 @@ from torch.cuda.amp import autocast
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 from utils import model
-from utils.params_config import Params
 
 
 def init_metrics(no_of_classes: int) -> dict:

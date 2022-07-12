@@ -282,6 +282,6 @@ class ToTensor:
         :return sample: The sample made of Tensors.
         """
         sample["image"] = torch.from_numpy(sample["image"].transpose((2, 0, 1)))
-        if "mask" is sample.keys():
+        if "mask" == sample.keys():
             sample["mask"] = torch.from_numpy(sample["mask"])
         return sample

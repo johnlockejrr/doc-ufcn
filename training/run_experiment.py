@@ -17,7 +17,6 @@ from pathlib import Path
 import evaluate
 import normalization_params
 import predict
-import torch
 import torch.optim as optim
 import train
 import utils.preprocessing as pprocessing
@@ -87,12 +86,14 @@ def default_config():
         global_params["batch_size"] is not None
         or global_params["no_of_params"] is not None
     ), "Please provide a batch size or a maximum number of parameters"
-    params = Params().to_dict()
+    params = Params().to_dict()  # noqa: F841
 
     # Load the current experiment parameters.
     experiment_name = "doc-ufcn"
-    log_path = "runs/" + experiment_name.lower().replace(" ", "_").replace("-", "_")
-    tb_path = "events/"
+    log_path = "runs/" + experiment_name.lower().replace(  # noqa: F841
+        " ", "_"
+    ).replace("-", "_")
+    tb_path = "events/"  # noqa: F841
     steps = ["normalization_params", "train", "prediction", "evaluation"]
     for step in steps:
         assert step in STEPS
@@ -113,7 +114,7 @@ def default_config():
             "json": ["./data/test/labels_json/"],
         },
     }
-    exp_data_paths = {
+    exp_data_paths = {  # noqa: F841
         set: {
             key: [Path(element).expanduser() for element in value]
             for key, value in paths.items()
