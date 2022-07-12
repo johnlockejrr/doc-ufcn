@@ -1,0 +1,15 @@
+{
+    "global_params": {
+        "classes_names": ["background", "text_line"],
+        "classes_colors": [
+            [0, 0, 0],
+            [0, 0, 255]
+        ],
+        "img_size": 768,
+        "no_of_epochs": 200,
+        "batch_size": 4,
+        "min_cc": 50,
+        "save_image": ["val", "test"],
+        "use_amp": false
+    }
+}

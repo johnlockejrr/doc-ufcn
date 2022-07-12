@@ -1,0 +1,5 @@
+experiment_name,steps,train,val,test,restore_model,loss
+exp1,normalization_params;train;prediction;evaluation,~/data/DLA/dataset1;~/data/dataset2,~/data/DLA/dataset1;~/data/dataset2,~/data/DLA/dataset3;~/data/dataset2,,
+exp1,prediction;evaluation,,,~/data/DLA/dataset4,,
+exp1,train;prediction;evaluation,~/data/DLA/dataset4,~/data/DLA/dataset4,~/data/DLA/dataset4,last_model.pth,initial
+exp2,normalization_params;train;prediction;evaluation,~/data/DLA/dataset5,~/data/DLA/dataset5,~/data/DLA/dataset5,,
