@@ -27,6 +27,7 @@ from doc_ufcn.train.evaluate import run as evaluate
 from doc_ufcn.train.normalization_params import run as normalization_params
 from doc_ufcn.train.predict import run as predict
 from doc_ufcn.train.training import run as train
+from doc_ufcn.train.utils import DLACollateFunction, Sampler
 from doc_ufcn.train.utils.params import Params
 from doc_ufcn.train.utils.preprocessing import (
     Normalize,
@@ -36,8 +37,7 @@ from doc_ufcn.train.utils.preprocessing import (
     ToTensor,
     TrainingDataset,
 )
-from doc_ufcn.train.utils.training_utils import Diceloss
-from doc_ufcn.training.utils import DLACollateFunction, Sampler
+from doc_ufcn.train.utils.training import Diceloss
 
 STEPS = ["normalization_params", "train", "prediction", "evaluation"]
 
