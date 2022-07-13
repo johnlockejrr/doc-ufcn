@@ -1,0 +1,7 @@
+imageio==2.10.1
+matplotlib==3.3.4
+sacred==0.8.2
+Shapely==1.8.0
+tensorboard==2.7.0
+torchvision==0.13.0
+tqdm==4.62.3

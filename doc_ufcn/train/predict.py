@@ -15,8 +15,9 @@ import time
 import cv2
 import numpy as np
 import torch
-import utils.prediction_utils as pr_utils
 from tqdm import tqdm
+
+import doc_ufcn.train.utils.prediction as pr_utils
 
 
 def get_predicted_polygons(
