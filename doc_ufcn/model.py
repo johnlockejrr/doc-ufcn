@@ -53,7 +53,7 @@ class DocUFCNModel(NNModule):
         """
         modules = []
         modules.append(
-            torch.nn.Conv2d(input_size, output_size, 3, stride=1, dilation=1, padding=1)
+            torch.nn.Conv2d(input_size, output_size, 3, stride=1, dilation=1, padding=1, bias=False)
         )
         modules.append(torch.nn.BatchNorm2d(output_size, track_running_stats=False))
         modules.append(torch.nn.ReLU(inplace=True))
@@ -61,7 +61,7 @@ class DocUFCNModel(NNModule):
         for i in [2, 4, 8, 16]:
             modules.append(
                 torch.nn.Conv2d(
-                    output_size, output_size, 3, stride=1, dilation=i, padding=i
+                    output_size, output_size, 3, stride=1, dilation=i, padding=i, bias=False
                 )
             )
             modules.append(torch.nn.BatchNorm2d(output_size, track_running_stats=False))
@@ -79,12 +79,12 @@ class DocUFCNModel(NNModule):
         :return: The sequence of the convolutions.
         """
         return torch.nn.Sequential(
-            torch.nn.Conv2d(input_size, output_size, 3, stride=1, padding=1),
+            torch.nn.Conv2d(input_size, output_size, 3, stride=1, padding=1, bias=False),
             torch.nn.BatchNorm2d(output_size, track_running_stats=False),
             torch.nn.ReLU(inplace=True),
             torch.nn.Dropout(p=0.4),
             # Does the upsampling.
-            torch.nn.ConvTranspose2d(output_size, output_size, 2, stride=2),
+            torch.nn.ConvTranspose2d(output_size, output_size, 2, stride=2, bias=False),
             torch.nn.BatchNorm2d(output_size, track_running_stats=False),
             torch.nn.ReLU(inplace=True),
             torch.nn.Dropout(p=0.4),
