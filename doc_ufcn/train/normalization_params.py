@@ -12,11 +12,12 @@ import logging
 import os
 
 import numpy as np
-import utils.preprocessing as pprocessing
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from tqdm import tqdm
-from utils.params_config import Params
+
+from doc_ufcn.train.utils.params import Params
+from doc_ufcn.train.utils.preprocessing import PredictionDataset, Rescale, ToTensor
 
 
 def run(log_path: str, data_paths: dict, params: Params, img_size: int):
@@ -28,11 +29,9 @@ def run(log_path: str, data_paths: dict, params: Params, img_size: int):
     :param params: Parameters to use to find the mean and std values.
     :param img_size: The network input image size.
     """
-    dataset = pprocessing.PredictionDataset(
+    dataset = PredictionDataset(
         data_paths["train"]["image"],
-        transform=transforms.Compose(
-            [pprocessing.Rescale(img_size), pprocessing.ToTensor()]
-        ),
+        transform=transforms.Compose([Rescale(img_size), ToTensor()]),
     )
     loader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=2)
 

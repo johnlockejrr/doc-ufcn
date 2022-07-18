@@ -14,21 +14,30 @@ import os
 import sys
 from pathlib import Path
 
-import evaluate
-import normalization_params
-import predict
-import torch.optim as optim
-import train
-import utils.preprocessing as pprocessing
-import utils.training_utils as tr_utils
 from sacred import Experiment
 from sacred.observers import MongoObserver
 from torch.cuda.amp import GradScaler
+from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from tqdm import tqdm
-from utils import model, utils
-from utils.params_config import Params
+
+from doc_ufcn import model
+from doc_ufcn.train.evaluate import run as evaluate
+from doc_ufcn.train.normalization_params import run as normalization_params
+from doc_ufcn.train.predict import run as predict
+from doc_ufcn.train.training import run as train
+from doc_ufcn.train.utils import DLACollateFunction, Sampler
+from doc_ufcn.train.utils.params import Params
+from doc_ufcn.train.utils.preprocessing import (
+    Normalize,
+    Pad,
+    PredictionDataset,
+    Rescale,
+    ToTensor,
+    TrainingDataset,
+)
+from doc_ufcn.train.utils.training import Diceloss
 
 STEPS = ["normalization_params", "train", "prediction", "evaluation"]
 
@@ -208,14 +217,14 @@ def training_loaders(
         [exp_data_paths["train"]["image"], exp_data_paths["val"]["image"]],
         [exp_data_paths["train"]["mask"], exp_data_paths["val"]["mask"]],
     ):
-        dataset = pprocessing.TrainingDataset(
+        dataset = TrainingDataset(
             images,
             masks,
             global_params["classes_colors"],
             transform=transforms.Compose(
                 [
-                    pprocessing.Rescale(global_params["img_size"]),
-                    pprocessing.Normalize(norm_params["mean"], norm_params["std"]),
+                    Rescale(global_params["img_size"]),
+                    Normalize(norm_params["mean"], norm_params["std"]),
                 ]
             ),
         )
@@ -223,13 +232,13 @@ def training_loaders(
             dataset,
             num_workers=2,
             pin_memory=True,
-            batch_sampler=utils.Sampler(
+            batch_sampler=Sampler(
                 dataset,
                 bin_size=global_params["bin_size"],
                 batch_size=global_params["batch_size"],
                 nb_params=global_params["no_of_params"],
             ),
-            collate_fn=utils.DLACollateFunction(),
+            collate_fn=DLACollateFunction(),
         )
         logging.info(f"{set}: Found {len(dataset)} images")
     return loaders
@@ -255,14 +264,14 @@ def prediction_loaders(
             exp_data_paths["test"]["image"],
         ],
     ):
-        dataset = pprocessing.PredictionDataset(
+        dataset = PredictionDataset(
             images,
             transform=transforms.Compose(
                 [
-                    pprocessing.Rescale(global_params["img_size"]),
-                    pprocessing.Normalize(norm_params["mean"], norm_params["std"]),
-                    pprocessing.Pad(),
-                    pprocessing.ToTensor(),
+                    Rescale(global_params["img_size"]),
+                    Normalize(norm_params["mean"], norm_params["std"]),
+                    Pad(),
+                    ToTensor(),
                 ]
             ),
         )
@@ -289,10 +298,8 @@ def training_initialization(global_params: dict, training: dict, log_path: str) 
         net.apply(model.weights_init)
         tr_params = {
             "net": net,
-            "criterion": tr_utils.Diceloss(no_of_classes),
-            "optimizer": optim.Adam(
-                net.parameters(), lr=global_params["learning_rate"]
-            ),
+            "criterion": Diceloss(no_of_classes),
+            "optimizer": Adam(net.parameters(), lr=global_params["learning_rate"]),
             "saved_epoch": 0,
             "best_loss": 10e5,
             "scaler": GradScaler(enabled=global_params["use_amp"]),
@@ -302,14 +309,14 @@ def training_initialization(global_params: dict, training: dict, log_path: str) 
         # Restore model to resume training.
         checkpoint, net, optimizer, scaler = model.restore_model(
             net,
-            optim.Adam(net.parameters(), lr=global_params["learning_rate"]),
+            Adam(net.parameters(), lr=global_params["learning_rate"]),
             GradScaler(enabled=global_params["use_amp"]),
             log_path,
             training["restore_model"],
         )
         tr_params = {
             "net": net,
-            "criterion": tr_utils.Diceloss(no_of_classes),
+            "criterion": Diceloss(no_of_classes),
             "optimizer": optimizer,
             "saved_epoch": checkpoint["epoch"],
             "best_loss": checkpoint["best_loss"]
@@ -366,7 +373,7 @@ def run(
         save_config()
 
         if "normalization_params" in steps:
-            normalization_params.run(
+            normalization_params(
                 log_path, exp_data_paths, params, global_params["img_size"]
             )
 
@@ -378,7 +385,7 @@ def run(
             # Generate the loaders and start training.
             loaders = training_loaders(norm_params)
             tr_params = training_initialization()
-            train.run(
+            train(
                 params.model_path,
                 log_path,
                 tb_path,
@@ -394,7 +401,7 @@ def run(
             # Generate the loaders and start predicting.
             loaders = prediction_loaders(norm_params)
             net = prediction_initialization()
-            predict.run(
+            predict(
                 params.prediction_path,
                 log_path,
                 global_params["img_size"],
@@ -410,7 +417,7 @@ def run(
             for set in exp_data_paths.keys():
                 for dataset in exp_data_paths[set]["json"]:
                     if os.path.isdir(dataset):
-                        evaluate.run(
+                        evaluate(
                             log_path,
                             global_params["classes_names"],
                             set,

@@ -106,8 +106,10 @@ def generate_figure(params: dict, rotation: bool = None):
     :return axis: The created axis to plot.
     :return fp_light: The loaded font property used in the figures.
     """
-    fp_light = fm.FontProperties(fname="./utils/font/Quicksand-Light.ttf", size=11)
-    fp_medium = fm.FontProperties(fname="./utils/font/Quicksand-Medium.ttf", size=11)
+    fp_light = fm.FontProperties(fname="./resources/font/Quicksand-Light.ttf", size=11)
+    fp_medium = fm.FontProperties(
+        fname="./resources/font/Quicksand-Medium.ttf", size=11
+    )
     fig = plt.figure(figsize=params["size"])
     axis = fig.add_subplot(111)
     axis.set_xlabel(params["xlabel"], fontproperties=fp_light)

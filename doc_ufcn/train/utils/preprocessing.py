@@ -15,7 +15,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from .utils import rgb_to_gray_array, rgb_to_gray_value
+from doc_ufcn.train.utils import rgb_to_gray_array, rgb_to_gray_value
 
 
 class TrainingDataset(Dataset):
