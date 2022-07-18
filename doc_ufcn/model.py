@@ -21,12 +21,13 @@ class DocUFCNModel(NNModule):
     the sequencing of the defined layers/blocks.
     """
 
-    def __init__(self, no_of_classes, use_amp):
+    def __init__(self, no_of_classes, use_amp=False):
         """
         Constructor of the DocUFCNModel class.
         :param no_of_classes: The number of classes wanted at the
                               output of the network.
         :param use_amp: Whether to use Automatic Mixed Precision.
+                        Disabled by default
         """
         super(DocUFCNModel, self).__init__()
         self.amp = use_amp
