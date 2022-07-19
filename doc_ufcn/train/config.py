@@ -13,80 +13,88 @@ import csv
 import json
 import logging
 import os
+from pathlib import Path
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-TMP_DIR = "./tmp"
 STEPS = ["normalization_params", "train", "prediction", "evaluation"]
 
 
-def run(config):
+def generate_configurations(csv_path):
+    """
+    Read configuration references from a CSV and generate a configuration
+    for each line, using related local files
+    """
+
+    reader = csv.DictReader(csv_path.open(), delimiter=",")
+    for row in reader:
+
+        config = {}
+        # Get experiment name.
+        assert row["experiment_name"] != ""
+        config["experiment_name"] = row["experiment_name"]
+
+        # Get steps as a list of names.
+        config["steps"] = row["steps"].split(";")
+
+        # Get train/val/test folders.
+        config["data_paths"] = {}
+        for dataset in ["train", "val", "test"]:
+            config["data_paths"][dataset] = {}
+            if dataset in ["train", "val"]:
+                for folder, key in zip(
+                    ["images", "labels", "labels_json"], ["image", "mask", "json"]
+                ):
+                    if row[dataset] != "":
+                        config["data_paths"][dataset][key] = [
+                            os.path.join(element, dataset, folder)
+                            for element in row[dataset].split(";")
+                        ]
+                    else:
+                        config["data_paths"][dataset][key] = []
+            else:
+                for folder, key in zip(["images", "labels_json"], ["image", "json"]):
+                    if row[dataset] != "":
+                        config["data_paths"][dataset][key] = [
+                            os.path.join(element, dataset, folder)
+                            for element in row[dataset].split(";")
+                        ]
+                    else:
+                        config["data_paths"][dataset][key] = []
+
+        # Get restore model.
+        if row["restore_model"] != "":
+            config["training"] = {"restore_model": row["restore_model"]}
+            if row["loss"] != "":
+                config["training"]["loss"] = row["loss"]
+
+        yield config
+
+
+def run(csv_path, output):
     """
     Retrieve the configurations for the experiments from a config csv file.
     Save each configuration into TMP_DIR/experiment_name file.
     """
-    os.makedirs(TMP_DIR, exist_ok=True)
+    os.makedirs(output, exist_ok=True)
 
-    with open(config) as config_file:
-        reader = csv.DictReader(config_file, delimiter=",")
-        for index, row in enumerate(reader, 1):
+    for index, config in enumerate(generate_configurations(csv_path), 1):
 
-            json_dict = {}
-            # Get experiment name.
-            assert row["experiment_name"] != ""
-            json_dict["experiment_name"] = row["experiment_name"]
-
-            # Get steps as a list of names.
-            json_dict["steps"] = row["steps"].split(";")
-
-            # Get train/val/test folders.
-            json_dict["data_paths"] = {}
-            for set in ["train", "val", "test"]:
-                json_dict["data_paths"][set] = {}
-                if set in ["train", "val"]:
-                    for folder, key in zip(
-                        ["images", "labels", "labels_json"], ["image", "mask", "json"]
-                    ):
-                        if row[set] != "":
-                            json_dict["data_paths"][set][key] = [
-                                os.path.join(element, set, folder)
-                                for element in row[set].split(";")
-                            ]
-                        else:
-                            json_dict["data_paths"][set][key] = []
-                else:
-                    for folder, key in zip(
-                        ["images", "labels_json"], ["image", "json"]
-                    ):
-                        if row[set] != "":
-                            json_dict["data_paths"][set][key] = [
-                                os.path.join(element, set, folder)
-                                for element in row[set].split(";")
-                            ]
-                        else:
-                            json_dict["data_paths"][set][key] = []
-
-            # Get restore model.
-            if row["restore_model"] != "":
-                json_dict["training"] = {"restore_model": row["restore_model"]}
-                if row["loss"] != "":
-                    json_dict["training"]["loss"] = row["loss"]
-
-            # Save configuration file.
-            json_file = str(index) + "_" + row["experiment_name"] + ".json"
-            with open(os.path.join(TMP_DIR, json_file), "w") as file:
-                json.dump(
-                    {key: value for key, value in json_dict.items() if value},
-                    file,
-                    indent=4,
-                )
+        # Save each configuration in a dedicated file file.
+        json_file = str(index) + "_" + config["experiment_name"] + ".json"
+        with open(os.path.join(output, json_file), "w") as file:
+            json.dump(
+                {key: value for key, value in config.items() if value},
+                file,
+                indent=4,
+            )
 
     logging.info(
-        f"Retrieved {index} experiment configurations from {config}"
+        f"Retrieved {index} experiment configurations from {csv_path}"
         if index > 1
-        else f"Retrieved {index} experiment configuration from {config}"
+        else f"Retrieved {index} experiment configuration from {csv_path}"
     )
 
 
@@ -99,11 +107,17 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "--config", type=str, required=True, help="Path to the configurations file"
+        "config", type=Path, help="Path to the configurations file (CSV format)"
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("./tmp"),
+        help="Directory where the generated configurations will be stored",
     )
 
     args = parser.parse_args()
-    run(**(vars(args)))
+    run(args.config, args.output)
 
 
 if __name__ == "__main__":
