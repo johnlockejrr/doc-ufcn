@@ -15,11 +15,18 @@ import logging
 import os
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
+
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-STEPS = ["normalization_params", "train", "prediction", "evaluation"]
+
+STAGE_TRAIN = "train"
+STAGE_VAL = "val"
+STAGE_TEST = "test"
+
+CONVERT = {"images": "image", "labels": "mask", "labels_json": "json"}
 
 
 def generate_configurations(csv_path):
@@ -27,13 +34,16 @@ def generate_configurations(csv_path):
     Read configuration references from a CSV and generate a configuration
     for each line, using related local files
     """
+    assert csv_path.exists(), f"Missing CSV {csv_path}"
+
+    workdir = csv_path.parent.resolve()
 
     reader = csv.DictReader(csv_path.open(), delimiter=",")
     for row in reader:
 
         config = {}
         # Get experiment name.
-        assert row["experiment_name"] != ""
+        assert row["experiment_name"] != "", "Missing experiment name"
         config["experiment_name"] = row["experiment_name"]
 
         # Get steps as a list of names.
@@ -41,28 +51,22 @@ def generate_configurations(csv_path):
 
         # Get train/val/test folders.
         config["data_paths"] = {}
-        for dataset in ["train", "val", "test"]:
+        for dataset in [STAGE_TRAIN, STAGE_VAL, STAGE_TEST]:
             config["data_paths"][dataset] = {}
-            if dataset in ["train", "val"]:
-                for folder, key in zip(
-                    ["images", "labels", "labels_json"], ["image", "mask", "json"]
-                ):
-                    if row[dataset] != "":
-                        config["data_paths"][dataset][key] = [
-                            os.path.join(element, dataset, folder)
-                            for element in row[dataset].split(";")
-                        ]
-                    else:
-                        config["data_paths"][dataset][key] = []
-            else:
-                for folder, key in zip(["images", "labels_json"], ["image", "json"]):
-                    if row[dataset] != "":
-                        config["data_paths"][dataset][key] = [
-                            os.path.join(element, dataset, folder)
-                            for element in row[dataset].split(";")
-                        ]
-                    else:
-                        config["data_paths"][dataset][key] = []
+
+            # Handle conversion table, no labels when running tests
+            conversion_table = dict(CONVERT)
+            if dataset == STAGE_TEST:
+                del conversion_table["labels"]
+
+            for folder, key in CONVERT.items():
+                if row[dataset] != "":
+                    config["data_paths"][dataset][key] = [
+                        (workdir / element / dataset / folder).as_posix()
+                        for element in row[dataset].split(";")
+                    ]
+                else:
+                    config["data_paths"][dataset][key] = []
 
         # Get restore model.
         if row["restore_model"] != "":
@@ -91,7 +95,7 @@ def run(csv_path, output):
                 indent=4,
             )
 
-    logging.info(
+    logger.info(
         f"Retrieved {index} experiment configurations from {csv_path}"
         if index > 1
         else f"Retrieved {index} experiment configuration from {csv_path}"

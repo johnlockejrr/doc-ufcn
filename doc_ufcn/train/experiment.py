@@ -357,7 +357,7 @@ def run(
 ):
     """
     Main program.
-    :param global_params: Global parameters of the experiment entered by the used.
+    :param global_params: Global parameters of the experiment entered by the user.
     :param params: Global parameters of the experiment.
     :param log_path: Path to save the experiment information and model.
     :param tb_path: Path to save the Tensorboard events.
@@ -367,63 +367,64 @@ def run(
     """
     if len(steps) == 0:
         logging.info("No step to run, exiting execution.")
-    else:
-        # Get the default parameters.
-        params = Params.from_dict(params)
-        save_config()
+        return
 
-        if "normalization_params" in steps:
-            normalization_params(
-                log_path, exp_data_paths, params, global_params["img_size"]
-            )
+    # Get the default parameters.
+    params = Params.from_dict(params)
+    save_config()
 
-        if "train" in steps or "prediction" in steps:
-            # Get the mean and std values.
-            norm_params = get_mean_std()
+    if "normalization_params" in steps:
+        normalization_params(
+            log_path, exp_data_paths, params, global_params["img_size"]
+        )
 
-        if "train" in steps:
-            # Generate the loaders and start training.
-            loaders = training_loaders(norm_params)
-            tr_params = training_initialization()
-            train(
-                params.model_path,
-                log_path,
-                tb_path,
-                global_params["no_of_epochs"],
-                norm_params,
-                global_params["classes_names"],
-                loaders,
-                tr_params,
-                ex,
-            )
+    if "train" in steps or "prediction" in steps:
+        # Get the mean and std values.
+        norm_params = get_mean_std()
 
-        if "prediction" in steps:
-            # Generate the loaders and start predicting.
-            loaders = prediction_loaders(norm_params)
-            net = prediction_initialization()
-            predict(
-                params.prediction_path,
-                log_path,
-                global_params["img_size"],
-                global_params["classes_colors"],
-                global_params["classes_names"],
-                global_params["save_image"],
-                global_params["min_cc"],
-                loaders,
-                net,
-            )
+    if "train" in steps:
+        # Generate the loaders and start training.
+        loaders = training_loaders(norm_params)
+        tr_params = training_initialization()
+        train(
+            params.model_path,
+            log_path,
+            tb_path,
+            global_params["no_of_epochs"],
+            norm_params,
+            global_params["classes_names"],
+            loaders,
+            tr_params,
+            ex,
+        )
 
-        if "evaluation" in steps:
-            for set in exp_data_paths.keys():
-                for dataset in exp_data_paths[set]["json"]:
-                    if os.path.isdir(dataset):
-                        evaluate(
-                            log_path,
-                            global_params["classes_names"],
-                            set,
-                            exp_data_paths[set]["json"],
-                            str(dataset.parent.parent.name),
-                            params,
-                        )
-                    else:
-                        logging.info(f"{dataset} folder not found.")
+    if "prediction" in steps:
+        # Generate the loaders and start predicting.
+        loaders = prediction_loaders(norm_params)
+        net = prediction_initialization()
+        predict(
+            params.prediction_path,
+            log_path,
+            global_params["img_size"],
+            global_params["classes_colors"],
+            global_params["classes_names"],
+            global_params["save_image"],
+            global_params["min_cc"],
+            loaders,
+            net,
+        )
+
+    if "evaluation" in steps:
+        for set in exp_data_paths.keys():
+            for dataset in exp_data_paths[set]["json"]:
+                if os.path.isdir(dataset):
+                    evaluate(
+                        log_path,
+                        global_params["classes_names"],
+                        set,
+                        exp_data_paths[set]["json"],
+                        str(dataset.parent.parent.name),
+                        params,
+                    )
+                else:
+                    logging.info(f"{dataset} folder not found.")
