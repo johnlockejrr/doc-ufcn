@@ -32,10 +32,9 @@ def init_metrics(no_of_classes: int) -> dict:
     return {"matrix": np.zeros((no_of_classes, no_of_classes)), "loss": 0}
 
 
-def log_metrics(ex, epoch: int, metrics: dict, writer, step: str):
+def log_metrics(epoch: int, metrics: dict, writer, step: str):
     """
     Log the computed metrics to Tensorboard and Omniboard.
-    :param ex: The Sacred object to log information.
     :param epoch: The current epoch.
     :param metrics: The metrics to log.
     :param writer: The Tensorboard object to log information.
@@ -43,7 +42,6 @@ def log_metrics(ex, epoch: int, metrics: dict, writer, step: str):
     """
     for key in metrics.keys():
         writer.add_scalar(step + "_" + key, metrics[key], epoch)
-        ex.log_scalar(step.lower() + "." + key, metrics[key], epoch)
         if step == "Training":
             logging.info("  TRAIN {}: {}={}".format(epoch, key, round(metrics[key], 4)))
         else:
@@ -135,7 +133,6 @@ def run(
     classes_names: list,
     loaders: dict,
     tr_params: dict,
-    ex,
 ):
     """
     Run the training.
@@ -172,7 +169,7 @@ def run(
             step="Training",
         )
 
-        log_metrics(ex, current_epoch, epoch_values, writer, step="Training")
+        log_metrics(current_epoch, epoch_values, writer, step="Training")
 
         with torch.no_grad():
             # Run evaluation.
@@ -188,7 +185,7 @@ def run(
                 classes_names,
                 step="Validation",
             )
-            log_metrics(ex, current_epoch, epoch_values, writer, step="Validation")
+            log_metrics(current_epoch, epoch_values, writer, step="Validation")
             # Keep best model.
             if epoch_values["loss"] < tr_params["best_loss"]:
                 tr_params["best_loss"] = epoch_values["loss"]

@@ -14,8 +14,6 @@ import os
 import sys
 from pathlib import Path
 
-from sacred import Experiment
-from sacred.observers import MongoObserver
 from torch.cuda.amp import GradScaler
 from torch.optim import Adam
 from torch.utils.data import DataLoader
@@ -41,14 +39,11 @@ from doc_ufcn.train.utils.training import Diceloss
 
 STEPS = ["normalization_params", "train", "prediction", "evaluation"]
 
-ex = Experiment("Doc-UFCN")
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
-mongo_url = "mongodb://user:password@omniboard.vpn/sacred"
 
 
-@ex.config
 def default_config():
     """
     Define the default configuration for the experiment.
@@ -134,11 +129,8 @@ def default_config():
     training = {"restore_model": None, "loss": "initial"}
     training["loss"] = training["loss"].lower()
     assert training["loss"] in ["initial", "best"]
-    if "train" in steps and global_params["omniboard"] is True:
-        ex.observers.append(MongoObserver(mongo_url))
 
 
-@ex.capture
 def save_config(
     log_path: str,
     experiment_name: str,
@@ -171,7 +163,6 @@ def save_config(
         json.dump(json_dict, config_file, indent=4)
 
 
-@ex.capture
 def get_mean_std(log_path: str, params: Params) -> dict:
     """
     Retrieve the mean and std values computed during the first 'normalization
@@ -198,7 +189,6 @@ def get_mean_std(log_path: str, params: Params) -> dict:
     return {"mean": mean, "std": std}
 
 
-@ex.capture
 def training_loaders(
     norm_params: dict, exp_data_paths: dict, global_params: dict
 ) -> dict:
@@ -244,7 +234,6 @@ def training_loaders(
     return loaders
 
 
-@ex.capture
 def prediction_loaders(
     norm_params: dict, exp_data_paths: dict, global_params: dict
 ) -> dict:
@@ -281,7 +270,6 @@ def prediction_loaders(
     return loaders
 
 
-@ex.capture
 def training_initialization(global_params: dict, training: dict, log_path: str) -> dict:
     """
     Initialize the training step.
@@ -291,8 +279,8 @@ def training_initialization(global_params: dict, training: dict, log_path: str) 
     :return tr_params: A dictionary with the training parameters.
     """
     no_of_classes = len(global_params["classes_names"])
-    ex.log_scalar("no_of_classes", no_of_classes)
-    net = model.load_network(no_of_classes, global_params["use_amp"], ex)
+    # TODO: log number of classes on tensorboard ?
+    net = model.load_network(no_of_classes, global_params["use_amp"])
 
     if training["restore_model"] is None:
         net.apply(model.weights_init)
@@ -328,7 +316,6 @@ def training_initialization(global_params: dict, training: dict, log_path: str) 
     return tr_params
 
 
-@ex.capture
 def prediction_initialization(params: dict, global_params: dict, log_path: str) -> dict:
     """
     Initialize the prediction step.
@@ -339,13 +326,12 @@ def prediction_initialization(params: dict, global_params: dict, log_path: str) 
     """
     params = Params.from_dict(params)
     no_of_classes = len(global_params["classes_names"])
-    net = model.load_network(no_of_classes, False, ex)
+    net = model.load_network(no_of_classes, False)
 
     _, net, _, _ = model.restore_model(net, None, None, log_path, params.model_path)
     return net
 
 
-@ex.automain
 def run(
     global_params: dict,
     params: Params,
@@ -395,7 +381,6 @@ def run(
             global_params["classes_names"],
             loaders,
             tr_params,
-            ex,
         )
 
     if "prediction" in steps:
