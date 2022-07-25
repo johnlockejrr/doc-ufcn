@@ -10,15 +10,15 @@ from doc_ufcn import model
     "no_of_classes, expected_no_of_params",
     [
         # 1 class
-        (1, 4095745),
+        (1, 4092897),
         # 2 classes
-        (2, 4096322),
+        (2, 4093474),
         # Wrong number of classes
         (2.5, None),
         # Wrong number of classes
         (-1, None),
         # 5 classes
-        (5, 4098053),
+        (5, 4095205),
     ],
 )
 def test_DocUFCNModel(no_of_classes, expected_no_of_params):

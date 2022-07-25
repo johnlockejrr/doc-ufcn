@@ -13,10 +13,11 @@ import os
 import time
 
 import numpy as np
-import utils.evaluation_utils as ev_utils
-import utils.object_metrics as o_metrics
-import utils.pixel_metrics as p_metrics
 from tqdm import tqdm
+
+import doc_ufcn.train.utils.evaluation as ev_utils
+import doc_ufcn.train.utils.object_metrics as o_metrics
+import doc_ufcn.train.utils.pixel_metrics as p_metrics
 
 
 def run(

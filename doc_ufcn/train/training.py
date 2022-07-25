@@ -14,12 +14,13 @@ import time
 
 import numpy as np
 import torch
-import utils.training_pixel_metrics as p_metrics
-import utils.training_utils as tr_utils
 from torch.cuda.amp import autocast
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
-from utils import model
+
+import doc_ufcn.train.utils.training as tr_utils
+import doc_ufcn.train.utils.training_pixel_metrics as p_metrics
+from doc_ufcn import model
 
 
 def init_metrics(no_of_classes: int) -> dict:

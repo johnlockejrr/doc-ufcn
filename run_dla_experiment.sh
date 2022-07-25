@@ -28,7 +28,7 @@ then
    helpFunction
 fi
 
-python3 retrieve_experiments_configs.py --config "$config"
+python3 doc_ufcn/train/config.py --config "$config"
 
 index=1
 
@@ -39,11 +39,11 @@ for filename in ${TMP_DIR}/*; do
 
     if [ "$slack" == "false" ] || [ "$slack" == "False" ]
     then
-        python3 run_experiment.py with experiments_config.json "$filename" 2>&1 | tee >(grep --line-buffered -v "(prog)" > DLA_train_"${index}".log)
+        python3 doc_ufcn/train/experiment.py with experiments_config.json "$filename" 2>&1 | tee >(grep --line-buffered -v "(prog)" > DLA_train_"${index}".log)
     else
-        python3 run_experiment.py with experiments_config.json "$filename" 2>&1 | tee >(grep --line-buffered -v "(prog)" > DLA_train_"${index}".log) \
-        && (python3 notify-slack.py "INFO: Experiment completed" --log_file DLA_train_"${index}".log) \
-        || (python3 notify-slack.py "ERROR: Experiment failed" --log_file DLA_train_"${index}".log ; exit)
+        python3 doc_ufcn/train/experiment.py with experiments_config.json "$filename" 2>&1 | tee >(grep --line-buffered -v "(prog)" > DLA_train_"${index}".log) \
+        && (python3 tools/notify-slack.py "INFO: Experiment completed" --log_file DLA_train_"${index}".log) \
+        || (python3 tools/notify-slack.py "ERROR: Experiment failed" --log_file DLA_train_"${index}".log ; exit)
     fi
 
     index=$((index+1))
