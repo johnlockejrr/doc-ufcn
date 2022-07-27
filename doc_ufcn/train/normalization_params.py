@@ -16,11 +16,10 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from tqdm import tqdm
 
-from doc_ufcn.train.utils.params import Params
 from doc_ufcn.train.utils.preprocessing import PredictionDataset, Rescale, ToTensor
 
 
-def run(log_path: str, data_paths: dict, params: Params, img_size: int):
+def run(log_path: str, data_paths: dict, params: dict, img_size: int):
     """
     Compute the normalization parameters: mean and standard deviation on
     train set.
@@ -49,10 +48,10 @@ def run(log_path: str, data_paths: dict, params: Params, img_size: int):
     logging.info("Mean: {}".format(np.uint8(mean)))
     logging.info(" Std: {}".format(np.uint8(std)))
 
-    with open(os.path.join(log_path, params.mean), "w") as file:
+    with open(os.path.join(log_path, params["mean"]), "w") as file:
         for value in mean:
             file.write(str(np.uint8(value)) + "\n")
 
-    with open(os.path.join(log_path, params.std), "w") as file:
+    with open(os.path.join(log_path, params["std"]), "w") as file:
         for value in std:
             file.write(str(np.uint8(value)) + "\n")

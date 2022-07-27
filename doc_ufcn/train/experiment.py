@@ -11,7 +11,6 @@
 import json
 import logging
 import os
-import sys
 from pathlib import Path
 
 from torch.cuda.amp import GradScaler
@@ -26,7 +25,6 @@ from doc_ufcn.train.normalization_params import run as normalization_params
 from doc_ufcn.train.predict import run as predict
 from doc_ufcn.train.training import run as train
 from doc_ufcn.train.utils import DLACollateFunction, Sampler
-from doc_ufcn.train.utils.params import Params
 from doc_ufcn.train.utils.preprocessing import (
     Normalize,
     Pad,
@@ -37,109 +35,10 @@ from doc_ufcn.train.utils.preprocessing import (
 )
 from doc_ufcn.train.utils.training import Diceloss
 
-STEPS = ["normalization_params", "train", "prediction", "evaluation"]
-
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logger = logging.getLogger(__name__)
 
 
-def default_config():
-    """
-    Define the default configuration for the experiment.
-    :classes_names: The names of the classes involved during the experiment.
-    :classes_colors: The classes color codes.
-    :img_size: Network input size.
-    :no_of_epochs: Total number of epochs to run.
-    :batch_size: Size of the batch to use during training.
-    :no_of_params: Maximum number of parameters the system can
-                   support (used to automatically compute batch size).
-    :bin_size: Step (in pixels) between two groups of images.
-    :learning_rate: Initial learning rate to use during training.
-    :omniboard: Whether to use Omniboard.
-    :min_cc: Threshold used to remove small connected components.
-    :save_image: List of sets (train, val, test) for which the prediction images
-                 are generated and saved.
-    :use_amp: Whether to use Automatic Mixed Precision.
-    :params: Parameters to use during all the experiment steps.
-    :experiment_name: The name of the experiment that is used to save all
-                      the experiment information.
-    :log_path: Path to save the experiment information and model.
-    :tb_path: Path to save the Tensorboard events.
-    :steps: List of the steps to run.
-    :data_paths: Path to the experiment data folders.
-    :restore_model: Path to the model to restore to resume a training.
-    :loss: Indicates whether to use 'initial' or 'best' saved loss.
-    """
-    # Load the global experiments parameters from experiments_config.json.
-    global_params = {
-        "classes_names": ["background", "text_line"],
-        "classes_colors": [[0, 0, 0], [0, 0, 255]],
-        "img_size": 768,
-        "no_of_epochs": 100,
-        "batch_size": None,
-        "no_of_params": None,
-        "bin_size": 20,
-        "learning_rate": 5e-3,
-        "omniboard": False,
-        "min_cc": 0,
-        "save_image": [],
-        "use_amp": False,
-    }
-    assert (
-        global_params["batch_size"] is not None
-        or global_params["no_of_params"] is not None
-    ), "Please provide a batch size or a maximum number of parameters"
-    params = Params().to_dict()  # noqa: F841
-
-    # Load the current experiment parameters.
-    experiment_name = "doc-ufcn"
-    log_path = "runs/" + experiment_name.lower().replace(  # noqa: F841
-        " ", "_"
-    ).replace("-", "_")
-    tb_path = "events/"  # noqa: F841
-    steps = ["normalization_params", "train", "prediction", "evaluation"]
-    for step in steps:
-        assert step in STEPS
-
-    data_paths = {
-        "train": {
-            "image": ["./data/train/images/"],
-            "mask": ["./data/train/labels/"],
-            "json": ["./data/train/labels_json/"],
-        },
-        "val": {
-            "image": ["./data/val/images/"],
-            "mask": ["./data/val/labels/"],
-            "json": ["./data/val/labels_json/"],
-        },
-        "test": {
-            "image": ["./data/test/images/"],
-            "json": ["./data/test/labels_json/"],
-        },
-    }
-    exp_data_paths = {  # noqa: F841
-        set: {
-            key: [Path(element).expanduser() for element in value]
-            for key, value in paths.items()
-        }
-        for set, paths in data_paths.items()
-    }
-
-    training = {"restore_model": None, "loss": "initial"}
-    training["loss"] = training["loss"].lower()
-    assert training["loss"] in ["initial", "best"]
-
-
-def save_config(
-    log_path: str,
-    experiment_name: str,
-    global_params: dict,
-    params: Params,
-    steps: list,
-    data_paths: dict,
-    training: dict,
-):
+def save_config(config: dict):
     """
     Save the current configuration.
     :param log_path: Path to save the experiment information and model.
@@ -151,19 +50,14 @@ def save_config(
     :param data_paths: Path to the experiment data folders.
     :param training: Training parameters.
     """
-    os.makedirs(log_path, exist_ok=True)
-    json_dict = {
-        "global_params": global_params,
-        "params": params,
-        "steps": steps,
-        "data_paths": data_paths,
-        "training": training,
-    }
-    with open(os.path.join(log_path, experiment_name + ".json"), "w") as config_file:
-        json.dump(json_dict, config_file, indent=4)
+    os.makedirs(config["log_path"], exist_ok=True)
+    path = config["log_path"] / (config["experiment_name"] + ".json")
+    with open(path, "w") as config_file:
+        json.dump(config, config_file, indent=4, default=str)
+        logger.info(f"Saved configuration in {path.resolve()}")
 
 
-def get_mean_std(log_path: str, params: Params) -> dict:
+def get_mean_std(log_path: Path, params: dict) -> dict:
     """
     Retrieve the mean and std values computed during the first 'normalization
     params' step.
@@ -171,21 +65,22 @@ def get_mean_std(log_path: str, params: Params) -> dict:
     :param params: Parameters to use to find the mean and std files.
     :return: A dictionary containing the mean and std values.
     """
-    params = Params.from_dict(params)
-    if not os.path.isfile(os.path.join(log_path, params.mean)):
-        logging.error("No file found at %s", os.path.join(log_path, params.mean))
-        sys.exit()
-    else:
-        with open(os.path.join(log_path, params.mean), "r") as file:
-            mean = file.read().splitlines()
-            mean = [int(value) for value in mean]
-    if not os.path.isfile(os.path.join(log_path, params.std)):
-        logging.error("No file found at %s", os.path.join(log_path, params.std))
-        sys.exit()
-    else:
-        with open(os.path.join(log_path, params.std), "r") as file:
-            std = file.read().splitlines()
-            std = [int(value) for value in std]
+    mean_path = log_path / params["mean"]
+    if not mean_path.exists():
+        raise Exception(f"No file found at {mean_path}")
+
+    std_path = log_path / params["std"]
+    if not std_path.exists():
+        raise Exception(f"No file found at {std_path}")
+
+    with mean_path.open() as f:
+        mean = f.read().splitlines()
+        mean = [int(value) for value in mean]
+
+    with std_path.open() as f:
+        std = f.read().splitlines()
+        std = [int(value) for value in std]
+
     return {"mean": mean, "std": std}
 
 
@@ -324,7 +219,6 @@ def prediction_initialization(params: dict, global_params: dict, log_path: str) 
     :param log_path: Path to save the experiment information and model.
     :return: A dictionary with the prediction parameters.
     """
-    params = Params.from_dict(params)
     no_of_classes = len(global_params["classes_names"])
     net = model.load_network(no_of_classes, False)
 
@@ -332,84 +226,78 @@ def prediction_initialization(params: dict, global_params: dict, log_path: str) 
     return net
 
 
-def run(
-    global_params: dict,
-    params: Params,
-    log_path: str,
-    tb_path: str,
-    steps: list,
-    exp_data_paths: dict,
-    training: dict,
-):
+def run(config: dict):
     """
-    Main program.
-    :param global_params: Global parameters of the experiment entered by the user.
-    :param params: Global parameters of the experiment.
-    :param log_path: Path to save the experiment information and model.
-    :param tb_path: Path to save the Tensorboard events.
-    :param steps: List of the steps to run.
-    :param exp_data_paths: Path to the data folders.
-    :param training: Training parameters.
+    Main program, training a new model, using a valid configuration
     """
-    if len(steps) == 0:
+    if len(config["steps"]) == 0:
         logging.info("No step to run, exiting execution.")
         return
 
-    # Get the default parameters.
-    params = Params.from_dict(params)
-    save_config()
+    save_config(config)
 
-    if "normalization_params" in steps:
+    if "normalization_params" in config["steps"]:
         normalization_params(
-            log_path, exp_data_paths, params, global_params["img_size"]
+            config["log_path"],
+            config["data_paths"],
+            config["params"],
+            config["global_params"]["img_size"],
         )
 
-    if "train" in steps or "prediction" in steps:
+    if "train" in config["steps"] or "prediction" in config["steps"]:
         # Get the mean and std values.
-        norm_params = get_mean_std()
+        norm_params = get_mean_std(config["log_path"], config["params"])
 
-    if "train" in steps:
+    if "train" in config["steps"]:
         # Generate the loaders and start training.
-        loaders = training_loaders(norm_params)
-        tr_params = training_initialization()
+        loaders = training_loaders(
+            norm_params, config["data_paths"], config["global_params"]
+        )
+        tr_params = training_initialization(
+            config["global_params"], config["training"], config["log_path"]
+        )
         train(
-            params.model_path,
-            log_path,
-            tb_path,
-            global_params["no_of_epochs"],
+            config["params"]["model_path"],
+            config["log_path"],
+            config["tb_path"],
+            config["global_params"]["no_of_epochs"],
             norm_params,
-            global_params["classes_names"],
+            config["global_params"]["classes_names"],
             loaders,
             tr_params,
         )
 
-    if "prediction" in steps:
+    if "prediction" in config["steps"]:
         # Generate the loaders and start predicting.
-        loaders = prediction_loaders(norm_params)
-        net = prediction_initialization()
+        loaders = prediction_loaders(
+            norm_params, config["data_paths"], config["global_params"]
+        )
+        net = prediction_initialization(
+            config["params"], config["global_params"], config["log_path"]
+        )
         predict(
-            params.prediction_path,
-            log_path,
-            global_params["img_size"],
-            global_params["classes_colors"],
-            global_params["classes_names"],
-            global_params["save_image"],
-            global_params["min_cc"],
+            config["params"]["prediction_path"],
+            config["log_path"],
+            config["global_params"]["img_size"],
+            config["global_params"]["classes_colors"],
+            config["global_params"]["classes_names"],
+            config["global_params"]["save_image"],
+            config["global_params"]["min_cc"],
             loaders,
             net,
         )
 
-    if "evaluation" in steps:
-        for set in exp_data_paths.keys():
-            for dataset in exp_data_paths[set]["json"]:
+    if "evaluation" in config["steps"]:
+        for set in config["data_paths"].keys():
+            for dataset in config["data_paths"][set]["json"]:
                 if os.path.isdir(dataset):
                     evaluate(
-                        log_path,
-                        global_params["classes_names"],
+                        config["log_path"],
+                        config["global_params"]["classes_names"],
                         set,
-                        exp_data_paths[set]["json"],
+                        config["data_paths"][set]["json"],
                         str(dataset.parent.parent.name),
-                        params,
+                        config["params"],
                     )
                 else:
                     logging.info(f"{dataset} folder not found.")

@@ -39,9 +39,9 @@ for filename in ${TMP_DIR}/*; do
 
     if [ "$slack" == "false" ] || [ "$slack" == "False" ]
     then
-        python3 doc_ufcn/train/experiment.py with experiments_config.json "$filename" 2>&1 | tee >(grep --line-buffered -v "(prog)" > DLA_train_"${index}".log)
+        python3 doc_ufcn/train/cli.py "experiments_config.json" "$filename" 2>&1 | tee >(grep --line-buffered -v "(prog)" > DLA_train_"${index}".log)
     else
-        python3 doc_ufcn/train/experiment.py with experiments_config.json "$filename" 2>&1 | tee >(grep --line-buffered -v "(prog)" > DLA_train_"${index}".log) \
+        python3 doc_ufcn/train/cli.py "experiments_config.json" "$filename" 2>&1 | tee >(grep --line-buffered -v "(prog)" > DLA_train_"${index}".log) \
         && (python3 tools/notify-slack.py "INFO: Experiment completed" --log_file DLA_train_"${index}".log) \
         || (python3 tools/notify-slack.py "ERROR: Experiment failed" --log_file DLA_train_"${index}".log ; exit)
     fi
