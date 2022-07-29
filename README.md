@@ -159,7 +159,6 @@ Different files must be updated according to the task one want to run. Since we 
 | `bin_size`       | Size between two groups of images.                                                                                 | 20                            |
 | `min_cc`         | Threshold to use when removing of small connected components                                                       | `50`                          |
 | `save_image`     | List with the sets ["train", "val", "test"] for which we want to save the predicted masks                          | `["val", "test"]`             |
-| `omniboard`      | Whether to use Omniboard observer                                                                                  | `false`                       |
 | `use_amp`        | Whether to use Automatic Mixed Precision during training                                                           | `false`                       |
 
 The background class **must** always be defined at the first position in the `classes_names` and `classes_colors` fields.
@@ -233,12 +232,6 @@ $ tensorboard --logdir ./runs/experiment_name
 ```
 
 The model and the useful file for visualization are stored in `./runs/experiment_name`.
-
-#### Omniboard
-
-One can also log and visualize the training using [Omniboard](https://github.com/vivekratnavel/omniboard):
-- Put `"omniboard": true` in `experiments_config.json` file;
-- Update the user and password in `run_experiment.py` (l. 34).
 
 ### Result of an experiment
 

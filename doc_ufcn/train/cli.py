@@ -81,7 +81,6 @@ def parse_configurations(paths):
     parser.add_option("no_of_params", type=int, default=None)
     parser.add_option("bin_size", type=int, default=20)
     parser.add_option("learning_rate", type=float, default=5e-3)
-    parser.add_option("omniboard", type=bool, default=False)
     parser.add_option("min_cc", type=int, default=0)
     parser.add_option("save_image", type=str, many=True, default=[])
     parser.add_option("use_amp", type=bool, default=False)
