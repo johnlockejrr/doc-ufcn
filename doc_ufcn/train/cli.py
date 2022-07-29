@@ -84,6 +84,10 @@ def parse_configurations(paths):
     parser.add_option("min_cc", type=int, default=0)
     parser.add_option("save_image", type=str, many=True, default=[])
     parser.add_option("use_amp", type=bool, default=False)
+    parser.add_option("mean", type=str, default="mean")
+    parser.add_option("std", type=str, default="std")
+    parser.add_option("model_path", type=Path, default=Path("model.pth"))
+    parser.add_option("prediction_path", type=Path, default=Path("prediction"))
 
     # Path to save the Tensorboard events.
     parser.add_option("tb_path", type=Path, default=Path("events"))
@@ -129,13 +133,6 @@ def parse_configurations(paths):
     training.add_option("restore_model", type=Path, default=None)
     training.add_option("loss", type=_loss, default="initial")
 
-    # Global parameters of the experiment.
-    params = parser.add_subparser("params", default={})
-    params.add_option("mean", type=str, default="mean")
-    params.add_option("std", type=str, default="std")
-    params.add_option("model_path", type=Path, default=Path("model.pth"))
-    params.add_option("prediction_path", type=Path, default=Path("prediction"))
-
     # Merge all provided configuration files into a single payload
     # that will be validated by the configuration parser described above
     raw = {}
@@ -146,13 +143,14 @@ def parse_configurations(paths):
             logger.error(f"Failed to parse config {path} : {e}")
             raise Exception("Invalid configuration")
 
-    # Promote deprecated global params to root level
-    if "global_params" in raw:
-        logger.warn(
-            "Promoting global_params to root configuration level. You should update your configuration to promote the parameters directly"
-        )
-        global_params = raw.pop("global_params")
-        raw.update(global_params)
+    # Promote deprecated parameters to root level
+    for deprecated_key in ("params", "global_params"):
+        if deprecated_key in raw:
+            logger.warn(
+                f"Promoting {deprecated_key} to root configuration level. You should update your configuration to promote the parameters directly."
+            )
+            deprecated = raw.pop(deprecated_key)
+            raw.update(deprecated)
 
     out = parser.parse_data(raw)
 

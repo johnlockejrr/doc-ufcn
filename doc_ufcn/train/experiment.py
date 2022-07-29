@@ -53,19 +53,20 @@ def save_config(config: dict):
         logger.info(f"Saved configuration in {path.resolve()}")
 
 
-def get_mean_std(log_path: Path, params: dict) -> dict:
+def get_mean_std(log_path: Path, mean_name: str, std_name: str) -> dict:
     """
     Retrieve the mean and std values computed during the first 'normalization
     params' step.
     :param log_path: Path to save the experiment information and model.
-    :param params: Parameters to use to find the mean and std files.
+    :param mean_name: Name of the file that will contain all the mean values.
+    :param std_name: Name of the file that will contain all the std values.
     :return: A dictionary containing the mean and std values.
     """
-    mean_path = log_path / params["mean"]
+    mean_path = log_path / mean_name
     if not mean_path.exists():
         raise Exception(f"No file found at {mean_path}")
 
-    std_path = log_path / params["std"]
+    std_path = log_path / std_name
     if not std_path.exists():
         raise Exception(f"No file found at {std_path}")
 
@@ -214,17 +215,19 @@ def training_initialization(
     return tr_params
 
 
-def prediction_initialization(params: dict, classes_names: list, log_path: str) -> dict:
+def prediction_initialization(
+    model_path: Path, classes_names: list, log_path: str
+) -> dict:
     """
     Initialize the prediction step.
-    :param params: The global parameters of the experiment.
+    :param model_path: Path of the model to load in memory.
     :param log_path: Path to save the experiment information and model.
     :return: A dictionary with the prediction parameters.
     """
     no_of_classes = len(classes_names)
     net = model.load_network(no_of_classes, False)
 
-    _, net, _, _ = model.restore_model(net, None, None, log_path, params.model_path)
+    _, net, _, _ = model.restore_model(net, None, None, log_path, model_path)
     return net
 
 
@@ -238,13 +241,14 @@ def run(config: dict):
         normalization_params(
             config["log_path"],
             config["data_paths"],
-            config["params"],
             config["img_size"],
+            config["mean"],
+            config["std"],
         )
 
     if "train" in config["steps"] or "prediction" in config["steps"]:
         # Get the mean and std values.
-        norm_params = get_mean_std(config["log_path"], config["params"])
+        norm_params = get_mean_std(config["log_path"], config["mean"], config["std"])
 
     if "train" in config["steps"]:
         # Generate the loaders and start training.
@@ -266,7 +270,7 @@ def run(config: dict):
             config["learning_rate"],
         )
         train(
-            config["params"]["model_path"],
+            config["model_path"],
             config["log_path"],
             config["tb_path"],
             config["no_of_epochs"],
@@ -282,10 +286,10 @@ def run(config: dict):
             norm_params, config["data_paths"], config["img_size"]
         )
         net = prediction_initialization(
-            config["params"], config["classes_names"], config["log_path"]
+            config["model_path"], config["classes_names"], config["log_path"]
         )
         predict(
-            config["params"]["prediction_path"],
+            config["prediction_path"],
             config["log_path"],
             config["img_size"],
             config["classes_colors"],
@@ -306,7 +310,7 @@ def run(config: dict):
                         set,
                         config["data_paths"][set]["json"],
                         str(dataset.parent.parent.name),
-                        config["params"],
+                        config,
                     )
                 else:
                     logging.info(f"{dataset} folder not found.")
