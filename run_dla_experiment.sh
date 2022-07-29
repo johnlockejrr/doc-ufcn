@@ -28,7 +28,7 @@ then
    helpFunction
 fi
 
-python3 doc_ufcn/train/config.py "$config"
+python3 tools/training-csv-config.py "$config"
 
 index=1
 
