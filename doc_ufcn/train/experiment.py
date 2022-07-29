@@ -310,7 +310,8 @@ def run(config: dict):
                         set,
                         config["data_paths"][set]["json"],
                         str(dataset.parent.parent.name),
-                        config,
+                        config["prediction_path"],
+                        config["evaluation_path"],
                     )
                 else:
                     logging.info(f"{dataset} folder not found.")

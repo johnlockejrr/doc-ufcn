@@ -11,6 +11,7 @@
 import logging
 import os
 import time
+from pathlib import Path
 
 import numpy as np
 from tqdm import tqdm
@@ -27,6 +28,8 @@ def run(
     data_paths: dict,
     dataset: str,
     params: dict,
+    prediction_path: Path,
+    evaluation_path: Path,
 ):
     """
     Run the evaluation.
@@ -35,7 +38,8 @@ def run(
     :param set: The current evaluated set.
     :param data_paths: Path to the data folders.
     :param dataset: The dataset to evaluate.
-    :param params: The evaluation parameters.
+    :param prediction_path: Path where the prediction has been written.
+    :param evaluation_path: Path where the evaluation will been written.
     """
     # Run evaluation.
     logging.info("Starting evaluation: " + dataset)
@@ -62,7 +66,7 @@ def run(
     for img_name in tqdm(os.listdir(label_dir), desc="Evaluation (prog) " + set):
         gt_regions = ev_utils.read_json(os.path.join(label_dir, img_name))
         pred_regions = ev_utils.read_json(
-            os.path.join(log_path, params.prediction_path, set, dataset, img_name)
+            os.path.join(log_path, prediction_path, set, dataset, img_name)
         )
         assert gt_regions["img_size"] == pred_regions["img_size"]
         gt_polys = ev_utils.get_polygons(gt_regions, classes_names)
@@ -103,14 +107,14 @@ def run(
         print("AP [0.5,0.95] = ", np.round(np.mean(list(aps.values())), 4))
         print("\n")
 
-    os.makedirs(os.path.join(log_path, params.evaluation_path, set), exist_ok=True)
+    os.makedirs(os.path.join(log_path, evaluation_path, set), exist_ok=True)
     # ev_utils.save_graphical_results(object_metrics, classes_names[1:],
     #                                os.path.join(log_path, params.evaluation_path, set))
     ev_utils.save_results(
         pixel_metrics,
         object_metrics,
         classes_names[1:],
-        os.path.join(log_path, params.evaluation_path, set),
+        os.path.join(log_path, evaluation_path, set),
         dataset,
     )
 
