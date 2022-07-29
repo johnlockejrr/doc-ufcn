@@ -45,6 +45,23 @@ def parse_configurations(paths):
             raise ConfigurationError(f"Invalid loss {value}")
         return value
 
+    def _rgb(value: list):
+        if not isinstance(value, (list, tuple)):
+            raise ConfigurationError("This RGB value should be a list or tuple")
+
+        if len(value) != 3:
+            raise ConfigurationError("This RGB value should be a list with 3 items")
+
+        if not all(isinstance(v, int) for v in value):
+            raise ConfigurationError("This RGB value should be set with integers only")
+
+        if not all(0 <= v <= 255 for v in value):
+            raise ConfigurationError(
+                "This RGB value should be set with integers in range 0-255"
+            )
+
+        return value
+
     parser = ConfigParser()
     parser.add_option("experiment_name", type=str, default="doc-ufcn")
 
@@ -108,10 +125,10 @@ def parse_configurations(paths):
         "classes_names", type=str, many=True, default=["background", "text_line"]
     )
     global_params.add_option(
-        "classes_colors", type=str, many=True, default=[[0, 0, 0], [0, 0, 255]]
+        "classes_colors", type=_rgb, many=True, default=[[0, 0, 0], [0, 0, 255]]
     )
     global_params.add_option("img_size", type=int, default=768)
-    global_params.add_option("no_of_epoch", type=int, default=100)
+    global_params.add_option("no_of_epochs", type=int, default=100)
     global_params.add_option("batch_size", type=int, default=None)
     global_params.add_option("no_of_params", type=int, default=None)
     global_params.add_option("bin_size", type=int, default=20)
