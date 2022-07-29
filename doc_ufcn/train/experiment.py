@@ -241,7 +241,7 @@ def run(config: dict):
             config["log_path"],
             config["data_paths"],
             config["params"],
-            config["global_params"]["img_size"],
+            config["img_size"],
         )
 
     if "train" in config["steps"] or "prediction" in config["steps"]:
@@ -250,39 +250,33 @@ def run(config: dict):
 
     if "train" in config["steps"]:
         # Generate the loaders and start training.
-        loaders = training_loaders(
-            norm_params, config["data_paths"], config["global_params"]
-        )
+        loaders = training_loaders(norm_params, config["data_paths"], config)
         tr_params = training_initialization(
-            config["global_params"], config["training"], config["log_path"]
+            config, config["training"], config["log_path"]
         )
         train(
             config["params"]["model_path"],
             config["log_path"],
             config["tb_path"],
-            config["global_params"]["no_of_epochs"],
+            config["no_of_epochs"],
             norm_params,
-            config["global_params"]["classes_names"],
+            config["classes_names"],
             loaders,
             tr_params,
         )
 
     if "prediction" in config["steps"]:
         # Generate the loaders and start predicting.
-        loaders = prediction_loaders(
-            norm_params, config["data_paths"], config["global_params"]
-        )
-        net = prediction_initialization(
-            config["params"], config["global_params"], config["log_path"]
-        )
+        loaders = prediction_loaders(norm_params, config["data_paths"], config)
+        net = prediction_initialization(config["params"], config, config["log_path"])
         predict(
             config["params"]["prediction_path"],
             config["log_path"],
-            config["global_params"]["img_size"],
-            config["global_params"]["classes_colors"],
-            config["global_params"]["classes_names"],
-            config["global_params"]["save_image"],
-            config["global_params"]["min_cc"],
+            config["img_size"],
+            config["classes_colors"],
+            config["classes_names"],
+            config["save_image"],
+            config["min_cc"],
             loaders,
             net,
         )
@@ -293,7 +287,7 @@ def run(config: dict):
                 if os.path.isdir(dataset):
                     evaluate(
                         config["log_path"],
-                        config["global_params"]["classes_names"],
+                        config["classes_names"],
                         set,
                         config["data_paths"][set]["json"],
                         str(dataset.parent.parent.name),

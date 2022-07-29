@@ -68,6 +68,24 @@ def parse_configurations(paths):
     # List of the steps to run.
     parser.add_option("steps", type=_step, many=True, default=STEPS)
 
+    # Global parameters of the experiment entered by the user.
+    parser.add_option(
+        "classes_names", type=str, many=True, default=["background", "text_line"]
+    )
+    parser.add_option(
+        "classes_colors", type=_rgb, many=True, default=[[0, 0, 0], [0, 0, 255]]
+    )
+    parser.add_option("img_size", type=int, default=768)
+    parser.add_option("no_of_epochs", type=int, default=100)
+    parser.add_option("batch_size", type=int, default=None)
+    parser.add_option("no_of_params", type=int, default=None)
+    parser.add_option("bin_size", type=int, default=20)
+    parser.add_option("learning_rate", type=float, default=5e-3)
+    parser.add_option("omniboard", type=bool, default=False)
+    parser.add_option("min_cc", type=int, default=0)
+    parser.add_option("save_image", type=str, many=True, default=[])
+    parser.add_option("use_amp", type=bool, default=False)
+
     # Path to save the Tensorboard events.
     parser.add_option("tb_path", type=Path, default=Path("events"))
 
@@ -119,25 +137,6 @@ def parse_configurations(paths):
     params.add_option("model_path", type=Path, default=Path("model.pth"))
     params.add_option("prediction_path", type=Path, default=Path("prediction"))
 
-    # Global parameters of the experiment entered by the user.
-    global_params = parser.add_subparser("global_params", default={})
-    global_params.add_option(
-        "classes_names", type=str, many=True, default=["background", "text_line"]
-    )
-    global_params.add_option(
-        "classes_colors", type=_rgb, many=True, default=[[0, 0, 0], [0, 0, 255]]
-    )
-    global_params.add_option("img_size", type=int, default=768)
-    global_params.add_option("no_of_epochs", type=int, default=100)
-    global_params.add_option("batch_size", type=int, default=None)
-    global_params.add_option("no_of_params", type=int, default=None)
-    global_params.add_option("bin_size", type=int, default=20)
-    global_params.add_option("learning_rate", type=float, default=5e-3)
-    global_params.add_option("omniboard", type=bool, default=False)
-    global_params.add_option("min_cc", type=int, default=0)
-    global_params.add_option("save_image", type=str, many=True, default=[])
-    global_params.add_option("use_amp", type=bool, default=False)
-
     # Merge all provided configuration files into a single payload
     # that will be validated by the configuration parser described above
     raw = {}
@@ -148,11 +147,18 @@ def parse_configurations(paths):
             logger.error(f"Failed to parse config {path} : {e}")
             raise Exception("Invalid configuration")
 
+    # Promote deprecated global params to root level
+    if "global_params" in raw:
+        logger.warn(
+            "Promoting global_params to root configuration level. You should update your configuration to promote the parameters directly"
+        )
+        global_params = raw.pop("global_params")
+        raw.update(global_params)
+
     out = parser.parse_data(raw)
 
     assert (
-        out["global_params"]["batch_size"] is not None
-        or out["global_params"]["no_of_params"] is not None
+        out["batch_size"] is not None or out["no_of_params"] is not None
     ), "Please provide a batch size or a maximum number of parameters"
 
     # Update log path using experiment name
