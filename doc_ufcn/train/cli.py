@@ -3,8 +3,8 @@ import argparse
 import logging
 from pathlib import Path
 
-from doc_ufcn.train.configuration import parse_configurations
-from doc_ufcn.train.experiment import run, save_config
+from doc_ufcn.train.configuration import parse_configurations, save_configuration
+from doc_ufcn.train.experiment import run
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -42,7 +42,7 @@ def main():
         return
 
     # Save configuration to be able to re-run the experiment
-    save_config(config)
+    save_configuration(config)
 
     # Run experiment
     run(config)

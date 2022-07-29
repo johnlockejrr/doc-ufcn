@@ -8,7 +8,6 @@
     Use it to train, predict and evaluate a model.
 """
 
-import json
 import logging
 import os
 from pathlib import Path
@@ -36,21 +35,6 @@ from doc_ufcn.train.utils.preprocessing import (
 from doc_ufcn.train.utils.training import Diceloss
 
 logger = logging.getLogger(__name__)
-
-
-def save_config(config: dict):
-    """
-    Save the current configuration.
-    :param log_path: Path to save the experiment information and model.
-    :param experiment_name: The name of the experiment that is used to save all
-                      the experiment information.
-    :param config : Full configuration payload that will be saved and usable to retry the experiment
-    """
-    os.makedirs(config["log_path"], exist_ok=True)
-    path = config["log_path"] / (config["experiment_name"] + ".json")
-    with open(path, "w") as config_file:
-        json.dump(config, config_file, indent=4, default=str, sort_keys=True)
-        logger.info(f"Saved configuration in {path.resolve()}")
 
 
 def get_mean_std(log_path: Path, mean_name: str, std_name: str) -> dict:
