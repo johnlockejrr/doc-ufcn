@@ -6,7 +6,7 @@ from pathlib import Path
 
 from teklia_toolbox.config import ConfigParser, ConfigurationError
 
-from doc_ufcn.train.experiment import run
+from doc_ufcn.train.experiment import run, save_config
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -175,6 +175,14 @@ def main():
 
     # Parse all configuration files provided from CLI
     config = parse_configurations(args.config)
+
+    # Ensure we have at least one step to run
+    if len(config["steps"]) == 0:
+        logger.error("No step to run, exiting execution.")
+        return
+
+    # Save configuration to be able to re-run the experiment
+    save_config(config)
 
     # Run experiment
     run(config)
