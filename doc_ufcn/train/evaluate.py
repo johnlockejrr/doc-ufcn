@@ -27,7 +27,6 @@ def run(
     set: str,
     data_paths: dict,
     dataset: str,
-    params: dict,
     prediction_path: Path,
     evaluation_path: Path,
 ):

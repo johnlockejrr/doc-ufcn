@@ -79,6 +79,7 @@ def parse_configurations(paths):
     parser.add_option("std", type=str, default="std")
     parser.add_option("model_path", type=Path, default=Path("model.pth"))
     parser.add_option("prediction_path", type=Path, default=Path("prediction"))
+    parser.add_option("evaluation_path", type=Path, default=Path("evaluation"))
 
     # Path to save the Tensorboard events.
     parser.add_option("tb_path", type=Path, default=Path("events"))
