@@ -136,12 +136,11 @@ def weights_init(model):
         torch.nn.init.xavier_uniform_(model.weight.data)
 
 
-def load_network(no_of_classes: int, use_amp: bool, ex):
+def load_network(no_of_classes: int, use_amp: bool):
     """
     Load the network for the experiment.
     :param no_of_classes: The number of classes involved in the experiment.
     :param use_amp: Whether to use Automatic Mixed Precision.
-    :param ex: The Sacred object to log information.
     :return net: The loaded network.
     :return last_layer: The last activation function to apply.
     """
@@ -153,7 +152,6 @@ def load_network(no_of_classes: int, use_amp: bool, ex):
     if torch.cuda.device_count() > 1:
         logger.info("Let's use %d GPUs", torch.cuda.device_count())
         net = torch.nn.DataParallel(net)
-        ex.log_scalar("gpus.number", torch.cuda.device_count())
     return net.to(device)
 
 
