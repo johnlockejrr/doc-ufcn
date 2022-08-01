@@ -195,12 +195,12 @@ def run(
                     epoch_values["loss"],
                     tr_params["optimizer"].state_dict(),
                     tr_params["scaler"].state_dict(),
-                    os.path.join(log_path, model_path),
+                    (log_path / model_path).absolute(),
                 )
                 logging.info("Best model (epoch %d) saved", current_epoch)
 
     # Save last model.
-    path = os.path.join(log_path, "last_" + model_path).replace("model", "model_0")
+    path = str(log_path / f"last_{model_path}").replace("model", "model_0")
     index = 1
     while os.path.exists(path):
         path = path.replace(str(index - 1), str(index))
