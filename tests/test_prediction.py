@@ -1,31 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import os
-
-import cv2
 import numpy as np
 import pytest
 
 from doc_ufcn import prediction
-
-FIXTURES = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    "data",
-)
-
-
-@pytest.fixture
-def test_image():
-    image = cv2.imread(os.path.join(FIXTURES, "test_image.png"))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    return image
-
-
-@pytest.fixture
-def test_masked_image():
-    image = cv2.imread(os.path.join(FIXTURES, "masked_image.png"))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    return image
 
 
 @pytest.mark.parametrize(

@@ -4,21 +4,8 @@ import os
 
 import pytest
 import requests
-import yaml
 
 from doc_ufcn import models
-
-FIXTURES = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    "data",
-)
-
-
-@pytest.fixture
-def test_parameters():
-    with open(os.path.join(FIXTURES, "test_params.yaml"), "r") as f:
-        parameters = yaml.safe_load(f)
-    return parameters
 
 
 @pytest.mark.parametrize(
