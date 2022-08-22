@@ -28,7 +28,7 @@ def generate_mask(
     img = cv2.imread(output_path)
 
     # Draw the polygons on the image
-    for label in label_polygons.keys():
+    for label in label_polygons:
         # Retrieve polygon color
         color = label_colors[label]
         # Retrieve corresponding polygons
