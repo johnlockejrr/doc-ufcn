@@ -32,10 +32,10 @@ def test_generate_mask(
 
     # Generate the mask
     _, output_path = tempfile.mkstemp(suffix=".teklia.test.mask.png")
-    generated_mask_path = generate_mask(
+    generate_mask(
         image_width, image_height, label_polygons, label_colors, output_path
     )
-    generated_mask = cv2.imread(generated_mask_path)
+    generated_mask = cv2.imread(output_path)
 
     assert generated_mask.shape == expected_mask.shape
 

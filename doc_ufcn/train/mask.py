@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 from itertools import combinations
 from pathlib import Path
 
@@ -25,9 +24,8 @@ def generate_mask(
         (image_height, image_width, 3),
         dtype=numpy.uint8,
     )
-    black_image_path = "{}_mask.png".format(os.path.splitext(output_path)[0])
-    cv2.imwrite(black_image_path, black_img)
-    img = cv2.imread(black_image_path)
+    cv2.imwrite(output_path, black_img)
+    img = cv2.imread(output_path)
 
     # Draw the polygons on the image
     for label in ["text_line", "picture"]:
@@ -37,7 +35,7 @@ def generate_mask(
         polygons = [Polygon(poly) for poly in label_polygons[label]]
 
         # Resize the polygons
-        # polygons = resize_polygons(polygons=polygons, height=1, width=1)
+        polygons = resize_polygons(polygons=polygons, height=1, width=1)
 
         # Split the polygons
         polygons = split_polygons(polygons)
@@ -46,8 +44,7 @@ def generate_mask(
         draw_polygons(polygons, img, color)
 
     # Update the mask image on Disk
-    cv2.imwrite(black_image_path, img)
-    return black_image_path
+    cv2.imwrite(output_path, img)
 
 
 def draw_polygons(polygons: list, img, color: tuple) -> None:
