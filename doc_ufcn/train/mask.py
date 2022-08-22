@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import os
 from itertools import combinations
+from pathlib import Path
 
 import cv2
 import numpy
@@ -7,42 +9,56 @@ from shapely.affinity import scale
 from shapely.geometry import LineString, MultiPolygon, Polygon
 
 
-def generate_mask(image_width, image_height, label_polygons, label_colors, output_path):
-
-    image_path = str(output_path)[:-4] + "_mask.png"
-    print(image_path)
+def generate_mask(
+    image_width: int,
+    image_height: int,
+    label_polygons: dict,
+    label_colors: dict,
+    output_path: Path,
+) -> str:
+    """
+    Generate a mask with the given dimensions and polygons.
+    Returns the path to the generated image.
+    """
+    # Remove the extension from the output_path and add the suffix
     black_img = numpy.zeros(
         (image_height, image_width, 3),
         dtype=numpy.uint8,
     )
+    black_image_path = "{}_mask.png".format(os.path.splitext(output_path)[0])
+    cv2.imwrite(black_image_path, black_img)
+    img = cv2.imread(black_image_path)
 
-    line_polygons = label_polygons["text_line"]
-    picture_polygons = label_polygons["picture"]
-    line_color = label_colors["text_line"]
-    picture_color = label_colors["picture"]
+    # Draw the polygons on the image
+    for label in ["text_line", "picture"]:
+        # Retrieve polygon color
+        color = label_colors[label]
+        # Retrieve corresponding polygons
+        polygons = [Polygon(poly) for poly in label_polygons[label]]
 
-    # Prepare polygons for label image.
-    line_polygons = [Polygon(poly) for poly in line_polygons]
-    picture_polygons = [Polygon(poly) for poly in picture_polygons]
-    # Resize the polygons
-    # line_polygons = resize_polygons(polygons=line_polygons, height=1, width=1)
-    # picture_polygons = resize_polygons(polygons=picture_polygons, height=1.008, width=1.008)
-    # Split the polygons
-    line_polygons = split_polygons(line_polygons)
-    picture_polygons = split_polygons(picture_polygons)
-    cv2.imwrite(image_path, black_img)
-    img = cv2.imread(image_path)
-    draw_polygons(line_polygons, img, image_path, line_color)
-    draw_polygons(picture_polygons, img, image_path, picture_color)
+        # Resize the polygons
+        # polygons = resize_polygons(polygons=polygons, height=1, width=1)
+
+        # Split the polygons
+        polygons = split_polygons(polygons)
+
+        # Draw the polygons on the mask image
+        draw_polygons(polygons, img, color)
+
+    # Update the mask image on Disk
+    cv2.imwrite(black_image_path, img)
+    return black_image_path
 
 
-def draw_polygons(polygons, img, image_path, color):
+def draw_polygons(polygons: list, img, color: tuple) -> None:
+    """
+    Draw the provided polygons on the image
+    """
     for poly in polygons:
         contours = [numpy.array(poly.exterior.coords).round().astype(numpy.int32)]
         for contour in contours:
             if len(contour) > 0:
-                img = cv2.drawContours(img, contours, 0, tuple(reversed(color)), -1)
-        cv2.imwrite(image_path, img)
+                cv2.drawContours(img, contours, 0, tuple(reversed(color)), -1)
 
 
 def resize_polygons(polygons: list, height: float, width: float) -> list:

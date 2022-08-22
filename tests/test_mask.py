@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
+import tempfile
+
 import cv2
-import numpy as np
 import pytest
+from skimage.metrics import structural_similarity as ssim
 
 from doc_ufcn.train.mask import generate_mask
 
 
 @pytest.mark.parametrize(
-    "image_width, image_height, label_polygons, label_colors, output_path, ground_truth_path",
+    "image_width, image_height, label_polygons, label_colors",
     [
         (
             400,
@@ -19,31 +21,29 @@ from doc_ufcn.train.mask import generate_mask
                 "picture": [[[58, 76], [307, 76], [307, 205], [58, 205], [58, 76]]],
             },
             {"text_line": (255, 0, 0), "picture": (0, 0, 255)},
-            "doc_ufcn/train/test.png",
-            "doc_ufcn/train/ground_truth.png",
         )
     ],
 )
 def test_generate_mask(
-    image_width,
-    image_height,
-    label_polygons,
-    label_colors,
-    output_path,
-    ground_truth_path,
+    image_width, image_height, label_polygons, label_colors, expected_mask_path
 ):
-    generate_mask(image_width, image_height, label_polygons, label_colors, output_path)
-    image_path = output_path[:-4] + "_mask.png"
-    print(ground_truth_path)
-    truth_image = cv2.imread(ground_truth_path)
-    image = cv2.imread(image_path)
+    # Read the expected output image
+    expected_mask = cv2.imread(expected_mask_path)
 
-    print("image : ", image.shape)
-    print("truth_image : ", truth_image.shape)
-    errorL2 = cv2.norm(truth_image, image, cv2.NORM_L2)
-    similarity = 1 - errorL2 / (image_height * image_width)
-    print("Similarity = ", similarity)
+    # Generate the mask
+    _, output_path = tempfile.mkstemp(suffix=".teklia.test.mask.png")
+    generated_mask_path = generate_mask(
+        image_width, image_height, label_polygons, label_colors, output_path
+    )
+    generated_mask = cv2.imread(generated_mask_path)
 
-    print("truth_image : ", np.unique(truth_image))
-    print("image : ", np.unique(image))
-    assert similarity == 1
+    assert generated_mask.shape == expected_mask.shape
+
+    # Image comparison is done with skimage.structural_similarity
+    similarity = ssim(
+        expected_mask,
+        generated_mask,
+        data_range=generated_mask.max() - generated_mask.min(),
+        channel_axis=2,
+    )
+    assert similarity >= 0.95

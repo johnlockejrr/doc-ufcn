@@ -1,45 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import json
 import os
 
-import cv2
 import numpy as np
 import pytest
 
 from doc_ufcn import main
-
-FIXTURES = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    "data",
-)
-
-
-@pytest.fixture
-def test_image():
-    image = cv2.imread(os.path.join(FIXTURES, "test_image.png"))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    return image
-
-
-@pytest.fixture
-def mask_image():
-    image = cv2.imread(os.path.join(FIXTURES, "mask_image.png"))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    return image
-
-
-@pytest.fixture
-def overlap_image():
-    image = cv2.imread(os.path.join(FIXTURES, "overlap_image.png"))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    return image
-
-
-@pytest.fixture
-def test_json():
-    with open(os.path.join(FIXTURES, "test_json.json"), "r") as json_file:
-        return json.load(json_file)
+from tests.conftest import FIXTURES
 
 
 @pytest.mark.parametrize(
@@ -152,13 +119,13 @@ def test_load(model_path):
         ("mean"),
     ],
 )
-def test_mean(mean):
+def test_mean(mean, page_generic_model_path):
     """
     Test of the load function: check that wrong mean values raise an exception.
     """
     model = main.DocUFCN(2, 768, "cpu")
     with pytest.raises(AssertionError):
-        model.load(os.path.join(FIXTURES, "page_generic.pth"), mean, [48, 48, 45])
+        model.load(page_generic_model_path, mean, [48, 48, 45])
 
 
 @pytest.mark.parametrize(
@@ -173,40 +140,36 @@ def test_mean(mean):
         ("mean"),
     ],
 )
-def test_std(std):
+def test_std(std, page_generic_model_path):
     """
     Test of the load function: check that wrong std values raise an exception.
     """
     model = main.DocUFCN(2, 768, "cpu")
     with pytest.raises(AssertionError):
-        model.load(os.path.join(FIXTURES, "page_generic.pth"), [190, 182, 165], std)
+        model.load(page_generic_model_path, [190, 182, 165], std)
 
 
 @pytest.mark.parametrize(
     "input_image",
     [([1]), ("input_image"), (1)],
 )
-def test_predict_input_image(input_image):
+def test_predict_input_image(input_image, page_generic_model_path):
     """
     Test of the predict function: check that wrong input images raise an exception.
     """
     model = main.DocUFCN(2, 768, "cpu")
-    model.load(
-        os.path.join(FIXTURES, "page_generic.pth"), [190, 182, 165], [48, 48, 45]
-    )
+    model.load(page_generic_model_path, [190, 182, 165], [48, 48, 45])
 
     with pytest.raises(AssertionError):
         model.predict(input_image)
 
 
-def test_predict(test_image, test_json):
+def test_predict(test_image, test_json, page_generic_model_path):
     """
     Test of the predict function.
     """
     model = main.DocUFCN(2, 768, "cpu")
-    model.load(
-        os.path.join(FIXTURES, "page_generic.pth"), [190, 182, 165], [48, 48, 45]
-    )
+    model.load(page_generic_model_path, [190, 182, 165], [48, 48, 45])
 
     # Only one output
     output = model.predict(test_image)
@@ -219,14 +182,14 @@ def test_predict(test_image, test_json):
     assert output[1:4] == (None, None, None)
 
 
-def test_predict_all_outputs(test_image, mask_image, overlap_image):
+def test_predict_all_outputs(
+    test_image, mask_image, overlap_image, page_generic_model_path
+):
     """
     Test of the predict function with all four outputs.
     """
     model = main.DocUFCN(2, 768, "cpu")
-    model.load(
-        os.path.join(FIXTURES, "page_generic.pth"), [190, 182, 165], [48, 48, 45]
-    )
+    model.load(page_generic_model_path, [190, 182, 165], [48, 48, 45])
 
     # All outputs
     output = model.predict(
