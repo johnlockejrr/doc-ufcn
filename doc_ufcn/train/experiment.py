@@ -230,10 +230,10 @@ def run(config: dict, num_workers: int = 2):
     if "normalization_params" in config["steps"]:
         normalization_params(
             log_path=config["log_path"],
-            data_path=config["data_paths"],
+            data_paths=config["data_paths"],
             img_size=config["img_size"],
-            mean=config["mean"],
-            std=config["std"],
+            mean_name=config["mean"],
+            std_name=config["std"],
             num_workers=num_workers,
         )
 
@@ -245,7 +245,7 @@ def run(config: dict, num_workers: int = 2):
         # Generate the loaders and start training.
         loaders = training_loaders(
             norm_params=norm_params,
-            data_paths=config["data_paths"],
+            exp_data_paths=config["data_paths"],
             classes_colors=config["classes_colors"],
             img_size=config["img_size"],
             bin_size=config["bin_size"],

@@ -1,16 +1,35 @@
 # -*- coding: utf-8 -*-
 from itertools import combinations
 from pathlib import Path
+from typing import Tuple
 
 import cv2
 import numpy
 from shapely.affinity import scale
-from shapely.geometry import LineString, MultiPolygon, Polygon
+from shapely.geometry import LineString, Polygon
+from shapely.geometry.multipolygon import MultiPolygon
+
+
+def new_image_size(input_size: tuple, output_size: int):
+    """
+    Get the resize label size and corresponding ratios.
+    The longest side of the image will have a length of output_size.
+    :param input_size: The original image size.
+    :param output_size: The output maximum size.
+    """
+    # Compute the new image size.
+    ratio = float(output_size) / max(input_size[:2])
+    new_size = tuple([int(x * ratio) for x in input_size[:2]])
+    # Compute the ratios between the original and new image sizes.
+    # It is used to resize the annotations.
+    ratios = [new_size[index] / input_size[index] for index in range(len(new_size))]
+    return *new_size, *ratios
 
 
 def generate_mask(
     image_width: int,
     image_height: int,
+    max_image_size: float,
     label_polygons: dict,
     label_colors: dict,
     output_path: Path,
@@ -19,9 +38,21 @@ def generate_mask(
     Generate a mask with the given dimensions and polygons.
     Returns the path to the generated image.
     """
+    if max_image_size is not None:
+        mask_height, mask_width, ratio_height, ratio_width = new_image_size(
+            [image_height, image_width],
+            max_image_size,
+        )
+    else:
+        mask_height, mask_width, ratio_height, ratio_width = (
+            image_height,
+            image_width,
+            1,
+            1,
+        )
     # Remove the extension from the output_path and add the suffix
     black_img = numpy.zeros(
-        (image_height, image_width, 3),
+        (mask_height, mask_width, 3),
         dtype=numpy.uint8,
     )
     cv2.imwrite(output_path, black_img)
@@ -35,7 +66,9 @@ def generate_mask(
         polygons = [Polygon(poly) for poly in label_polygons[label]]
 
         # Resize the polygons
-        polygons = resize_polygons(polygons=polygons, height=1, width=1)
+        polygons = resize_polygons(
+            polygons=polygons, height=ratio_height, width=ratio_width
+        )
 
         # Split the polygons
         polygons = split_polygons(polygons)
@@ -52,10 +85,13 @@ def draw_polygons(polygons: list, img, color: tuple) -> None:
     Draw the provided polygons on the image
     """
     for poly in polygons:
-        contours = [numpy.array(poly.exterior.coords).round().astype(numpy.int32)]
-        for contour in contours:
-            if len(contour) > 0:
-                cv2.drawContours(img, contours, 0, tuple(reversed(color)), -1)
+        if isinstance(poly, MultiPolygon):
+            draw_polygons(polygons=list(poly.geoms), img=img, color=color)
+        else:
+            contours = [numpy.array(poly.exterior.coords).round().astype(numpy.int32)]
+            for contour in contours:
+                if len(contour) > 0:
+                    cv2.drawContours(img, contours, 0, tuple(reversed(color)), -1)
 
 
 def resize_polygons(polygons: list, height: float, width: float) -> list:
