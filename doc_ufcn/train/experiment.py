@@ -72,6 +72,7 @@ def training_loaders(
     bin_size: int,
     batch_size: int,
     no_of_params: int,
+    num_workers: int = 2,
 ) -> dict:
     """
     Generate the loaders to use during the training step.
@@ -100,7 +101,7 @@ def training_loaders(
         )
         loaders[set] = DataLoader(
             dataset,
-            num_workers=2,
+            num_workers=num_workers,
             pin_memory=True,
             batch_sampler=Sampler(
                 dataset,
@@ -114,7 +115,9 @@ def training_loaders(
     return loaders
 
 
-def prediction_loaders(norm_params: dict, exp_data_paths: dict, img_size: int) -> dict:
+def prediction_loaders(
+    norm_params: dict, exp_data_paths: dict, img_size: int, num_workers: int = 2
+) -> dict:
     """
     Generate the loaders to use during the prediction step.
     :param norm_params: The mean and std values used during image normalization.
@@ -142,7 +145,11 @@ def prediction_loaders(norm_params: dict, exp_data_paths: dict, img_size: int) -
             ),
         )
         loaders[set + "_loader"] = DataLoader(
-            dataset, batch_size=1, shuffle=False, num_workers=2, pin_memory=True
+            dataset,
+            batch_size=1,
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=True,
         )
     return loaders
 
