@@ -221,7 +221,7 @@ def prediction_initialization(
     return net
 
 
-def run(config: dict):
+def run(config: dict, num_workers: int = 2):
     """
     Main program, training a new model, using a valid configuration
     """
@@ -229,11 +229,12 @@ def run(config: dict):
 
     if "normalization_params" in config["steps"]:
         normalization_params(
-            config["log_path"],
-            config["data_paths"],
-            config["img_size"],
-            config["mean"],
-            config["std"],
+            log_path=config["log_path"],
+            data_path=config["data_paths"],
+            img_size=config["img_size"],
+            mean=config["mean"],
+            std=config["std"],
+            num_workers=num_workers,
         )
 
     if "train" in config["steps"] or "prediction" in config["steps"]:
@@ -243,13 +244,14 @@ def run(config: dict):
     if "train" in config["steps"]:
         # Generate the loaders and start training.
         loaders = training_loaders(
-            norm_params,
-            config["data_paths"],
-            config["classes_colors"],
-            config["img_size"],
-            config["bin_size"],
-            config["batch_size"],
-            config["no_of_params"],
+            norm_params=norm_params,
+            data_paths=config["data_paths"],
+            classes_colors=config["classes_colors"],
+            img_size=config["img_size"],
+            bin_size=config["bin_size"],
+            batch_size=config["batch_size"],
+            no_of_params=config["no_of_params"],
+            num_workers=num_workers,
         )
 
         tr_params = training_initialization(
