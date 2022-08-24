@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from itertools import combinations
 from pathlib import Path
-from typing import Tuple
 
 import cv2
 import numpy
