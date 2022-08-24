@@ -17,7 +17,14 @@ from tqdm import tqdm
 from doc_ufcn.train.utils.preprocessing import PredictionDataset, Rescale, ToTensor
 
 
-def run(log_path: str, data_paths: dict, img_size: int, mean_name: str, std_name: str):
+def run(
+    log_path: str,
+    data_paths: dict,
+    img_size: int,
+    mean_name: str,
+    std_name: str,
+    num_workers: int = 2,
+):
     """
     Compute the normalization parameters: mean and standard deviation on
     train set.
@@ -31,7 +38,7 @@ def run(log_path: str, data_paths: dict, img_size: int, mean_name: str, std_name
         data_paths["train"]["image"],
         transform=transforms.Compose([Rescale(img_size), ToTensor()]),
     )
-    loader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=2)
+    loader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=num_workers)
 
     # Compute mean and std.
     mean = []

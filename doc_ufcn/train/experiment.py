@@ -72,6 +72,7 @@ def training_loaders(
     bin_size: int,
     batch_size: int,
     no_of_params: int,
+    num_workers: int = 2,
 ) -> dict:
     """
     Generate the loaders to use during the training step.
@@ -100,7 +101,7 @@ def training_loaders(
         )
         loaders[set] = DataLoader(
             dataset,
-            num_workers=2,
+            num_workers=num_workers,
             pin_memory=True,
             batch_sampler=Sampler(
                 dataset,
@@ -114,7 +115,9 @@ def training_loaders(
     return loaders
 
 
-def prediction_loaders(norm_params: dict, exp_data_paths: dict, img_size: int) -> dict:
+def prediction_loaders(
+    norm_params: dict, exp_data_paths: dict, img_size: int, num_workers: int = 2
+) -> dict:
     """
     Generate the loaders to use during the prediction step.
     :param norm_params: The mean and std values used during image normalization.
@@ -142,7 +145,11 @@ def prediction_loaders(norm_params: dict, exp_data_paths: dict, img_size: int) -
             ),
         )
         loaders[set + "_loader"] = DataLoader(
-            dataset, batch_size=1, shuffle=False, num_workers=2, pin_memory=True
+            dataset,
+            batch_size=1,
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=True,
         )
     return loaders
 
@@ -214,7 +221,7 @@ def prediction_initialization(
     return net
 
 
-def run(config: dict):
+def run(config: dict, num_workers: int = 2):
     """
     Main program, training a new model, using a valid configuration
     """
@@ -222,11 +229,12 @@ def run(config: dict):
 
     if "normalization_params" in config["steps"]:
         normalization_params(
-            config["log_path"],
-            config["data_paths"],
-            config["img_size"],
-            config["mean"],
-            config["std"],
+            log_path=config["log_path"],
+            data_paths=config["data_paths"],
+            img_size=config["img_size"],
+            mean_name=config["mean"],
+            std_name=config["std"],
+            num_workers=num_workers,
         )
 
     if "train" in config["steps"] or "prediction" in config["steps"]:
@@ -236,13 +244,14 @@ def run(config: dict):
     if "train" in config["steps"]:
         # Generate the loaders and start training.
         loaders = training_loaders(
-            norm_params,
-            config["data_paths"],
-            config["classes_colors"],
-            config["img_size"],
-            config["bin_size"],
-            config["batch_size"],
-            config["no_of_params"],
+            norm_params=norm_params,
+            exp_data_paths=config["data_paths"],
+            classes_colors=config["classes_colors"],
+            img_size=config["img_size"],
+            bin_size=config["bin_size"],
+            batch_size=config["batch_size"],
+            no_of_params=config["no_of_params"],
+            num_workers=num_workers,
         )
 
         tr_params = training_initialization(
