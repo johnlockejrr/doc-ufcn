@@ -66,8 +66,13 @@ def run(
         pred_regions = ev_utils.read_json(
             os.path.join(log_path, prediction_path, set, dataset, img_name)
         )
-        assert gt_regions["img_size"] == pred_regions["img_size"]
+
         gt_polys = ev_utils.get_polygons(gt_regions, classes_names)
+
+        if gt_regions["img_size"] != pred_regions["img_size"]:
+            pred_regions = ev_utils.resize_polygons(
+                pred_regions, gt_regions["img_size"], pred_regions["img_size"]
+            )
         pred_polys = ev_utils.get_polygons(pred_regions, classes_names)
 
         pixel_metrics = p_metrics.compute_metrics(

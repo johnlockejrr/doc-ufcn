@@ -17,6 +17,43 @@ from matplotlib import ticker
 from shapely.geometry import Polygon
 
 
+def resize_polygons(polygons: dict, gt_size: tuple, pred_size: tuple) -> dict:
+    """
+    Resize the detected polygons to the original image size.
+    :param polygons: The polygons to resize.
+    :param gt_size: The ground truth image size.
+    :param pred_size: The prediction image size.
+    :return polygons: The resized detected polygons.
+    """
+    # Compute resizing ratio
+    ratio = [gt / pred for gt, pred in zip(gt_size, pred_size)]
+
+    for channel in polygons.keys():
+        if channel == "img_size":
+            continue
+        for index, polygon in enumerate(polygons[channel]):
+            x_points = [int(element[1] * ratio[0]) for element in polygon["polygon"]]
+            y_points = [int(element[0] * ratio[1]) for element in polygon["polygon"]]
+
+            x_points = [
+                int(element) if element < gt_size[0] else int(gt_size[0])
+                for element in x_points
+            ]
+            y_points = [
+                int(element) if element < gt_size[1] else int(gt_size[1])
+                for element in y_points
+            ]
+            x_points = [int(element) if element > 0 else 0 for element in x_points]
+            y_points = [int(element) if element > 0 else 0 for element in y_points]
+
+            assert max(x_points) <= gt_size[0]
+            assert min(x_points) >= 0
+            assert max(y_points) <= gt_size[1]
+            assert min(y_points) >= 0
+            polygons[channel][index]["polygon"] = list(zip(y_points, x_points))
+    return polygons
+
+
 def read_json(filename: str) -> dict:
     """
     Read a label / prediction json file.
