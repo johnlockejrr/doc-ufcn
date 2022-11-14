@@ -91,15 +91,17 @@ We provide an open-source model for the page detection task. To download the mod
 from doc_ufcn import models
 from doc_ufcn.main import DocUFCN
 
-model_path, parameters = models.download_model('generic_page_detection')
+model_path, parameters = models.download_model('generic-page')
 
 model = DocUFCN(len(parameters['classes']), parameters['input_size'], 'cpu')
 model.load(model_path, parameters['mean'], parameters['std'])
 ```
 By default, the most recent version of the model will be downloaded. One can also use a specific version using the following line:
 ```python
-model_path, parameters = models.download_model('generic_page_detection', version="0.0.2")
+model_path, parameters = models.download_model('generic-page', version="main")
 ```
+
+We store our models on [HuggingFace](https://huggingface.co/Teklia) and every model prefixed by `doc-ufcn-` is supported.
 
 ## Training
 The Doc-UFCN tool is split into three parts:

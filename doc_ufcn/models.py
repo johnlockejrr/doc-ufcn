@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 def download_model(name, version=None):
+    # Strip the model name prefix if provided
+    name = name.replace("doc-ufcn-", "")
+    logger.info(f"Will look for model @ {HUGGING_FACE_REPO_PREFIX + name}")
+
     cache_dir = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
     dir_path = os.path.join(cache_dir, "doc-ufcn", "models", name)
     # Retrieve parameters.yml
@@ -32,4 +36,4 @@ def download_model(name, version=None):
     with open(parameters_path) as f:
         parameters = yaml.safe_load(f)
 
-    return model_path, parameters
+    return model_path, parameters["parameters"]

@@ -17,6 +17,13 @@ from doc_ufcn import models
             "~/.cache/doc-ufcn/models/generic-page/models--Teklia--doc-ufcn-generic-page/snapshots/ef5519d77baa190bfe294ad3994146dbe7e72095",
             pytest.lazy_fixture("test_parameters"),
         ),
+        # Correct fullname and version
+        (
+            "doc-ufcn-generic-page",
+            "main",
+            "~/.cache/doc-ufcn/models/generic-page/models--Teklia--doc-ufcn-generic-page/snapshots/ef5519d77baa190bfe294ad3994146dbe7e72095",
+            pytest.lazy_fixture("test_parameters"),
+        ),
         # Correct name and incorrect version
         ("generic-page", "version", None, None),
         # Correct name and no version

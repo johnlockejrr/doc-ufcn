@@ -1,10 +1,7 @@
----
-version: 0.0.2
-parameters:
-  mean: [190, 182, 165]
-  std: [48, 48, 45]
-  min_cc: 50
-  classes:
-    - background
-    - page
-  input_size: 768
+mean: [190, 182, 165]
+std: [48, 48, 45]
+min_cc: 50
+classes:
+  - background
+  - page
+input_size: 768
