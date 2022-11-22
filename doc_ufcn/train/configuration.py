@@ -120,8 +120,8 @@ def parse_configurations(paths):
     training.add_option("loss", type=_loss, default="initial")
 
     # MLflow parameters
-    mlflow = parser.add_subparser("mlflow", default={})
-    mlflow.add_option("experiment_id", type=int)
+    mlflow = parser.add_subparser("mlflow", default=None)
+    mlflow.add_option("experiment_id", type=str)
     mlflow.add_option("run_name", type=str, default=None)
 
     # Merge all provided configuration files into a single payload

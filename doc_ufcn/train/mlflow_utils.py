@@ -3,6 +3,7 @@ import os
 from contextlib import contextmanager
 
 import mlflow
+from mlflow.exceptions import MlflowException
 
 from doc_ufcn.train import logger
 
@@ -32,9 +33,9 @@ def start_mlflow_run(config):
 
     try:
         mlflow.set_experiment(experiment_id=experiment_id)
-    except mlflow.exceptions.MlflowException as e:
+    except MlflowException as e:
         logger.error(f"Couldn't set Mlflow experiment with ID: {experiment_id}")
         raise e
 
     # Start run
-    return mlflow.start_run(run_name=config.get("run_name"))
+    yield mlflow.start_run(run_name=config.get("run_name"))
