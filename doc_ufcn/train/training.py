@@ -11,6 +11,7 @@ import logging
 import os
 import time
 
+import mlflow
 import numpy as np
 import torch
 from torch.cuda.amp import autocast
@@ -31,22 +32,24 @@ def init_metrics(no_of_classes: int) -> dict:
     return {"matrix": np.zeros((no_of_classes, no_of_classes)), "loss": 0}
 
 
-def log_metrics(epoch: int, metrics: dict, writer, step: str):
+def log_metrics(epoch: int, metrics: dict, writer, step: str, mlflow_logging: bool):
     """
     Log the computed metrics to Tensorboard and Omniboard.
     :param epoch: The current epoch.
     :param metrics: The metrics to log.
     :param writer: The Tensorboard object to log information.
     :param step: String indicating whether to log training or validation metrics.
+    :param mlflow_logging: Whether we should log data to MLflow.
     """
-    for key in metrics.keys():
-        writer.add_scalar(step + "_" + key, metrics[key], epoch)
-        if step == "Training":
-            logging.info("  TRAIN {}: {}={}".format(epoch, key, round(metrics[key], 4)))
-        else:
-            logging.info(
-                "    VALID {}: {}={}".format(epoch, key, round(metrics[key], 4))
-            )
+    prefixed_metrics = {step + "_" + key: value for key, value in metrics.items()}
+
+    for tag, scalar in prefixed_metrics.items():
+        writer.add_scalar(tag, scalar, epoch)
+        step_name = "TRAIN" if step == "Training" else "VALID"
+        logging.info("  {} {}: {}={}".format(step_name, epoch, tag, round(scalar, 4)))
+
+    if mlflow_logging:
+        mlflow.log_metrics(metrics=prefixed_metrics, step=epoch)
 
 
 def run_one_epoch(
@@ -132,6 +135,7 @@ def run(
     classes_names: list,
     loaders: dict,
     tr_params: dict,
+    mlflow_logging: bool,
 ):
     """
     Run the training.
@@ -143,7 +147,7 @@ def run(
     :param classes_names: The names of the classes involved during the experiment.
     :param loaders: The loaders containing the images and masks to use.
     :param tr_params: The training parameters.
-    :param ex: The Sacred object to log information.
+    :param mlflow_logging: Whether we should log data to MLflow.
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -168,7 +172,13 @@ def run(
             step="Training",
         )
 
-        log_metrics(current_epoch, epoch_values, writer, step="Training")
+        log_metrics(
+            epoch=current_epoch,
+            metrics=epoch_values,
+            writer=writer,
+            step="Training",
+            mlflow_logging=mlflow_logging,
+        )
 
         with torch.no_grad():
             # Run evaluation.
@@ -184,7 +194,13 @@ def run(
                 classes_names,
                 step="Validation",
             )
-            log_metrics(current_epoch, epoch_values, writer, step="Validation")
+            log_metrics(
+                current_epoch,
+                epoch_values,
+                writer,
+                step="Validation",
+                mlflow_logging=mlflow_logging,
+            )
             # Keep best model.
             if epoch_values["loss"] < tr_params["best_loss"]:
                 tr_params["best_loss"] = epoch_values["loss"]

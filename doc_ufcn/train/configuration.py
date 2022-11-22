@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
 import json
-import logging
 import os
 from pathlib import Path
 
 from teklia_toolbox.config import ConfigParser, ConfigurationError
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-
-logger = logging.getLogger(__name__)
+from doc_ufcn.train import logger
 
 STEPS = ["normalization_params", "train", "prediction", "evaluation"]
 
@@ -124,6 +118,11 @@ def parse_configurations(paths):
     training = parser.add_subparser("training", default={})
     training.add_option("restore_model", type=Path, default=None)
     training.add_option("loss", type=_loss, default="initial")
+
+    # MLflow parameters
+    mlflow = parser.add_subparser("mlflow", default={})
+    mlflow.add_option("experiment_id", type=int)
+    mlflow.add_option("run_name", type=str, default=None)
 
     # Merge all provided configuration files into a single payload
     # that will be validated by the configuration parser described above
