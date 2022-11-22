@@ -319,6 +319,7 @@ def run_experiment(config: dict, num_workers: int = 2, mlflow_logging=False):
                         str(dataset.parent.parent.name),
                         config["prediction_path"],
                         config["evaluation_path"],
+                        mlflow_logging,
                     )
                 else:
                     logging.info(f"{dataset} folder not found.")

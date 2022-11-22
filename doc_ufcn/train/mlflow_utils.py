@@ -19,12 +19,14 @@ def check_environment():
         for variable in needed_variables:
             assert os.getenv(variable)
     except AssertionError:
-        raise Exception(f"Missing {variable} in the environment")
+        raise Exception(
+            f"{variable} is missing in the environment, cannot use MLflow logging."
+        )
 
 
 @contextmanager
 def start_mlflow_run(config):
-    # Check environment
+    # Make sure needed environment variables are set
     check_environment()
 
     # Set experiment from config
