@@ -112,4 +112,4 @@ bump-python-deps:
     - schedules
 
   script:
-    - devops python-deps requirements.txt
+    - devops python-deps requirements.txt test-requirements.txt training-requirements.txt
