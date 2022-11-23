@@ -43,9 +43,9 @@ def log_metrics(epoch: int, metrics: dict, writer, step: str, mlflow_logging: bo
     """
     prefixed_metrics = {step + "_" + key: value for key, value in metrics.items()}
 
+    step_name = "TRAIN" if step == "Training" else "VALID"
     for tag, scalar in prefixed_metrics.items():
         writer.add_scalar(tag, scalar, epoch)
-        step_name = "TRAIN" if step == "Training" else "VALID"
         logging.info("  {} {}: {}={}".format(step_name, epoch, tag, round(scalar, 4)))
 
     if mlflow_logging:
@@ -81,10 +81,10 @@ def run_one_epoch(
     epoch = epochs[0]
 
     t = tqdm(loader)
-    if step == "Training":
-        t.set_description("TRAIN (prog) {}/{}".format(epoch, no_of_epochs + epochs[1]))
-    else:
-        t.set_description("VALID (prog) {}/{}".format(epoch, no_of_epochs + epochs[1]))
+    step_name = "TRAIN" if step == "Training" else "VALID"
+    t.set_description(
+        "{} (prog) {}/{}".format(step_name, epoch, no_of_epochs + epochs[1])
+    )
 
     for index, data in enumerate(t, 1):
         params["optimizer"].zero_grad()
