@@ -4,5 +4,5 @@ protobuf==3.20.1
 Shapely>= 1.8,< 1.9
 teklia-toolbox==0.1.3
 tensorboard==2.7.0
-torchvision==0.13.0
+torchvision==0.14.0
 tqdm==4.62.3
