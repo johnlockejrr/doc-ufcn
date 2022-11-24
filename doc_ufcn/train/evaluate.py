@@ -114,7 +114,7 @@ def run(
             AP_metrics[f"{channel} AP_0.5-0.95"] = np.round(
                 np.mean(list(aps.values())), 4
             )
-            mlflow.log_metrics(metrics={**prefixed_pixel_metrics, **AP_metrics})
+            mlflow.set_tags(tags={**prefixed_pixel_metrics, **AP_metrics})
 
     # Print the results.
     print(set)
