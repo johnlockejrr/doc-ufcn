@@ -259,7 +259,7 @@ MLflow logging is also available in Doc-UFCN. Information about the instance and
 - `run_name`: Optional name of the created run,
 - `tracking_uri`: URL towards the MLflow instance, see [MLFLOW_TRACKING_URI](https://www.mlflow.org/docs/latest/quickstart.html?highlight=mlflow_tracking_uri#launch-a-tracking-server-on-a-remote-machine),
 - `s3_endpoint_url`: URL towards the MLflow instance's storage, see [MLFLOW_S3_ENDPOINT_URL](https://www.mlflow.org/docs/latest/python_api/mlflow.environment_variables.html?highlight=mlflow_s3_endpoint#mlflow.environment_variables.MLFLOW_S3_ENDPOINT_URL),
-- `aws_access_key_id` and `aws_secret_access_key`: [AWS credentials](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup.html#setup-credentials) if the storage is Amazon S3 or Amazon S3-compatible. Only needed when logging artefacts.
+- `aws_access_key_id` and `aws_secret_access_key`: [AWS credentials](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup.html#setup-credentials) if the storage is Amazon S3 or Amazon S3-compatible. Only needed when logging artifacts.
 
 ### Result of an experiment
 
