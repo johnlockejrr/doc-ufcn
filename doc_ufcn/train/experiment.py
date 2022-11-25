@@ -19,6 +19,7 @@ from tqdm import tqdm
 
 from doc_ufcn import model
 from doc_ufcn.train.evaluate import run as evaluate
+from doc_ufcn.train.mlflow_utils import start_mlflow_run
 from doc_ufcn.train.normalization_params import run as normalization_params
 from doc_ufcn.train.predict import run as predict
 from doc_ufcn.train.training import run as train
@@ -226,6 +227,19 @@ def run(config: dict, num_workers: int = 2):
     Main program, training a new model, using a valid configuration
     """
     assert len(config["steps"]) > 0, "No step to run"
+    if config["mlflow"]:
+        with start_mlflow_run(config["mlflow"]) as run:
+            logger.info(f"Started MLflow run with ID ({run.info.run_id})")
+            run_experiment(config=config, num_workers=num_workers, mlflow_logging=True)
+    else:
+        run_experiment(config=config, num_workers=num_workers, mlflow_logging=False)
+
+
+def run_experiment(config: dict, num_workers: int = 2, mlflow_logging=False):
+    """
+    Main program, training a new model, using a valid configuration
+    """
+    assert len(config["steps"]) > 0, "No step to run"
 
     if "normalization_params" in config["steps"]:
         normalization_params(
@@ -270,6 +284,7 @@ def run(config: dict, num_workers: int = 2):
             config["classes_names"],
             loaders,
             tr_params,
+            mlflow_logging,
         )
 
     if "prediction" in config["steps"]:
@@ -304,6 +319,7 @@ def run(config: dict, num_workers: int = 2):
                         str(dataset.parent.parent.name),
                         config["prediction_path"],
                         config["evaluation_path"],
+                        mlflow_logging,
                     )
                 else:
                     logging.info(f"{dataset} folder not found.")

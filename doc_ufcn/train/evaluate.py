@@ -12,6 +12,7 @@ import os
 import time
 from pathlib import Path
 
+import mlflow
 import numpy as np
 from tqdm import tqdm
 
@@ -28,6 +29,7 @@ def run(
     dataset: str,
     prediction_path: Path,
     evaluation_path: Path,
+    mlflow_logging: bool,
 ):
     """
     Run the evaluation.
@@ -38,6 +40,7 @@ def run(
     :param dataset: The dataset to evaluate.
     :param prediction_path: Path where the prediction has been written.
     :param evaluation_path: Path where the evaluation will been written.
+    :param mlflow_logging: Whether we should log data to MLflow.
     """
     # Run evaluation.
     logging.info("Starting evaluation: " + dataset)
@@ -93,6 +96,26 @@ def run(
     object_metrics = o_metrics.get_mean_results(
         rank_scores, number_of_gt, classes_names[1:], object_metrics
     )
+
+    if mlflow_logging:
+        # Log metrics per channel
+        for channel in classes_names[1:]:
+            prefix = f"{set.upper()} {channel}"
+            # Pixel metrics
+            prefixed_pixel_metrics = {
+                f"{prefix}_{metric}": np.round(np.mean(value), 4)
+                for metric, value in pixel_metrics[channel].items()
+            }
+            aps = object_metrics[channel]["AP"]
+            # AP values
+            AP_metrics = {
+                f"{prefix} AP IOU_0.{level}": np.round(aps[level], 4)
+                for level in [50, 75, 95]
+            }
+            AP_metrics[f"{prefix} AP_0.5-0.95"] = np.round(
+                np.mean(list(aps.values())), 4
+            )
+            mlflow.set_tags(tags={**prefixed_pixel_metrics, **AP_metrics})
 
     # Print the results.
     print(set)
