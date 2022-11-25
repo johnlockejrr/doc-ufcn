@@ -8,26 +8,22 @@ from mlflow.exceptions import MlflowException
 from doc_ufcn.train import logger
 
 
-def check_environment():
-    needed_variables = [
-        "MLFLOW_S3_ENDPOINT_URL",
-        "MLFLOW_TRACKING_URI",
-        "AWS_ACCESS_KEY_ID",
-        "AWS_SECRET_ACCESS_KEY",
-    ]
-    try:
-        for variable in needed_variables:
-            assert os.getenv(variable)
-    except AssertionError:
-        raise Exception(
-            f"{variable} is missing in the environment, cannot use MLflow logging."
-        )
+def setup_environment(config):
+    needed_variables = {
+        "MLFLOW_S3_ENDPOINT_URL": "s3_endpoint_url",
+        "MLFLOW_TRACKING_URI": "tracking_uri",
+        "AWS_ACCESS_KEY_ID": "aws_access_key_id",
+        "AWS_SECRET_ACCESS_KEY": "aws_secret_access_key",
+    }
+    for variable_name, config_key in needed_variables.items():
+        if config_key in config:
+            os.environ[variable_name] = config[config_key]
 
 
 @contextmanager
 def start_mlflow_run(config):
-    # Make sure needed environment variables are set
-    check_environment()
+    # Set needed variables in environment
+    setup_environment(config)
 
     # Set experiment from config
     experiment_id = config.get("experiment_id")

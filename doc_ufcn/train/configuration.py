@@ -122,6 +122,10 @@ def parse_configurations(paths):
     # MLflow parameters
     mlflow = parser.add_subparser("mlflow", default=None)
     mlflow.add_option("experiment_id", type=str)
+    mlflow.add_option("tracking_uri", type=str)
+    mlflow.add_option("s3_endpoint_url", type=str)
+    mlflow.add_option("aws_access_key_id", type=str, default=None)
+    mlflow.add_option("aws_secret_access_key", type=str, default=None)
     mlflow.add_option("run_name", type=str, default=None)
 
     # Merge all provided configuration files into a single payload

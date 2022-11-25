@@ -100,18 +100,19 @@ def run(
     if mlflow_logging:
         # Log metrics per channel
         for channel in classes_names[1:]:
+            prefix = f"{set.upper()} {channel}"
             # Pixel metrics
             prefixed_pixel_metrics = {
-                f"{channel}_{metric}": np.round(np.mean(value), 4)
+                f"{prefix}_{metric}": np.round(np.mean(value), 4)
                 for metric, value in pixel_metrics[channel].items()
             }
             aps = object_metrics[channel]["AP"]
             # AP values
             AP_metrics = {
-                f"{channel} AP IOU_0.{level}": np.round(aps[level], 4)
+                f"{prefix} AP IOU_0.{level}": np.round(aps[level], 4)
                 for level in [50, 75, 95]
             }
-            AP_metrics[f"{channel} AP_0.5-0.95"] = np.round(
+            AP_metrics[f"{prefix} AP_0.5-0.95"] = np.round(
                 np.mean(list(aps.values())), 4
             )
             mlflow.set_tags(tags={**prefixed_pixel_metrics, **AP_metrics})
