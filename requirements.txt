@@ -1,6 +1,6 @@
 huggingface-hub==0.11.0
 numpy==1.23.5
-opencv-python-headless==4.6.0.66
+opencv-python-headless==4.7.0.68
 pyyaml==6.0
 requests>=2,<3
 torch==1.13.1
