@@ -1,4 +1,4 @@
-imageio==2.22.4
+imageio==2.24.0
 matplotlib==3.6.3
 mlflow==1.25.1
 Shapely>= 1.8,< 1.9
