@@ -1,5 +1,5 @@
-matplotlib==3.6.3
 imageio==2.24.0
+matplotlib==3.6.3
 mlflow==1.25.1
 Shapely>= 1.8,< 1.9
 teklia-toolbox==0.1.3
