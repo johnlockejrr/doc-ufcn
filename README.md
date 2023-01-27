@@ -179,6 +179,7 @@ In the root directory, one has to create an `experiments.csv` file (see `example
 | `val`             | Paths to the validation datasets                                                                 | `path_to_dataset1;path_to_dataset_2`               |
 | `test`            | Paths to the evaluation datasets                                                                 | `path_to_dataset1;path_to_dataset_2`               |
 | `restore_model`   | Name of a saved model to resume or fine-tune a training                                          |                                                    |
+| `same_classes`    | Whether the classes of the current experiment are the same as those of the model to resume       | `True`                                             |
 | `loss`            | Whether to use an initial loss (`initial`) or the best (`best`) saved loss of the restored model | `initial`                                          |
 
 Note: All the steps are dependent, e.g to run the `"prediction"` step, one **needs** the results of the `"normalization_params"` and `"train"` steps.
@@ -187,12 +188,12 @@ Note: All the steps are dependent, e.g to run the `"prediction"` step, one **nee
 
 The `example_experiments.csv` file shows an example on how to build the experiments csv file.
 
-| experiment_name | steps                                              | train                                 | val                                   | test                                  | restore_model    | loss      |
-| --------------- | -------------------------------------------------- | ------------------------------------- | ------------------------------------- | ------------------------------------- | ---------------- | --------- |
-| exp1            | `normalization_params;train;prediction;evaluation` | `~/data/DLA/dataset1;~/data/dataset2` | `~/data/DLA/dataset1;~/data/dataset2` | `~/data/DLA/dataset3;~/data/dataset2` |                  |           |
-| exp1            | `prediction;evaluation`                            |                                       |                                       | `~/data/DLA/dataset4`                 |                  |           |
-| exp1            | `train;prediction;evaluation`                      | `~/data/DLA/dataset4`                 | `~/data/DLA/dataset4`                 | `~/data/DLA/dataset4`                 | `last_model.pth` | `initial` |
-| exp2            | `normalization_params;train;prediction;evaluation` | `~/data/DLA/dataset5`                 | `~/data/DLA/dataset5`                 | `~/data/DLA/dataset5`                 |                  |           |
+| experiment_name | steps                                              | train                                 | val                                   | test                                  | restore_model    | same_classes | loss      |
+| --------------- | -------------------------------------------------- | ------------------------------------- | ------------------------------------- | ------------------------------------- | ---------------- | ------------ | --------- |
+| exp1            | `normalization_params;train;prediction;evaluation` | `~/data/DLA/dataset1;~/data/dataset2` | `~/data/DLA/dataset1;~/data/dataset2` | `~/data/DLA/dataset3;~/data/dataset2` |                  |              |           |
+| exp1            | `prediction;evaluation`                            |                                       |                                       | `~/data/DLA/dataset4`                 |                  |              |           |
+| exp1            | `train;prediction;evaluation`                      | `~/data/DLA/dataset4`                 | `~/data/DLA/dataset4`                 | `~/data/DLA/dataset4`                 | `last_model.pth` |              | `initial` |
+| exp2            | `normalization_params;train;prediction;evaluation` | `~/data/DLA/dataset5`                 | `~/data/DLA/dataset5`                 | `~/data/DLA/dataset5`                 |                  |              |           |
 
 The first line will start a standard training on two datasets (dataset1 and dataset2) and will be tested also on two datasets (dataset2 and dataset3).
 
