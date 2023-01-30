@@ -18,6 +18,7 @@ from torchvision import transforms
 from tqdm import tqdm
 
 from doc_ufcn import model
+from doc_ufcn.models import download_model
 from doc_ufcn.train.evaluate import run as evaluate
 from doc_ufcn.train.mlflow_utils import start_mlflow_run
 from doc_ufcn.train.normalization_params import run as normalization_params
@@ -184,6 +185,15 @@ def training_initialization(
             "use_amp": use_amp,
         }
     else:
+        if not training["restore_model"].endswith(".pth"):
+            # Try to load a model with such a name on HuggingFace
+            logger.info(
+                f'Loading model with name {training["restore_model"]} from HuggingFace'
+            )
+            training["restore_model"], _ = download_model(
+                name=training["restore_model"]
+            )
+
         # Restore model to resume training.
         checkpoint, net, optimizer, scaler = model.restore_model(
             net,

@@ -116,7 +116,7 @@ def parse_configurations(paths):
 
     # Training parameters.
     training = parser.add_subparser("training", default={})
-    training.add_option("restore_model", type=Path, default=None)
+    training.add_option("restore_model", type=str, default=None)
     training.add_option("loss", type=_loss, default="initial")
 
     # MLflow parameters
