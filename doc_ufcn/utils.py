@@ -2,6 +2,7 @@
 import hashlib
 from pathlib import Path
 
+
 def md5sum(path):
     """
     Calc the MD5 hash of a binary file
@@ -14,6 +15,7 @@ def md5sum(path):
                 break
             d.update(buf)
         return d.hexdigest()
+
 
 def export_list(data: list, output: Path):
     """
