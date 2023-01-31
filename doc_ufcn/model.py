@@ -154,7 +154,9 @@ def load_network(no_of_classes: int, use_amp: bool):
     return net.to(device)
 
 
-def restore_model(net, optimizer, scaler, log_path: str, model_path: str):
+def restore_model(
+    net, optimizer, scaler, log_path: str, model_path: str, keep_last: bool = True
+):
     """
     Load the model weights.
     :param net: The loaded model.
@@ -162,6 +164,7 @@ def restore_model(net, optimizer, scaler, log_path: str, model_path: str):
     :param scaler: The scaler used for AMP.
     :param log_path: The directory containing the model to restore.
     :param model_path: The name of the model to restore.
+    :param keep_last: Retrieve the last layer weights.
     :return checkpoint: The loaded checkpoint.
     :return net: The restored model.
     :return optimizer: The restored optimizer.
@@ -190,12 +193,18 @@ def restore_model(net, optimizer, scaler, log_path: str, model_path: str):
                 loaded_checkpoint[key.replace("module.", "")] = checkpoint[
                     "state_dict"
                 ][key]
-        net.load_state_dict(loaded_checkpoint)
 
-        if optimizer is not None:
-            optimizer.load_state_dict(checkpoint["optimizer"])
-        if scaler is not None:
-            scaler.load_state_dict(checkpoint["scaler"])
+        if keep_last:
+            net.load_state_dict(loaded_checkpoint)
+            if optimizer is not None:
+                optimizer.load_state_dict(checkpoint["optimizer"])
+            if scaler is not None:
+                scaler.load_state_dict(checkpoint["scaler"])
+        else:
+            loaded_checkpoint.pop("last_conv.weight")
+            loaded_checkpoint.pop("last_conv.bias")
+            net.load_state_dict(loaded_checkpoint, strict=False)
+
         logger.info(
             "Loaded checkpoint %s (epoch %d) in %1.5fs",
             model_path,
