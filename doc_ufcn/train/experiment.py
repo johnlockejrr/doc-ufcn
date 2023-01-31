@@ -10,6 +10,7 @@
 import logging
 import os
 from pathlib import Path
+from doc_ufcn.utils import export_list
 
 from torch.cuda.amp import GradScaler
 from torch.optim import Adam
@@ -185,15 +186,6 @@ def training_initialization(
             "use_amp": use_amp,
         }
     else:
-        if not training["restore_model"].endswith(".pth"):
-            # Try to load a model with such a name on HuggingFace
-            logger.info(
-                f'Loading model with name {training["restore_model"]} from HuggingFace'
-            )
-            training["restore_model"], _ = download_model(
-                name=training["restore_model"]
-            )
-
         # Restore model to resume training.
         checkpoint, net, optimizer, scaler = model.restore_model(
             net,
@@ -261,9 +253,29 @@ def run_experiment(config: dict, num_workers: int = 2, mlflow_logging=False):
             num_workers=num_workers,
         )
 
+    model_to_restore = config["training"].get("restore_model", "")
+    
+    if model_to_restore and not model_to_restore.endswith(".pth"):
+        # Try to load a model with such a name on HuggingFace
+        logger.info(
+            f'Loading model with name {model_to_restore} from HuggingFace'
+        )
+        # Store the path to the last model and its parameters
+        config["training"]["restore_model"], parameters = download_model(
+            name=model_to_restore
+        )
+        # Store mean and std values
+        export_list(
+            data=parameters["mean"], output=config["log_path"] / config["mean"]
+        )
+        export_list(
+            data=parameters["std"], output=config["log_path"] / config["std"]
+        )
+
     if "train" in config["steps"] or "prediction" in config["steps"]:
         # Get the mean and std values.
         norm_params = get_mean_std(config["log_path"], config["mean"], config["std"])
+
 
     if "train" in config["steps"]:
         # Generate the loaders and start training.
