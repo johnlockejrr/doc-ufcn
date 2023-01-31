@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import hashlib
+from pathlib import Path
 
 
 def md5sum(path):
@@ -14,3 +15,11 @@ def md5sum(path):
                 break
             d.update(buf)
         return d.hexdigest()
+
+
+def export_list(data: list, output: Path):
+    """
+    Export a list of elements to a specified location, one element per line.
+    """
+    with output.open("w") as writer:
+        writer.write("\n".join(str(value) for value in data))
