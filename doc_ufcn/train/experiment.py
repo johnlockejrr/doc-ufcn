@@ -173,9 +173,9 @@ def training_initialization(
     no_of_classes = len(classes_names)
     # TODO: log number of classes on tensorboard ?
     net = model.load_network(no_of_classes, use_amp)
+    net.apply(model.weights_init)
 
     if training["restore_model"] is None:
-        net.apply(model.weights_init)
         tr_params = {
             "net": net,
             "criterion": Diceloss(no_of_classes),
@@ -193,6 +193,7 @@ def training_initialization(
             GradScaler(enabled=use_amp),
             log_path,
             training["restore_model"],
+            training["same_classes"],
         )
         tr_params = {
             "net": net,

@@ -30,6 +30,14 @@ def parse_configurations(paths):
             raise ConfigurationError(f"Invalid loss {value}")
         return value
 
+    def _same_classes(value: str):
+        value = value.lower()
+        if value not in ["true", "false"]:
+            raise ConfigurationError(
+                f"Invalid same classes argument: {value}. This value should be set to True or False"
+            )
+        return value == "true"
+
     def _rgb(value: list):
         if not isinstance(value, (list, tuple)):
             raise ConfigurationError("This RGB value should be a list or tuple")
@@ -117,6 +125,7 @@ def parse_configurations(paths):
     # Training parameters.
     training = parser.add_subparser("training", default={})
     training.add_option("restore_model", type=str, default=None)
+    training.add_option("same_classes", type=_same_classes, default="true")
     training.add_option("loss", type=_loss, default="initial")
 
     # MLflow parameters

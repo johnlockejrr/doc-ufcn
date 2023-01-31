@@ -71,6 +71,8 @@ def generate_configurations(csv_path):
         # Get restore model.
         if row["restore_model"] != "":
             config["training"] = {"restore_model": row["restore_model"]}
+            if row["same_classes"] != "":
+                config["training"]["same_classes"] = row["same_classes"]
             if row["loss"] != "":
                 config["training"]["loss"] = row["loss"]
 
