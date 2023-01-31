@@ -6,15 +6,19 @@ The model is designed to run various Document Layout Analysis (DLA) tasks like t
 
 ![Model schema](https://gitlab.com/teklia/dla/doc-ufcn/-/raw/main/resources/UFCN.png)
 
-This library can be used by anyone that has an already trained Doc-UFCN model and want to easily apply it to document images. With only a few lines of code, the trained model is loaded, applied to an image and the detected objects along with some visualizations are obtained.
+This library can be used to train a model, fine-tune a model or directly apply a trained Doc-UFCN model to document images.
 
-### Getting started
+## Getting started
 
 To use Doc-UFCN in your own scripts, install it using pip:
 
-```console
+```shell
 pip install doc-ufcn
 ```
+
+## Model inference
+
+With only a few lines of code, the trained model is loaded, applied to an image and the detected objects along with some visualizations are obtained.
 
 ### Usage
 
@@ -34,7 +38,7 @@ logging.basicConfig(
 image = cv2.cvtColor(cv2.imread(IMAGE_PATH), cv2.COLOR_BGR2RGB)
 ```
 
-Then one can initialize and load the trained model with the parameters used during training. The number of classes should include the background that must have been put as the first channel during training. By default, the model is loaded in evaluation mode. To load it in training mode, use `mode="train"`.
+Then one can initialize and load a trained model with the parameters used during training. The number of classes should include the background that must have been put as the first channel during training. By default, the model is loaded in evaluation mode. To load it in training mode, use `mode="train"`.
 ```python
 nb_of_classes = 2
 mean = [0, 0, 0]
@@ -70,8 +74,8 @@ When running inference on an image, the detected objects are returned as in the 
 In addition, one can directly retrieve the raw probabilities output by the model using `model.predict(image, raw_output=True)`. A tensor of size `(nb_of_classes, height, width)` is then returned along with the polygons and can be used for further processing.
 
 Lastly, two visualizations can be returned by the model:
-  * A mask of the detected objects `mask_output=True`;
-  * An overlap of the detected objects on the input image `overlap_output=True`.
+  * A mask of the detected objects, using `mask_output=True` parameter;
+  * An overlap of the detected objects on the input image, using `overlap_output=True` parameter.
 
 
 By default, only the detected polygons are returned, to return the four outputs, one can use:
@@ -86,7 +90,7 @@ detected_polygons, probabilities, mask, overlap = model.predict(
 
 ### Models
 
-We provide an open-source model for the page detection task. To download the model and load it one can use:
+We provide various open-source models, stored on [HuggingFace](https://huggingface.co/Teklia) and every model prefixed by `doc-ufcn-` is supported. For example, to download our [generic page detection model](https://huggingface.co/Teklia/doc-ufcn-generic-page) and load it, one can use:
 ```python
 from doc_ufcn import models
 from doc_ufcn.main import DocUFCN
@@ -96,17 +100,17 @@ model_path, parameters = models.download_model('generic-page')
 model = DocUFCN(len(parameters['classes']), parameters['input_size'], 'cpu')
 model.load(model_path, parameters['mean'], parameters['std'])
 ```
+
 By default, the most recent version of the model will be downloaded. One can also use a specific version using the following line:
 ```python
 model_path, parameters = models.download_model('generic-page', version="main")
 ```
 
-We store our models on [HuggingFace](https://huggingface.co/Teklia) and every model prefixed by `doc-ufcn-` is supported.
-
 ## Training
+
 The Doc-UFCN tool is split into three parts:
 
-- The code to train the model on a given datasets;
+- The code to train the model on given datasets;
 - The code to predict the segmentation of images according to the trained model;
 - The code to evaluate the model based on the predictions.
 
@@ -115,8 +119,7 @@ A csv configuration file allows to run a batch of experiments at once and also t
 ### Preparing the environment
 
 First of all, one needs an environment to run the three experiments presented before. Create a new environment and install the needed packages:
-
-```
+```shell
 pip install doc-ufcn[training]
 ```
 
@@ -142,7 +145,7 @@ To train and test the model, all the images and their annotations of a dataset s
 ```
 
 The labels should be generated directly at the network input size (*img_size*) to avoid resizing (that can cause mergings of regions).
-In addition, the evaluation is run over json files containing the polygons coordinates that should be in the `labels_json` folders.
+In addition, the evaluation is run over json files containing the original polygons coordinates that should be in the `labels_json` folders.
 
 ### Preparing the configuration files
 
@@ -205,9 +208,8 @@ The last line will run a standard new training on dataset5.
 
 ### Start an experiment
 
-To start the experiments:
-
-```
+To start the experiment:
+```shell
 $ ./run_dla_experiment.sh -c experiments.csv
 ```
 
@@ -215,12 +217,12 @@ There's a way to be notified in slack when training has finished (successfully o
 - Create a webhook here https://my.slack.com/services/new/incoming-webhook/;
 - Save the webhook key into `~/.notify-slack-cfg` (looks like: `T02TKKSAX/B246MJ6HX/WXt2BWPfNhSKxdoFNFblczW9`)
 - Make sure that the notifier is working:
-```
+```shell
 python tools/notify-slack.py "WARN: notifier works"
 ```
 - The slack notification is used by default;
 - To start the experiment without this slack notification run:
-```
+```shell
 $ ./run_dla_experiment.sh -c experiments.csv -s false
 ```
 
@@ -230,7 +232,7 @@ $ ./run_dla_experiment.sh -c experiments.csv -s false
 
 One can see the training progress using Tensorboard. In a new terminal:
 
-```
+```shell
 $ tensorboard --logdir ./runs/experiment_name
 ```
 
@@ -274,8 +276,22 @@ The evaluation results are in `./runs/experiment_name/results`.
 
 ### Resume a training
 
-There is no need to re-run the `"normalization_params"` step.
+To resume a training, just by adding epochs for example, one just has to:
+  - Remove the `"normalization_params"` step;
+  - Indicate the name of the model to resume in `restore_model` parameter;
+  - Set the value of the `loss` at `"best"`.
 
+## Model fine-tuning
+
+Several models are available on [HuggingFace](https://huggingface.co/Teklia) for inference but they can also be used as pre-trained weights. It is then possible to fine-tune them on a new task and/or new data.
+
+For this, it is necessary to follow the same data preparation steps as above, as well as the specification of the configuration files. To fine-tune a model, one needs to:
+  - Remove the `"normalization_params"` step;
+  - Indicate the name of the model to resume in `restore_model` parameter. If the name contains a `.pth` extension, the corresponding local file will be retrieved. Otherwise, to retrieve a model from HuggingFace, one just needs to put the name of the model starting with `doc-ufcn-`;
+  - Set the value of the `loss` at `"initial"`;
+  - Set the `same_classes` parameter to `False` if the classes used for training the new model are different from the classes used during the pre-training.
+
+Once these parameters have been updated, the training can be started and followed as described above.
 
 ## Cite us!
 
