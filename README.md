@@ -319,6 +319,10 @@ example :
     ]
 }
 ```
+
+Once the config file is ready, just run the following command: ```python hugging_face/app.py --config```
+by specifying the path to the config .json file
+
 ## Cite us!
 
 If you want to cite us in one of your works, please use the following citation.
