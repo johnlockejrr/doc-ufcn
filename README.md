@@ -293,6 +293,32 @@ For this, it is necessary to follow the same data preparation steps as above, as
 
 Once these parameters have been updated, the training can be started and followed as described above.
 
+## HuggingFace app
+
+It is possible to build an app that will predict your images with our UFCN models. To do this, you need to create a configuration `.json` file as follows:
+
+  - model_name: `str`, name of the model
+  - prediction_color: `list`, the colors of predictions
+  - no_of_classes: `int`, the number of classes
+  - title: `str`, the title of the app
+  - description: `str`, the description of the app
+  - examples: `list`, a list of `str`representing the path of the images. Paths to iiif images are supported but not   displayed well on the app
+
+example :
+
+```
+{
+    "model_name": "doc-ufcn-generic-historical-line",
+    "prediction_color": ["green"],
+    "no_of_classes":1,
+    "title":"doc-ufcn Page Detection Demo",
+    "description":"A demo showing a prediction from the [Teklia/doc-ufcn-generic-historical-line]('https://huggingface.co/Teklia/doc-ufcn-generic-historical-line') model.,
+    "examples":[
+        "hugging_face/hugging_face_1.jpg",
+        "hugging_face/hugging_face_2.jpg"
+    ]
+}
+```
 ## Cite us!
 
 If you want to cite us in one of your works, please use the following citation.
