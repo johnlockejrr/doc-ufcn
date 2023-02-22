@@ -297,7 +297,7 @@ Once these parameters have been updated, the training can be started and followe
 
 It is possible to build an app that will predict your images with our UFCN models.
 
-![image](https://gitlab.com/teklia/dla/doc-ufcn/-/tree/main/hugging_face/ressource/HuggingFace_Line_Historical.png)
+![image](https://gitlab.com/teklia/dla/doc-ufcn/-/tree/main/hugging_face/resource/HuggingFace_Line_Historical.png)
 
 To do this, you need to create a configuration `.json` file as follows:
 
