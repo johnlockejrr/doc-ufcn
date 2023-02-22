@@ -295,34 +295,49 @@ Once these parameters have been updated, the training can be started and followe
 
 ## HuggingFace app
 
-It is possible to build an app that will predict your images with our UFCN models. To do this, you need to create a configuration `.json` file as follows:
+It is possible to build an app that will predict your images with our UFCN models.
 
-  - model_name: `str`, name of the model
-  - prediction_color: `list`, the colors of predictions
-  - no_of_classes: `int`, the number of classes
-  - title: `str`, the title of the app
-  - description: `str`, the description of the app
-  - examples: `list`, a list of `str`representing the path of the images. Paths to iiif images are supported but not   displayed well on the app
+![image](hugging_face/resource/HuggingFace_Line_Historical.png)
+
+To do this, you need to create a configuration `.json` file as follows:
+
+| Parameter        | Description                                                                                                        | Default value                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+| `model_name`     | Str with the name of the model                                                                                |`"doc-ufcn-generic-historical-line"`|
+| `classes_colors` | List with the colors of the classes                                                                                |           `["green", "green"]`|
+| `title`          | Str with the title of the app                                                                                     | None|
+| `description`    | Str with the description of the app                                                                                |                             None|
+| `examples`       | List of paths of images. (In our example the images are in the resource [folder](hugging_face/resource/)) |`["hugging_face/resource/hugging_face_1.jpg", "hugging_face/resource/hugging_face_2.jpg"]`|
 
 example :
-
 ```
 {
     "model_name": "doc-ufcn-generic-historical-line",
-    "prediction_color": ["green"],
-    "no_of_classes":1,
-    "title":"doc-ufcn Page Detection Demo",
-    "description":"A demo showing a prediction from the [Teklia/doc-ufcn-generic-historical-line]('https://huggingface.co/Teklia/doc-ufcn-generic-historical-line') model.,
+    "classes_colors": ["green", "green"],
+    "title":"doc-ufcn Line Detection Demo",
+    "description":"A demo showing a prediction from the [Teklia/doc-ufcn-generic-historical-line](https://huggingface.co/Teklia/doc-ufcn-generic-historical-line) model. The generic historical line detection model predicts text lines from document images.",
     "examples":[
-        "hugging_face/hugging_face_1.jpg",
-        "hugging_face/hugging_face_2.jpg"
-    ]
+        "hugging_face/resource/hugging_face_1.jpg",
+        "hugging_face/resource/hugging_face_2.jpg"
+    ],
 }
 ```
 
-Once the config file is ready, just run the following command: ```python hugging_face/app.py --config```
-by specifying the path to the config .json file
+Once the config file is ready, just run the following command:
+```shell
+$ python hugging_face/app.py --config path/my_config.json
+```
+by specifying the path to the config ```.json``` file.
 
+```my_config``` can be replaced by the name of the config you have chosen. In our example ```my_config``` will be named [config](hugging_face/config.json)  and just call the python command from the root of the doc-ufcn folder:
+```shell
+$ hugging_face/app.py --config /hugging_face/config.json
+```
+
+If the ```share link mode``` is specified, it will be possible to share the link with other users for ```72 hours``` as long as the server is running. To do this, simply add ```--share-link``` at the end of the command:
+```shell
+$ python hugging_face/app.py --config path/my_config.json --share-link
+```
 ## Cite us!
 
 If you want to cite us in one of your works, please use the following citation.
