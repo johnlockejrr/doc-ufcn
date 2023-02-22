@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import os
 from pathlib import Path
 
 import gradio as gr
@@ -13,14 +14,17 @@ from hugging_face.config import parse_configurations
 # Get the configuration json file with a cli
 parser = argparse.ArgumentParser(description="UFCN HuggingFace app")
 parser.add_argument(
-    "--config", type=Path, required=True, help="A .json config for Hugging Face app"
+    "--config",
+    type=Path,
+    required=True,
+    help="The JSON-formatted configuration file of the Hugging Face app",
 )
 
 # Get the application's public mode (local or with sharing)
 parser.add_argument(
     "--public",
     action="store_true",
-    help="Boolean representing the activation of the link for share with other users if is specified",
+    help="Generate a shareable link to your application",
 )
 
 # Parse arguments
@@ -33,9 +37,12 @@ config = parse_configurations(args.config)
 model_path, parameters = models.download_model(config["model_name"])
 
 # Check that the number of colors is equal to the number of classes
-assert len(parameters["classes"]) == len(
+assert len(parameters["classes"]) - 1 == len(
     config["classes_colors"]
-), f"The parameter prediction_color was filled with the wrong number of colors. {len(parameters['classes'])} colors are expected instead of {len(config['classes_colors'])}"
+), f"The parameter classes_colors was filled with the wrong number of colors. {len(parameters['classes'])-1} colors are expected instead of {len(config['classes_colors'])}"
+
+for example in config["examples"]:
+    assert os.path.exists(example), f"The path of the image '{example}' does not exists"
 
 # Load the model
 model = DocUFCN(len(parameters["classes"]), parameters["input_size"], "cpu")
@@ -44,7 +51,7 @@ model.load(model_path, parameters["mean"], parameters["std"])
 
 def query_image(image):
     """
-    Get an input image and process it with predictions
+    Draws the predicted polygons with the color provided by the model on an image
 
     :param image: An image to predict
     :return: Image, an image with the predictions
@@ -58,12 +65,14 @@ def query_image(image):
     # Load image
     image = Image.fromarray(image)
 
-    # Copy image
+    # Make a copy of the image to keep the source and also to be able to use Pillow's blend method
     img2 = image.copy()
 
     # Create the polygons on the copy of the image for each class with the corresponding color
+    # The range start with 1 for not get the background channel
     for channel in range(1, len(parameters["classes"])):
         for polygon in detected_polygons[channel]:
+            # Draw the polygons on the image copy. Loop through the class_colors list with -1 to start at 0 and not overflow the list
             ImageDraw.Draw(img2).polygon(
                 polygon["polygon"], fill=config["classes_colors"][channel - 1]
             )
@@ -82,5 +91,5 @@ process_image = gr.Interface(
     examples=config["examples"],
 )
 
-# Launch the application with the shared link option retrieved in the config (True or False)
+# Launch the application with the public mode (True or False)
 process_image.launch(share=args.public)

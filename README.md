@@ -295,49 +295,44 @@ Once these parameters have been updated, the training can be started and followe
 
 ## HuggingFace app
 
-It is possible to build an app that will predict your images with our UFCN models.
+You may easily create and deploy a web application to demo the prediction of your Doc-UFCN models. This application can be integrated in a [HuggingFace space](https://huggingface.co/spaces).
+
+To use HuggingFace app, it is necessary to install gradio using pip:
+
+```shell
+pip install gradio
+```
+The code was last tested with ```gradio==3.18.0```
+
 
 ![image](https://gitlab.com/teklia/dla/doc-ufcn/-/tree/build-a-demo-interface-for-doc-ufcn-on-huggingface/hugging_face/resource/HuggingFace_Line_Historical.png)
 
-To do this, you need to create a configuration `.json` file as follows:
+An example is available in the `huggingface/` folder. You need to create a JSON configuration file with the following parameters:
 
 | Parameter        | Description                                                                                                        | Default value                 |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
-| `model_name`     | Str with the name of the model                                                                                |`"doc-ufcn-generic-historical-line"`|
-| `classes_colors` | List with the colors of the classes                                                                                |           `["green", "green"]`|
-| `title`          | Str with the title of the app                                                                                     | None|
+| `model_name`     | Name of the model                                                                                |`"doc-ufcn-generic-historical-line"`|
+| `classes_colors` | List with the colors of the classes                                                                                |           `["green"]`|
+| `title`          | Title of the app                                                                                     | None|
 | `description`    | Str with the description of the app                                                                                |                             None|
-| `examples`       | List of paths of images. (In our example the images are in the resource [folder](https://gitlab.com/teklia/dla/doc-ufcn/-/tree/build-a-demo-interface-for-doc-ufcn-on-huggingface/hugging_face/resource)) |`["hugging_face/resource/hugging_face_1.jpg", "hugging_face/resource/hugging_face_2.jpg"]`|
+| `examples`       | Paths towards the image examples. |`["hugging_face/resource/hugging_face_1.jpg", "hugging_face/resource/hugging_face_2.jpg"]`|
 
-example :
-```
-{
-    "model_name": "doc-ufcn-generic-historical-line",
-    "classes_colors": ["green", "green"],
-    "title":"doc-ufcn Line Detection Demo",
-    "description":"A demo showing a prediction from the [Teklia/doc-ufcn-generic-historical-line](https://huggingface.co/Teklia/doc-ufcn-generic-historical-line) model. The generic historical line detection model predicts text lines from document images.",
-    "examples":[
-        "hugging_face/resource/hugging_face_1.jpg",
-        "hugging_face/resource/hugging_face_2.jpg"
-    ],
-}
-```
+A configuration file (filled with the default values) is available in `huggingface/config.json`. You may update it to your needs.
 
-Once the config file is ready, just run the following command:
+Once the configuration file is ready, just run the following command:
+
 ```shell
-$ python hugging_face/app.py --config path/my_config.json
-```
-by specifying the path to the config ```.json``` file.
-
-```my_config``` can be replaced by the name of the config you have chosen. In our example ```my_config``` will be named [config](https://gitlab.com/teklia/dla/doc-ufcn/-/tree/build-a-demo-interface-for-doc-ufcn-on-huggingface/hugging_face/config.json)  and just call the python command from the root of the doc-ufcn folder:
-```shell
-$ hugging_face/app.py --config /hugging_face/config.json
+$ python3 hugging_face/app.py --config hugging_face/config.json
 ```
 
-If the ```public``` mode is specified, it will be possible to share the link with other users for ```72 hours``` as long as the server is running. To do this, simply add ```--public``` at the end of the command:
+If the ```public``` mode is specified, it will generate a public, shareable link that you can send to anyone. More information about public links on gradio is available in the gradio documentation: https://gradio.app/sharing-your-app/.
+
+To use the shareable link, use the following command:
+
 ```shell
-$ python hugging_face/app.py --config path/my_config.json --public
+$ python hugging_face/app.py --config path/config.json --public
 ```
+
 ## Cite us!
 
 If you want to cite us in one of your works, please use the following citation.

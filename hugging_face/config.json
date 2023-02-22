@@ -1,6 +1,6 @@
 {
     "model_name": "doc-ufcn-generic-historical-line",
-    "classes_colors": ["green", "green"],
+    "classes_colors": ["green"],
     "title":"doc-ufcn Line Detection Demo",
     "description":"A demo showing a prediction from the [Teklia/doc-ufcn-generic-historical-line](https://huggingface.co/Teklia/doc-ufcn-generic-historical-line) model. The generic historical line detection model predicts text lines from document images.",
     "examples":[
