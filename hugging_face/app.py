@@ -18,7 +18,7 @@ parser.add_argument(
 
 # Get the application's link sharing mode (simply local or with sharing)
 parser.add_argument(
-    "--share-link",
+    "--public",
     action="store_true",
     help="Boolean representing the activation of the link for share with other users ",
 )
@@ -83,4 +83,4 @@ process_image = gr.Interface(
 )
 
 # Launch the application with the shared link option retrieved in the config (True or False)
-process_image.launch(share=args.share_link)
+process_image.launch(share=args.public)
