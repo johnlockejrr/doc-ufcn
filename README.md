@@ -297,7 +297,7 @@ Once these parameters have been updated, the training can be started and followe
 
 It is possible to build an app that will predict your images with our UFCN models.
 
-![image](/hugging_face/resource/HuggingFace_Line_Historical.png)
+![image](https://gitlab.com/teklia/dla/doc-ufcn/-/tree/main/hugging_face/ressource/HuggingFace_Line_Historical.png)
 
 To do this, you need to create a configuration `.json` file as follows:
 
@@ -307,7 +307,7 @@ To do this, you need to create a configuration `.json` file as follows:
 | `classes_colors` | List with the colors of the classes                                                                                |           `["green", "green"]`|
 | `title`          | Str with the title of the app                                                                                     | None|
 | `description`    | Str with the description of the app                                                                                |                             None|
-| `examples`       | List of paths of images. (In our example the images are in the resource [folder](hugging_face/resource/)) |`["hugging_face/resource/hugging_face_1.jpg", "hugging_face/resource/hugging_face_2.jpg"]`|
+| `examples`       | List of paths of images. (In our example the images are in the resource [folder](https://gitlab.com/teklia/dla/doc-ufcn/-/tree/main/hugging_face/resource)) |`["hugging_face/resource/hugging_face_1.jpg", "hugging_face/resource/hugging_face_2.jpg"]`|
 
 example :
 ```
@@ -329,7 +329,7 @@ $ python hugging_face/app.py --config path/my_config.json
 ```
 by specifying the path to the config ```.json``` file.
 
-```my_config``` can be replaced by the name of the config you have chosen. In our example ```my_config``` will be named [config](/hugging_face/config.json)  and just call the python command from the root of the doc-ufcn folder:
+```my_config``` can be replaced by the name of the config you have chosen. In our example ```my_config``` will be named [config](https://gitlab.com/teklia/dla/doc-ufcn/-/tree/main/hugging_face/config.json)  and just call the python command from the root of the doc-ufcn folder:
 ```shell
 $ hugging_face/app.py --config /hugging_face/config.json
 ```
