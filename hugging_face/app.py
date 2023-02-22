@@ -16,11 +16,11 @@ parser.add_argument(
     "--config", type=Path, required=True, help="A .json config for Hugging Face app"
 )
 
-# Get the application's link sharing mode (simply local or with sharing)
+# Get the application's public mode (local or with sharing)
 parser.add_argument(
     "--public",
     action="store_true",
-    help="Boolean representing the activation of the link for share with other users ",
+    help="Boolean representing the activation of the link for share with other users if is specified",
 )
 
 # Parse arguments

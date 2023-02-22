@@ -297,7 +297,7 @@ Once these parameters have been updated, the training can be started and followe
 
 It is possible to build an app that will predict your images with our UFCN models.
 
-![image](hugging_face/resource/HuggingFace_Line_Historical.png)
+![image](/hugging_face/resource/HuggingFace_Line_Historical.png)
 
 To do this, you need to create a configuration `.json` file as follows:
 
@@ -329,14 +329,14 @@ $ python hugging_face/app.py --config path/my_config.json
 ```
 by specifying the path to the config ```.json``` file.
 
-```my_config``` can be replaced by the name of the config you have chosen. In our example ```my_config``` will be named [config](hugging_face/config.json)  and just call the python command from the root of the doc-ufcn folder:
+```my_config``` can be replaced by the name of the config you have chosen. In our example ```my_config``` will be named [config](/hugging_face/config.json)  and just call the python command from the root of the doc-ufcn folder:
 ```shell
 $ hugging_face/app.py --config /hugging_face/config.json
 ```
 
-If the ```share link mode``` is specified, it will be possible to share the link with other users for ```72 hours``` as long as the server is running. To do this, simply add ```--share-link``` at the end of the command:
+If the ```public``` mode is specified, it will be possible to share the link with other users for ```72 hours``` as long as the server is running. To do this, simply add ```--public``` at the end of the command:
 ```shell
-$ python hugging_face/app.py --config path/my_config.json --share-link
+$ python hugging_face/app.py --config path/my_config.json --public
 ```
 ## Cite us!
 
