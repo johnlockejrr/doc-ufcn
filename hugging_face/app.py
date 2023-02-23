@@ -34,7 +34,7 @@ args = parser.parse_args()
 config = parse_configurations(args.config)
 
 # Download the model
-model_path, parameters = models.download_model(config["model_name"])
+model_path, parameters = models.download_model(name=config["model_name"])
 
 # Check that the number of colors is equal to the number of classes
 assert len(parameters["classes"]) - 1 == len(
@@ -45,8 +45,12 @@ for example in config["examples"]:
     assert os.path.exists(example), f"The path of the image '{example}' does not exists"
 
 # Load the model
-model = DocUFCN(len(parameters["classes"]), parameters["input_size"], "cpu")
-model.load(model_path, parameters["mean"], parameters["std"])
+model = DocUFCN(
+    no_of_classes=len(parameters["classes"]),
+    model_input_size=parameters["input_size"],
+    device="cpu",
+)
+model.load(model_path=model_path, mean=parameters["mean"], std=parameters["std"])
 
 
 def query_image(image):
@@ -59,7 +63,7 @@ def query_image(image):
 
     # Make a prediction with the model
     detected_polygons, probabilities, mask, overlap = model.predict(
-        image, raw_output=True, mask_output=True, overlap_output=True
+        input_image=image, raw_output=True, mask_output=True, overlap_output=True
     )
 
     # Load image
