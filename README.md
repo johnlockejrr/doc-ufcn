@@ -330,7 +330,7 @@ If the ```public``` mode is specified, it will generate a public, shareable link
 To use the shareable link, use the following command:
 
 ```shell
-$ python hugging_face/app.py --config path/config.json --public
+$ python3 hugging_face/app.py --config path/config.json --public
 ```
 
 ## Cite us!
