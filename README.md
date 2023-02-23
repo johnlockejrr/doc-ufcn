@@ -305,7 +305,7 @@ pip install gradio
 The code was last tested with `gradio==3.18.0`.
 
 
-![image](https://gitlab.com/teklia/dla/doc-ufcn/-/raw/build-a-demo-interface-for-doc-ufcn-on-huggingface/hugging_face/resource/HuggingFace_Line_Historical.png)
+![image](https://gitlab.com/teklia/dla/doc-ufcn/-/raw/main/hugging_face/resource/HuggingFace_Line_Historical.png)
 
 An example is available in the `huggingface/` folder. You need to create a JSON configuration file with the following parameters:
 
