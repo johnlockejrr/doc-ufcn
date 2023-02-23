@@ -19,7 +19,7 @@ def parse_configurations(config_path: Path):
     parser.add_option(
         "model_name", type=str, default="doc-ufcn-generic-historical-line"
     )
-    parser.add_option("classes_colors", type=list, default=["green", "green"])
+    parser.add_option("classes_colors", type=list, default=["green"])
     parser.add_option("title", type=str)
     parser.add_option("description", type=str)
     parser.add_option("examples", type=list)

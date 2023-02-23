@@ -311,11 +311,11 @@ An example is available in the `huggingface/` folder. You need to create a JSON 
 
 | Parameter        | Description                                                                                                        | Default value                 |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
-| `model_name`     | Name of the model                                                                                |`"doc-ufcn-generic-historical-line"`|
-| `classes_colors` | List with the colors of the classes                                                                                |           `["green"]`|
-| `title`          | Title of the app                                                                                     | None|
-| `description`    | Str with the description of the app                                                                                |                             None|
-| `examples`       | Paths towards the image examples. |`["hugging_face/resource/hugging_face_1.jpg", "hugging_face/resource/hugging_face_2.jpg"]`|
+| `model_name`     | Name of the model                                                                                             |`"doc-ufcn-generic-historical-line"`|
+| `classes_colors` | List with the colors of the classes                                                                                |                    `["green"]`|
+| `title`          | Title of the app                                                                                                   |                           None|
+| `description`    | Description of the app                                                                                             |                           None|
+| `examples`       | Paths towards the image examples.                                                                                  |                           None|
 
 A configuration file (filled with the default values) is available in `huggingface/config.json`. You may update it to your needs.
 
@@ -330,7 +330,7 @@ If the ```public``` mode is specified, it will generate a public, shareable link
 To use the shareable link, use the following command:
 
 ```shell
-$ python3 hugging_face/app.py --config path/config.json --public
+$ python3 hugging_face/app.py --config hugging_face/config.json --public
 ```
 
 ## Cite us!
