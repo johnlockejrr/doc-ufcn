@@ -325,7 +325,7 @@ Once the configuration file is ready, just run the following command:
 $ python3 hugging_face/app.py --config hugging_face/config.json
 ```
 
-If the ```--public``` argument is specified, the script will generate a public, shareable link that you can send to anyone. More information about public links on gradio is available in the [gradio documentation](https://gradio.app/sharing-your-app/).
+If the `--public` argument is specified, the script will generate a public, shareable link that you can send to anyone. More information about public links on gradio is available in the [gradio documentation](https://gradio.app/sharing-your-app/).
 
 To generate the shareable link, use the following command:
 
