@@ -11,7 +11,6 @@ from doc_ufcn import models
 from doc_ufcn.main import DocUFCN
 from hugging_face.config import parse_configurations
 
-# Get the configuration json file with a cli
 parser = argparse.ArgumentParser(description="UFCN HuggingFace app")
 parser.add_argument(
     "--config",
@@ -36,17 +35,24 @@ config = parse_configurations(args.config)
 # Download the model
 model_path, parameters = models.download_model(name=config["model_name"])
 
-# Check that the number of colors is equal to the number of classes
-assert len(parameters["classes"]) - 1 == len(
-    config["classes_colors"]
-), f"The parameter classes_colors was filled with the wrong number of colors. {len(parameters['classes'])-1} colors are expected instead of {len(config['classes_colors'])}"
+# Store classes_colors list
+classes_colors = config["classes_colors"]
 
+# Store classes
+classes = parameters["classes"]
+
+# Check that the number of colors is equal to the number of classes -1
+assert len(classes) - 1 == len(
+    classes_colors
+), f"The parameter classes_colors was filled with the wrong number of colors. {len(classes)-1} colors are expected instead of {len(classes_colors)}."
+
+# Check that the paths of the examples are valid
 for example in config["examples"]:
-    assert os.path.exists(example), f"The path of the image '{example}' does not exists"
+    assert os.path.exists(example), f"The path of the image '{example}' does not exist."
 
 # Load the model
 model = DocUFCN(
-    no_of_classes=len(parameters["classes"]),
+    no_of_classes=len(classes),
     model_input_size=parameters["input_size"],
     device="cpu",
 )
@@ -73,12 +79,13 @@ def query_image(image):
     img2 = image.copy()
 
     # Create the polygons on the copy of the image for each class with the corresponding color
-    # The range start with 1 for not get the background channel
-    for channel in range(1, len(parameters["classes"])):
+    # We do not draw polygons of the background channel (channel 0)
+    for channel in range(1, len(classes)):
         for polygon in detected_polygons[channel]:
-            # Draw the polygons on the image copy. Loop through the class_colors list with -1 to start at 0 and not overflow the list
+            # Draw the polygons on the image copy.
+            # Loop through the class_colors list (channel 1 has color 0)
             ImageDraw.Draw(img2).polygon(
-                polygon["polygon"], fill=config["classes_colors"][channel - 1]
+                polygon["polygon"], fill=classes_colors[channel - 1]
             )
 
     # Return the blend of the images

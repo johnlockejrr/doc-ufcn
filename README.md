@@ -302,22 +302,22 @@ To use HuggingFace app, it is necessary to install gradio using pip:
 ```shell
 pip install gradio
 ```
-The code was last tested with ```gradio==3.18.0```
+The code was last tested with `gradio==3.18.0`.
 
 
-![image](https://gitlab.com/teklia/dla/doc-ufcn/-/tree/build-a-demo-interface-for-doc-ufcn-on-huggingface/hugging_face/resource/HuggingFace_Line_Historical.png)
+![image](https://gitlab.com/teklia/dla/doc-ufcn/-/raw/build-a-demo-interface-for-doc-ufcn-on-huggingface/hugging_face/resource/HuggingFace_Line_Historical.png)
 
 An example is available in the `huggingface/` folder. You need to create a JSON configuration file with the following parameters:
 
 | Parameter        | Description                                                                                                        | Default value                 |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
-| `model_name`     | Name of the model                                                                                             |`"doc-ufcn-generic-historical-line"`|
+| `model_name`     | Name of the model                                                                                             |`doc-ufcn-generic-historical-line`|
 | `classes_colors` | List with the colors of the classes                                                                                |                    `["green"]`|
-| `title`          | Title of the app                                                                                                   |                           None|
-| `description`    | Description of the app                                                                                             |                           None|
-| `examples`       | Paths towards the image examples.                                                                                  |                           None|
+| `title`          | Title of the app                                                                                                   |                           **Required**|
+| `description`    | Description of the app                                                                                             |                           **Required**|
+| `examples`       | Paths towards the image examples.                                                                                  |                           **Required**|
 
-A configuration file (filled with the default values) is available in `huggingface/config.json`. You may update it to your needs.
+A ready-to-use configuration file is available in `huggingface/config.json`. You may update it to your needs.
 
 Once the configuration file is ready, just run the following command:
 
@@ -325,9 +325,9 @@ Once the configuration file is ready, just run the following command:
 $ python3 hugging_face/app.py --config hugging_face/config.json
 ```
 
-If the ```public``` mode is specified, it will generate a public, shareable link that you can send to anyone. More information about public links on gradio is available in the gradio documentation: https://gradio.app/sharing-your-app/.
+If the ```--public``` argument is specified, the script will generate a public, shareable link that you can send to anyone. More information about public links on gradio is available in the [gradio documentation](https://gradio.app/sharing-your-app/).
 
-To use the shareable link, use the following command:
+To generate the shareable link, use the following command:
 
 ```shell
 $ python3 hugging_face/app.py --config hugging_face/config.json --public
