@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import json
 import os
 from pathlib import Path
 
 import gradio as gr
+import numpy as np
 from PIL import Image, ImageDraw
 
 from doc_ufcn import models
@@ -64,7 +66,7 @@ def query_image(image):
     Draws the predicted polygons with the color provided by the model on an image
 
     :param image: An image to predict
-    :return: Image, an image with the predictions
+    :return: Image and JSON, an image with the predictions and a json containing the predictions
     """
 
     # Make a prediction with the model
@@ -78,25 +80,40 @@ def query_image(image):
     # Make a copy of the image to keep the source and also to be able to use Pillow's blend method
     img2 = image.copy()
 
+    # Initialize the dictionary which will display the json on the application
+    predict = {}
+
     # Create the polygons on the copy of the image for each class with the corresponding color
     # We do not draw polygons of the background channel (channel 0)
     for channel in range(1, len(classes)):
-        for polygon in detected_polygons[channel]:
+        for i, polygon in enumerate(detected_polygons[channel]):
             # Draw the polygons on the image copy.
             # Loop through the class_colors list (channel 1 has color 0)
             ImageDraw.Draw(img2).polygon(
                 polygon["polygon"], fill=classes_colors[channel - 1]
             )
 
-    # Return the blend of the images
-    return Image.blend(image, img2, 0.5)
+            # Build the dictionary
+            # Add +1 to dictionary keys so they are more human readable in json file
+            predict[str(i + 1)] = {
+                "polygon": np.asarray(polygon["polygon"])
+                .astype(int)
+                .tolist(),  # The list of coordinates of the points of the polygon
+                "confidence": polygon[
+                    "confidence"
+                ],  # Confidence that the model predicts the polygon in the right place
+                "channel": channel,  # The channel on which the polygon is predicted
+            }
+
+    # Return the blend of the images and the dictionary formatted in json
+    return Image.blend(image, img2, 0.5), json.dumps(predict)
 
 
 # Create an interface with the config
 process_image = gr.Interface(
     fn=query_image,
     inputs=[gr.Image()],
-    outputs=[gr.Image()],
+    outputs=[gr.Image(), gr.JSON(show_label=False)],
     title=config["title"],
     description=config["description"],
     examples=config["examples"],
