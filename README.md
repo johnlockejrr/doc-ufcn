@@ -295,7 +295,7 @@ Once these parameters have been updated, the training can be started and followe
 
 ## HuggingFace app
 
-You may easily create and deploy a web application to demo the prediction of your Doc-UFCN models. This application can be integrated in a [HuggingFace space](https://huggingface.co/spaces).
+You may easily create and deploy a web application to demo the prediction of your Doc-UFCN models. This application can be easily integrated in a [HuggingFace space](https://huggingface.co/spaces): an example of a *HuggingFace Space* generated using this code is available [here](https://huggingface.co/spaces/Teklia/doc-ufcn).
 
 To use HuggingFace app, it is necessary to install gradio using pip:
 
