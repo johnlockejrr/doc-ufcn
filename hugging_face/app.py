@@ -66,7 +66,11 @@ def query_image(image):
     Draws the predicted polygons with the color provided by the model on an image
 
     :param image: An image to predict
-    :return: Image and JSON, an image with the predictions and a json containing the predictions
+    :return: Image and dict, an image with the predictions and a
+        dictionary containing dictionaries with an `int` id as key and a `dictionary` with the following keys as value:
+        - `polygon` : list, The list of coordinates of the points of the polygon
+        - `confidence` : float, Confidence that the model predicts the polygon in the right place
+        - `channel` : int, The channel on which the polygon is predicted
     """
 
     # Make a prediction with the model

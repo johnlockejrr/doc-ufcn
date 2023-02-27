@@ -333,6 +333,26 @@ To generate the shareable link, use the following command:
 $ python3 hugging_face/app.py --config hugging_face/config.json --public
 ```
 
+The model predictions will appear on the application in the following `json` format:
+
+A dictionary containing dictionaries with an `int` id as key and a `dictionary` with the following keys as value:
+- `polygon` : list, The list of coordinates of the points of the polygon
+- `confidence` : float, Confidence that the model predicts the polygon in the right place
+- `channel` : int, The channel on which the polygon is predicted
+
+```
+{
+  1 : {
+    polygon: [[],..,[]]
+    ,
+    confidence: 0.91
+    ,
+    channel: 1
+  },
+  ..
+}
+```
+
 ## Cite us!
 
 If you want to cite us in one of your works, please use the following citation.
