@@ -67,10 +67,10 @@ def query_image(image):
 
     :param image: An image to predict
     :return: Image and dict, an image with the predictions and a
-        dictionary containing dictionaries with an `int` id as key and a `dictionary` with the following keys as value:
-        - `polygon` : list, The list of coordinates of the points of the polygon
-        - `confidence` : float, Confidence that the model predicts the polygon in the right place
-        - `channel` : int, The channel on which the polygon is predicted
+        dictionary mapping an object idx (starting from 1) to a dictionary describing the detected object:
+        - `polygon` key : list, the coordinates of the points of the polygon,
+        - `confidence` key : float, confidence of the model,
+        - `channel` key : str, the name of the predicted class.
     """
 
     # Make a prediction with the model
@@ -85,7 +85,7 @@ def query_image(image):
     img2 = image.copy()
 
     # Initialize the dictionary which will display the json on the application
-    predict = {}
+    predict = []
 
     # Create the polygons on the copy of the image for each class with the corresponding color
     # We do not draw polygons of the background channel (channel 0)
@@ -98,30 +98,79 @@ def query_image(image):
             )
 
             # Build the dictionary
-            # Add +1 to dictionary keys so they are more human readable in json file
-            predict[str(i + 1)] = {
-                "polygon": np.asarray(polygon["polygon"])
-                .astype(int)
-                .tolist(),  # The list of coordinates of the points of the polygon
-                "confidence": polygon[
-                    "confidence"
-                ],  # Confidence that the model predicts the polygon in the right place
-                "channel": channel,  # The channel on which the polygon is predicted
-            }
+            # Add an index to dictionary keys to differentiate predictions of the same class
+            predict.append(
+                {
+                    "polygon": np.asarray(polygon["polygon"])
+                    .astype(int)
+                    .tolist(),  # The list of coordinates of the points of the polygon
+                    "confidence": polygon[
+                        "confidence"
+                    ],  # Confidence that the model predicts the polygon in the right place
+                    "channel": classes[
+                        channel
+                    ],  # The channel on which the polygon is predicted
+                }
+            )
 
     # Return the blend of the images and the dictionary formatted in json
-    return Image.blend(image, img2, 0.5), json.dumps(predict)
+    return Image.blend(image, img2, 0.5), json.dumps(predict, indent=20)
 
 
-# Create an interface with the config
-process_image = gr.Interface(
-    fn=query_image,
-    inputs=[gr.Image()],
-    outputs=[gr.Image(), gr.JSON(show_label=False)],
-    title=config["title"],
-    description=config["description"],
-    examples=config["examples"],
-)
+def clear_outputs():
+    """
+    Clear inputs and outputs
+
+    :return: (None, None, None), A tuple of None which allows to clear all inputs and outputs (image, image_output, json_output)
+    """
+    return None, None, None
+
+
+buttons_images = {}
+with gr.Blocks() as process_image:
+
+    # Create app title
+    gr.Markdown(f"<h1 align='center'>{config['title']}</h1>")
+
+    # Create app description
+    gr.Markdown(config["description"])
+
+    # Manages the application layout, with rows and columns.
+    # The gr.row() method is used to manage application rows and the gr.Column() method manages columns
+    with gr.Row():
+        with gr.Column():
+
+            # Generates an image that can be uploaded by a user
+            image = gr.Image()
+
+            with gr.Row():
+                # Generate a button to clear the inputs and outputs
+                clear_button = gr.Button("Clear", variant="secondary")
+
+                # Generates a button to submit the prediction
+                submit_button = gr.Button("Submit", variant="primary")
+
+            with gr.Row():
+                # Generate example images that can be used as input image
+                examples = gr.Examples(inputs=image, examples=config["examples"])
+
+        with gr.Column():
+            # Generates an output image that does not support upload
+            image_output = gr.Image(interactive=False)
+
+            with gr.Row():
+                with gr.Column():
+                    # Generates a json with the model predictions
+                    with gr.Accordion("JSON"):
+                        json_output = gr.JSON()
+
+    # Create the button to clear the inputs and outputs
+    clear_button.click(
+        clear_outputs, inputs=[], outputs=[image, image_output, json_output]
+    )
+
+    # Create the button to submit the prediction
+    submit_button.click(query_image, inputs=image, outputs=[image_output, json_output])
 
 # Launch the application with the public mode (True or False)
 process_image.launch(share=args.public)
