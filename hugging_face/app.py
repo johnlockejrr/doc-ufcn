@@ -101,15 +101,13 @@ def query_image(image):
             # Add an index to dictionary keys to differentiate predictions of the same class
             predict.append(
                 {
-                    "polygon": np.asarray(polygon["polygon"])
-                    .astype(int)
-                    .tolist(),  # The list of coordinates of the points of the polygon
-                    "confidence": polygon[
-                        "confidence"
-                    ],  # Confidence that the model predicts the polygon in the right place
-                    "channel": classes[
-                        channel
-                    ],  # The channel on which the polygon is predicted
+                    # The list of coordinates of the points of the polygon.
+                    # Use np.asarray to change list to ndarray to turn int64 to int32 with np.ndarray.tolist
+                    "polygon": np.asarray(polygon["polygon"]).tolist(),
+                    # Confidence that the model predicts the polygon in the right place
+                    "confidence": polygon["confidence"],
+                    # The channel on which the polygon is predicted
+                    "channel": classes[channel],
                 }
             )
 
@@ -120,7 +118,7 @@ def query_image(image):
 with gr.Blocks() as process_image:
 
     # Create app title
-    gr.Markdown(f"<h1 align='center'>{config['title']}</h1>")
+    gr.Markdown(f"# {config['title']}")
 
     # Create app description
     gr.Markdown(config["description"])
