@@ -165,10 +165,10 @@ with gr.Blocks() as process_image:
                         # Generates a json with the model predictions
                         json_output = gr.JSON()
 
-    # Create the button to clear the inputs and outputs
+    # Clear button: set default values to inputs and output objects
     clear_button.click(
-        lambda x, y, z: (None, None, None),
-        inputs=[image, image_output, json_output],
+        lambda : (None, None, None),
+        inputs=[],
         outputs=[image, image_output, json_output],
     )
 
