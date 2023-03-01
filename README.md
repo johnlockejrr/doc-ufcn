@@ -305,7 +305,7 @@ pip install gradio
 The code was last tested with `gradio==3.18.0`.
 
 
-![image](https://gitlab.com/teklia/dla/doc-ufcn/-/raw/main/hugging_face/resource/HuggingFace_Line_Historical.png)
+![image](https://gitlab.com/teklia/dla/doc-ufcn/-/raw/main/hugging_face/resource/hf_doc_ufcn_line_hist.png)
 
 An example is available in the `huggingface/` folder. You need to create a JSON configuration file with the following parameters:
 
@@ -331,6 +331,26 @@ To generate the shareable link, use the following command:
 
 ```shell
 $ python3 hugging_face/app.py --config hugging_face/config.json --public
+```
+
+The model's predictions will be shown on the application in JSON format:
+
+A dictionary mapping an object idx (starting from 1) to a dictionary describing the detected object:
+- `polygon` key : list, the coordinates of the points of the polygon,
+- `confidence` key : float, confidence of the model,
+- `channel` key : str, the name of the predicted class.
+
+```
+[
+  {
+    "polygon": [[],..,[]]
+    ,
+    "confidence": 0.91
+    ,
+    "channel": "text_line"
+  },
+  ..
+]
 ```
 
 ## Cite us!
