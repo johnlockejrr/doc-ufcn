@@ -167,7 +167,7 @@ with gr.Blocks() as process_image:
 
     # Clear button: set default values to inputs and output objects
     clear_button.click(
-        lambda : (None, None, None),
+        lambda: (None, None, None),
         inputs=[],
         outputs=[image, image_output, json_output],
     )
