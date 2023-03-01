@@ -101,15 +101,13 @@ def query_image(image):
             # Add an index to dictionary keys to differentiate predictions of the same class
             predict.append(
                 {
-                    "polygon": np.asarray(polygon["polygon"])
-                    .astype(int)
-                    .tolist(),  # The list of coordinates of the points of the polygon
-                    "confidence": polygon[
-                        "confidence"
-                    ],  # Confidence that the model predicts the polygon in the right place
-                    "channel": classes[
-                        channel
-                    ],  # The channel on which the polygon is predicted
+                    # The list of coordinates of the points of the polygon.
+                    # Cast to list of np.int32 to make it JSON-serializable
+                    "polygon": np.asarray(polygon["polygon"], dtype=np.int32).tolist(),
+                    # Confidence that the model predicts the polygon in the right place
+                    "confidence": polygon["confidence"],
+                    # The channel on which the polygon is predicted
+                    "channel": classes[channel],
                 }
             )
 
@@ -120,7 +118,7 @@ def query_image(image):
 with gr.Blocks() as process_image:
 
     # Create app title
-    gr.Markdown(f"<h1 align='center'>{config['title']}</h1>")
+    gr.Markdown(f"# {config['title']}")
 
     # Create app description
     gr.Markdown(config["description"])
@@ -167,10 +165,10 @@ with gr.Blocks() as process_image:
                         # Generates a json with the model predictions
                         json_output = gr.JSON()
 
-    # Create the button to clear the inputs and outputs
+    # Clear button: set default values to inputs and output objects
     clear_button.click(
-        lambda x, y, z: (None, None, None),
-        inputs=[image, image_output, json_output],
+        lambda: (None, None, None),
+        inputs=[],
         outputs=[image, image_output, json_output],
     )
 
