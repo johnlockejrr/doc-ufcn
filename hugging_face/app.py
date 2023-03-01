@@ -117,16 +117,6 @@ def query_image(image):
     return Image.blend(image, img2, 0.5), json.dumps(predict, indent=20)
 
 
-def clear_outputs():
-    """
-    Clear inputs and outputs
-
-    :return: (None, None, None), A tuple of None which allows to clear all inputs and outputs (image, image_output, json_output)
-    """
-    return None, None, None
-
-
-buttons_images = {}
 with gr.Blocks() as process_image:
 
     # Create app title
@@ -135,38 +125,53 @@ with gr.Blocks() as process_image:
     # Create app description
     gr.Markdown(config["description"])
 
-    # Manages the application layout, with rows and columns.
-    # The gr.row() method is used to manage application rows and the gr.Column() method manages columns
+    # Create a first row of blocks
     with gr.Row():
+
+        # Create a column on the left
         with gr.Column():
 
             # Generates an image that can be uploaded by a user
             image = gr.Image()
 
+            # Create a row under the image
             with gr.Row():
+
                 # Generate a button to clear the inputs and outputs
                 clear_button = gr.Button("Clear", variant="secondary")
 
                 # Generates a button to submit the prediction
                 submit_button = gr.Button("Submit", variant="primary")
 
+            # Create a row under the buttons
             with gr.Row():
+
                 # Generate example images that can be used as input image
                 examples = gr.Examples(inputs=image, examples=config["examples"])
 
+        # Create a column on the right
         with gr.Column():
+
             # Generates an output image that does not support upload
             image_output = gr.Image(interactive=False)
 
+            # Create a row under the predicted image
             with gr.Row():
+
+                # Create a column so that the JSON output doesn't take the full size of the page
                 with gr.Column():
-                    # Generates a json with the model predictions
+
+                    # Create a collapsible region
                     with gr.Accordion("JSON"):
+
+                        # Generates a json with the model predictions
                         json_output = gr.JSON()
 
     # Create the button to clear the inputs and outputs
     clear_button.click(
-        clear_outputs, inputs=[], outputs=[image, image_output, json_output]
+        lambda x, y, z: (None, None, None),
+        inputs=[image, image_output, json_output],
+        outputs=[image, image_output, json_output],
     )
 
     # Create the button to submit the prediction
