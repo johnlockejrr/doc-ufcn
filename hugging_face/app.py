@@ -102,8 +102,7 @@ def query_image(image):
             predict.append(
                 {
                     # The list of coordinates of the points of the polygon.
-                    # Use np.asarray to change list to ndarray to transform int64 to int32 with
-                    # np.ndarray.tolist to be able to serialize it to JSON.
+                    # Cast to list of np.int32 to make it JSON-serializable
                     "polygon": np.asarray(polygon["polygon"], dtype=np.int32).tolist(),
                     # Confidence that the model predicts the polygon in the right place
                     "confidence": polygon["confidence"],
