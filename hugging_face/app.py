@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import json
 import os
 from pathlib import Path
 
 import gradio as gr
+import numpy as np
 from PIL import Image, ImageDraw
 
 from doc_ufcn import models
@@ -64,7 +66,11 @@ def query_image(image):
     Draws the predicted polygons with the color provided by the model on an image
 
     :param image: An image to predict
-    :return: Image, an image with the predictions
+    :return: Image and dict, an image with the predictions and a
+        dictionary mapping an object idx (starting from 1) to a dictionary describing the detected object:
+        - `polygon` key : list, the coordinates of the points of the polygon,
+        - `confidence` key : float, confidence of the model,
+        - `channel` key : str, the name of the predicted class.
     """
 
     # Make a prediction with the model
@@ -78,29 +84,98 @@ def query_image(image):
     # Make a copy of the image to keep the source and also to be able to use Pillow's blend method
     img2 = image.copy()
 
+    # Initialize the dictionary which will display the json on the application
+    predict = []
+
     # Create the polygons on the copy of the image for each class with the corresponding color
     # We do not draw polygons of the background channel (channel 0)
     for channel in range(1, len(classes)):
-        for polygon in detected_polygons[channel]:
+        for i, polygon in enumerate(detected_polygons[channel]):
             # Draw the polygons on the image copy.
             # Loop through the class_colors list (channel 1 has color 0)
             ImageDraw.Draw(img2).polygon(
                 polygon["polygon"], fill=classes_colors[channel - 1]
             )
 
-    # Return the blend of the images
-    return Image.blend(image, img2, 0.5)
+            # Build the dictionary
+            # Add an index to dictionary keys to differentiate predictions of the same class
+            predict.append(
+                {
+                    "polygon": np.asarray(polygon["polygon"])
+                    .astype(int)
+                    .tolist(),  # The list of coordinates of the points of the polygon
+                    "confidence": polygon[
+                        "confidence"
+                    ],  # Confidence that the model predicts the polygon in the right place
+                    "channel": classes[
+                        channel
+                    ],  # The channel on which the polygon is predicted
+                }
+            )
+
+    # Return the blend of the images and the dictionary formatted in json
+    return Image.blend(image, img2, 0.5), json.dumps(predict, indent=20)
 
 
-# Create an interface with the config
-process_image = gr.Interface(
-    fn=query_image,
-    inputs=[gr.Image()],
-    outputs=[gr.Image()],
-    title=config["title"],
-    description=config["description"],
-    examples=config["examples"],
-)
+with gr.Blocks() as process_image:
+
+    # Create app title
+    gr.Markdown(f"<h1 align='center'>{config['title']}</h1>")
+
+    # Create app description
+    gr.Markdown(config["description"])
+
+    # Create a first row of blocks
+    with gr.Row():
+
+        # Create a column on the left
+        with gr.Column():
+
+            # Generates an image that can be uploaded by a user
+            image = gr.Image()
+
+            # Create a row under the image
+            with gr.Row():
+
+                # Generate a button to clear the inputs and outputs
+                clear_button = gr.Button("Clear", variant="secondary")
+
+                # Generates a button to submit the prediction
+                submit_button = gr.Button("Submit", variant="primary")
+
+            # Create a row under the buttons
+            with gr.Row():
+
+                # Generate example images that can be used as input image
+                examples = gr.Examples(inputs=image, examples=config["examples"])
+
+        # Create a column on the right
+        with gr.Column():
+
+            # Generates an output image that does not support upload
+            image_output = gr.Image(interactive=False)
+
+            # Create a row under the predicted image
+            with gr.Row():
+
+                # Create a column so that the JSON output doesn't take the full size of the page
+                with gr.Column():
+
+                    # Create a collapsible region
+                    with gr.Accordion("JSON"):
+
+                        # Generates a json with the model predictions
+                        json_output = gr.JSON()
+
+    # Create the button to clear the inputs and outputs
+    clear_button.click(
+        lambda x, y, z: (None, None, None),
+        inputs=[image, image_output, json_output],
+        outputs=[image, image_output, json_output],
+    )
+
+    # Create the button to submit the prediction
+    submit_button.click(query_image, inputs=image, outputs=[image_output, json_output])
 
 # Launch the application with the public mode (True or False)
 process_image.launch(share=args.public)
