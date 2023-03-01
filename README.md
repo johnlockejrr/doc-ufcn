@@ -313,8 +313,8 @@ An example is available in the `huggingface/` folder. You need to create a JSON 
 | ---------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
 | `model_name`     | Name of the model                                                                                             |`doc-ufcn-generic-historical-line`|
 | `classes_colors` | List with the colors of the classes                                                                                |                    `["green"]`|
-| `title`          | Title of the app (support markdown)                                                                                                   |                           **Required**|
-| `description`    | Description of the app (support markdown)                                                                                           |                           **Required**|
+| `title`          | Title of the app (supports Markdown)                                                                                                   |                           **Required**|
+| `description`    | Description of the app (supports Markdown)                                                                                           |                           **Required**|
 | `examples`       | Paths towards the image examples.                                                                                  |                           **Required**|
 
 A ready-to-use configuration file is available in `huggingface/config.json`. You may update it to your needs.
