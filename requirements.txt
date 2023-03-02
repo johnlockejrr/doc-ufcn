@@ -1,6 +1,6 @@
 huggingface-hub==0.12.0
 numpy==1.24.1
-opencv-python-headless==4.7.0.68
+opencv-python-headless==4.7.0.72
 pyyaml==6.0
 requests>=2,<3
 teklia_toolbox==0.1.3
