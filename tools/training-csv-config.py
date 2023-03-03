@@ -40,7 +40,6 @@ def generate_configurations(csv_path):
 
     reader = csv.DictReader(csv_path.open(), delimiter=",")
     for row in reader:
-
         config = {}
         # Get experiment name.
         assert row["experiment_name"] != "", "Missing experiment name"
@@ -87,7 +86,6 @@ def run(csv_path, output):
     os.makedirs(output, exist_ok=True)
 
     for index, config in enumerate(generate_configurations(csv_path), 1):
-
         # Save each configuration in a dedicated file file.
         json_file = str(index) + "_" + config["experiment_name"] + ".json"
         with open(os.path.join(output, json_file), "w") as file:
