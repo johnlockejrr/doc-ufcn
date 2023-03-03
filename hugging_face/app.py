@@ -116,7 +116,6 @@ def query_image(image):
 
 
 with gr.Blocks() as process_image:
-
     # Create app title
     gr.Markdown(f"# {config['title']}")
 
@@ -125,16 +124,13 @@ with gr.Blocks() as process_image:
 
     # Create a first row of blocks
     with gr.Row():
-
         # Create a column on the left
         with gr.Column():
-
             # Generates an image that can be uploaded by a user
             image = gr.Image()
 
             # Create a row under the image
             with gr.Row():
-
                 # Generate a button to clear the inputs and outputs
                 clear_button = gr.Button("Clear", variant="secondary")
 
@@ -143,25 +139,20 @@ with gr.Blocks() as process_image:
 
             # Create a row under the buttons
             with gr.Row():
-
                 # Generate example images that can be used as input image
                 examples = gr.Examples(inputs=image, examples=config["examples"])
 
         # Create a column on the right
         with gr.Column():
-
             # Generates an output image that does not support upload
             image_output = gr.Image(interactive=False)
 
             # Create a row under the predicted image
             with gr.Row():
-
                 # Create a column so that the JSON output doesn't take the full size of the page
                 with gr.Column():
-
                     # Create a collapsible region
                     with gr.Accordion("JSON"):
-
                         # Generates a json with the model predictions
                         json_output = gr.JSON()
 

@@ -67,7 +67,6 @@ def create_buckets(images_sizes, bin_size):
 
 class Sampler(torch.utils.data.Sampler):
     def __init__(self, data, bin_size=20, batch_size=None, nb_params=None):
-
         self.bin_size = bin_size
         self.batch_size = batch_size
         self.nb_params = nb_params
