@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw
 
 from doc_ufcn import models
 from doc_ufcn.main import DocUFCN
-from hugging_face.config import parse_configurations
+from hugging_face.config import parse_configurations, parse_yaml
 
 parser = argparse.ArgumentParser(description="UFCN HuggingFace app")
 parser.add_argument(
@@ -31,37 +31,51 @@ parser.add_argument(
 # Parse arguments
 args = parser.parse_args()
 
+config = parse_yaml(args.config)
+
+print("FINIIIIII")
 # Load the config
-config = parse_configurations(args.config)
+# config = parse_configurations(args.config)
 
-# Download the model
-model_path, parameters = models.download_model(name=config["model_name"])
+def load_model(model_name):
+    # Download the model
+    model_path, parameters = models.download_model(name=model_name)
 
-# Store classes_colors list
-classes_colors = config["classes_colors"]
+    # Store classes_colors list
+    classes_colors = config["classes_colors"]
 
-# Store classes
-classes = parameters["classes"]
+    # Store classes
+    classes = parameters["classes"]
 
-# Check that the number of colors is equal to the number of classes -1
-assert len(classes) - 1 == len(
-    classes_colors
-), f"The parameter classes_colors was filled with the wrong number of colors. {len(classes)-1} colors are expected instead of {len(classes_colors)}."
+    # if model_name != "doc-ufcn-huginmunin-line":
+    # Check that the number of colors is equal to the number of classes -1
 
-# Check that the paths of the examples are valid
-for example in config["examples"]:
-    assert os.path.exists(example), f"The path of the image '{example}' does not exist."
-
-# Load the model
-model = DocUFCN(
-    no_of_classes=len(classes),
-    model_input_size=parameters["input_size"],
-    device="cpu",
-)
-model.load(model_path=model_path, mean=parameters["mean"], std=parameters["std"])
+    assert len(classes)-1 == len(
+        classes_colors
+    ), f"The parameter classes_colors was filled with the wrong number of colors. {len(classes)} colors are expected instead of {len(classes_colors)}."
+    
+    # else:
+    #    # Check that the number of colors is equal to the number of classes
+    #     assert len(classes) -1  == len(
+    #         classes_colors
+    #     ), f"The parameter classes_colors was filled with the wrong number of colors. {len(classes)-1} colors are expected instead of {len(classes_colors)}." 
 
 
-def query_image(image):
+    # Check that the paths of the examples are valid
+    for example in config["examples"]:
+        assert os.path.exists(example), f"The path of the image '{example}' does not exist."
+
+    # Load the model
+    model = DocUFCN(
+        no_of_classes=len(classes),
+        model_input_size=parameters["input_size"],
+        device="cpu",
+    )
+    model.load(model_path=model_path, mean=parameters["mean"], std=parameters["std"])
+
+    return classes, classes_colors, model
+
+def query_image(dropdown, image):
     """
     Draws the predicted polygons with the color provided by the model on an image
 
@@ -72,6 +86,9 @@ def query_image(image):
         - `confidence` key : float, confidence of the model,
         - `channel` key : str, the name of the predicted class.
     """
+    
+    classes, classes_colors, model = load_model(dropdown)
+    
 
     # Make a prediction with the model
     detected_polygons, probabilities, mask, overlap = model.predict(
@@ -114,13 +131,53 @@ def query_image(image):
     # Return the blend of the images and the dictionary formatted in json
     return Image.blend(image, img2, 0.5), json.dumps(predict, indent=20)
 
-
 with gr.Blocks() as process_image:
+
+    dropdown = gr.Dropdown(config["model_name"])
+    # textbox = gr.Textbox(dropdown.value)
+    # print(dropdown.value)
+
+    # model_name = dropdown.change(fn=load_model, every=True)
+    # print(dropdown)
+    # # classes_colors, classes, model = load_model_name(model_name)
+
+    # # Download the model
+    # model_path, parameters = models.download_model(name=model_name)val
+
+    # # Store classes_colors list
+    # classes_colors = config["classes_colors"]
+
+    # # Store classes
+    # classes = parameters["classes"]
+
+    # # Check that the number of colors is equal to the number of classes -1
+    # assert len(classes) - 1 == len(
+    #     classes_colors
+    # ), f"The parameter classes_colors was filled with the wrong number of colors. {len(classes)-1} colors are expected instead of {len(classes_colors)}."
+
+    # # Check that the paths of the examples are valid
+    # for example in config["examples"]:
+    #     assert os.path.exists(example), f"The path of the image '{example}' does not exist."
+
+    # # Load the model
+    # model = DocUFCN(
+    #     no_of_classes=len(classes),
+    #     model_input_size=parameters["input_size"],
+    #     device="cpu",
+    # )
+    # model.load(model_path=model_path, mean=parameters["mean"], std=parameters["std"])
+
+    
     # Create app title
     gr.Markdown(f"# {config['title']}")
 
     # Create app description
     gr.Markdown(config["description"])
+
+    # dropdown = gr.Dropdown(config["model_name"])
+
+    # model_name = dropdown.change(fn=None, inputs=config["model_name"])
+    # classes_colors, classes, model = load_model_name(model_name)
 
     # Create a first row of blocks
     with gr.Row():
@@ -164,7 +221,7 @@ with gr.Blocks() as process_image:
     )
 
     # Create the button to submit the prediction
-    submit_button.click(query_image, inputs=image, outputs=[image_output, json_output])
+    submit_button.click(query_image, inputs=[dropdown, image], outputs=[image_output, json_output])
 
 # Launch the application with the public mode (True or False)
 process_image.launch(share=args.public)
