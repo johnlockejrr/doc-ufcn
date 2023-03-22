@@ -52,7 +52,7 @@ def load_model(model_name, model_id):
     ), f"The parameter classes_colors was filled with the wrong number of colors. {len(classes)-1} colors are expected instead of {len(classes_colors)}."
     
     # Check that the paths of the examples are valid
-    for example in config["examples"]:
+    for example in config["models"][model_id]["examples"]:
         assert os.path.exists(example), f"The path of the image '{example}' does not exist."
 
     # Load the model
@@ -123,9 +123,19 @@ def query_image(dropdown, image):
     return Image.blend(image, img2, 0.5), json.dumps(predict, indent=20)
 
 def get_value(dropdown):
-    return models_name.index(dropdown.value)
+    return models_name.index(dropdown)
+
+def change_model_title(model_id):
+    return f"## {config['models'][model_id]['title']}"
+
+def change_model_description(model_id):
+    return config["models"][model_id]["description"]
+
 
 with gr.Blocks() as process_image:
+
+    # Create a int Number for define the model id
+    model_id = gr.Number(precision=0, value=0, visible=False)
 
     # Create app title
     title = gr.Markdown(f"# {config['title']}")
@@ -133,9 +143,23 @@ with gr.Blocks() as process_image:
     # Create app description
     description = gr.Markdown(config["description"])
 
+    # Create dropdown button
     dropdown = gr.Dropdown(models_name, value=models_name[0], label="Models")
 
-    model_id = get_value(dropdown)
+    # Create model title
+    model_title = gr.Markdown(f"## {config['models'][model_id.value]['title']}")
+    
+    # Create model description
+    model_description = gr.Markdown(config['models'][model_id.value]["description"])
+
+    # Set the model id to the selected model id by the dropdown button
+    dropdown.change(get_value, dropdown, model_id)
+
+    # Change model title when the model_id is update
+    model_id.change(change_model_title, model_id, model_title)
+
+    # Change model description when the model_id is update
+    model_id.change(change_model_description, model_id, model_description)
 
     # Create a first row of blocks
     with gr.Row():
@@ -151,11 +175,13 @@ with gr.Blocks() as process_image:
 
                 # Generates a button to submit the prediction
                 submit_button = gr.Button("Submit", variant="primary")
-
+            
             # Create a row under the buttons
             with gr.Row():
-                # Generate example images that can be used as input image
-                examples = gr.Examples(inputs=image, examples=config["examples"])
+                # Generate example images that can be used as input image for every model
+                for model in config["models"]:
+                    with gr.Tab(f"Examples Page {model['model_name']}"):
+                        gr.Examples(model["examples"], inputs=image)
 
         # Create a column on the right
         with gr.Column():
