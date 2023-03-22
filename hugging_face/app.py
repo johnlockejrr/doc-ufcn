@@ -35,7 +35,6 @@ config = parse_configurations(args.config)
 
 models_name = [model["model_name"] for model in config["models"]]
 
-<<<<<<< HEAD
 # Check that the paths of the examples are valid
 for example in config["examples"]:
     assert Path.exists(
@@ -52,19 +51,10 @@ MODELS = {
     )
     for model in config["models"]
 }
-=======
-def load_model(model_name, model_id):
-    # Download the model
-    model_path, parameters = models.download_model(name=model_name)
-
-    # Store classes_colors list
-    classes_colors = config["models"][model_id]["classes_colors"]
->>>>>>> 9a64357... Add a new config and a selector of models
 
 # Create a list of models name
 models_name = list(MODELS)
 
-<<<<<<< HEAD
 
 def load_model(model_name: str) -> UFCNModel:
     """
@@ -79,15 +69,8 @@ def load_model(model_name: str) -> UFCNModel:
         model.load()
     return model
 
-=======
-    # Check that the number of colors is equal to the number of classes -1
-    assert len(classes)-1 == len(
-        classes_colors
-    ), f"The parameter classes_colors was filled with the wrong number of colors. {len(classes)-1} colors are expected instead of {len(classes_colors)}."
-    
->>>>>>> 9a64357... Add a new config and a selector of models
     # Check that the paths of the examples are valid
-    for example in config["examples"]:
+    for example in config["models"][model_id]["examples"]:
         assert os.path.exists(example), f"The path of the image '{example}' does not exist."
 
     # Load the model
@@ -172,16 +155,25 @@ def update_model(model_name: gr.Dropdown) -> str:
     return f"## {MODELS[model_name].title}", MODELS[model_name].description
 
 def get_value(dropdown):
-    return models_name.index(dropdown.value)
+    return models_name.index(dropdown)
+
+def change_model_title(model_id):
+    return f"## {config['models'][model_id]['title']}"
+
+def change_model_description(model_id):
+    return config["models"][model_id]["description"]
+
 
 with gr.Blocks() as process_image:
+
+    # Create a int Number for define the model id
+    model_id = gr.Number(precision=0, value=0, visible=False)
 
     # Create app title
     title = gr.Markdown(f"# {config['title']}")
 
     # Create app description
     description = gr.Markdown(config["description"])
-<<<<<<< HEAD
 
     # Create dropdown button
     model_name = gr.Dropdown(models_name, value=models_name[0], label="Models")
@@ -197,12 +189,24 @@ with gr.Blocks() as process_image:
 
     # Change model title and description when the model_id is update
     model_name.change(update_model, model_name, [model_title, model_description])
-=======
->>>>>>> 9a64357... Add a new config and a selector of models
 
+    # Create dropdown button
     dropdown = gr.Dropdown(models_name, value=models_name[0], label="Models")
 
-    model_id = get_value(dropdown)
+    # Create model title
+    model_title = gr.Markdown(f"## {config['models'][model_id.value]['title']}")
+    
+    # Create model description
+    model_description = gr.Markdown(config['models'][model_id.value]["description"])
+
+    # Set the model id to the selected model id by the dropdown button
+    dropdown.change(get_value, dropdown, model_id)
+
+    # Change model title when the model_id is update
+    model_id.change(change_model_title, model_id, model_title)
+
+    # Change model description when the model_id is update
+    model_id.change(change_model_description, model_id, model_description)
 
     # Create a first row of blocks
     with gr.Row():
@@ -218,7 +222,7 @@ with gr.Blocks() as process_image:
 
                 # Generates a button to submit the prediction
                 submit_button = gr.Button("Submit", variant="primary")
-
+            
             # Create a row under the buttons
             with gr.Row():
                 # Generate example images that can be used as input image for every model
