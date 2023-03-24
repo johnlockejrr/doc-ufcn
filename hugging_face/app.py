@@ -70,8 +70,10 @@ def load_model(model_name: str) -> UFCNModel:
     return model
 
     # Check that the paths of the examples are valid
-    for example in config["models"][model_id]["examples"]:
-        assert os.path.exists(example), f"The path of the image '{example}' does not exist."
+    for example in config["examples"]:
+        assert os.path.exists(
+            example
+        ), f"The path of the image '{example}' does not exist."
 
     # Load the model
     model = DocUFCN(
@@ -98,6 +100,7 @@ def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json])
     # Get the id of the model in the list of models
     model_id = models_name.index(dropdown)
 
+    # Load the model and get its classes, classes_colors and the model
     classes, classes_colors, model = load_model(dropdown, model_id)
 
     # Load the model and get its classes, classes_colors and the model
@@ -107,7 +110,7 @@ def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json])
     detected_polygons, probabilities, mask, overlap = ufcn_model.model.predict(
         input_image=image, raw_output=True, mask_output=True, overlap_output=True
     )
-    
+
     # Load image
     image = Image.fromarray(image)
 
@@ -154,18 +157,38 @@ def update_model(model_name: gr.Dropdown) -> str:
     """
     return f"## {MODELS[model_name].title}", MODELS[model_name].description
 
+
 def get_value(dropdown):
+    """
+    Get the model selected in dropdown component and return this id
+
+    :param dropdown: A model selected in dropdown
+    :return: The model id selected
+    """
     return models_name.index(dropdown)
 
+
 def change_model_title(model_id):
+    """
+    Change the model title to the title of the current model
+
+    :param model_id: The id of the current model
+    :return: A new title
+    """
     return f"## {config['models'][model_id]['title']}"
 
+
 def change_model_description(model_id):
+    """
+    Change the model description to the description of the current model
+
+    :param model_id: The id of the current model
+    :return: A new description
+    """
     return config["models"][model_id]["description"]
 
 
 with gr.Blocks() as process_image:
-
     # Create a int Number for define the model id
     model_id = gr.Number(precision=0, value=0, visible=False)
 
@@ -195,9 +218,9 @@ with gr.Blocks() as process_image:
 
     # Create model title
     model_title = gr.Markdown(f"## {config['models'][model_id.value]['title']}")
-    
+
     # Create model description
-    model_description = gr.Markdown(config['models'][model_id.value]["description"])
+    model_description = gr.Markdown(config["models"][model_id.value]["description"])
 
     # Set the model id to the selected model id by the dropdown button
     dropdown.change(get_value, dropdown, model_id)
@@ -206,7 +229,9 @@ with gr.Blocks() as process_image:
     model_id.change(change_model_title, model_id, model_title)
 
     # Change model description when the model_id is update
-    model_id.change(change_model_description, model_id, model_description)
+    model_description = model_id.change(
+        change_model_description, model_id, model_description
+    )
 
     # Create a first row of blocks
     with gr.Row():
@@ -222,7 +247,7 @@ with gr.Blocks() as process_image:
 
                 # Generates a button to submit the prediction
                 submit_button = gr.Button("Submit", variant="primary")
-            
+
             # Create a row under the buttons
             with gr.Row():
                 # Generate example images that can be used as input image for every model

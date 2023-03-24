@@ -17,6 +17,7 @@ def parse_configurations(config_path: Path):
 
     parser.add_option("title")
     parser.add_option("description")
+    parser.add_option("examples", type=list)
     model_parser = parser.add_subparser("models", many=True)
 
     model_parser.add_option("model_name")
