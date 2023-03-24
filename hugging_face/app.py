@@ -36,6 +36,7 @@ config = parse_configurations(args.config)
 
 models_name = [model["model_name"] for model in config["models"]]
 
+
 def load_model(model_name, model_id):
     # Download the model
     model_path, parameters = models.download_model(name=model_name)
@@ -47,13 +48,15 @@ def load_model(model_name, model_id):
     classes = parameters["classes"]
 
     # Check that the number of colors is equal to the number of classes -1
-    assert len(classes)-1 == len(
+    assert len(classes) - 1 == len(
         classes_colors
     ), f"The parameter classes_colors was filled with the wrong number of colors. {len(classes)-1} colors are expected instead of {len(classes_colors)}."
-    
+
     # Check that the paths of the examples are valid
-    for example in config["models"][model_id]["examples"]:
-        assert os.path.exists(example), f"The path of the image '{example}' does not exist."
+    for example in config["examples"]:
+        assert os.path.exists(
+            example
+        ), f"The path of the image '{example}' does not exist."
 
     # Load the model
     model = DocUFCN(
@@ -65,10 +68,12 @@ def load_model(model_name, model_id):
 
     return classes, classes_colors, model
 
+
 def query_image(dropdown, image):
     """
-    Draws the predicted polygons with the color provided by the model on an image
+    Load a model and draws the predicted polygons with the color provided by the model on an image
 
+    :param dropdown: A model selected in dropdown
     :param image: An image to predict
     :return: Image and dict, an image with the predictions and a
         dictionary mapping an object idx (starting from 1) to a dictionary describing the detected object:
@@ -79,13 +84,14 @@ def query_image(dropdown, image):
     # Get the id of the model in the list of models
     model_id = models_name.index(dropdown)
 
+    # Load the model and get its classes, classes_colors and the model
     classes, classes_colors, model = load_model(dropdown, model_id)
 
     # Make a prediction with the model
     detected_polygons, probabilities, mask, overlap = model.predict(
         input_image=image, raw_output=True, mask_output=True, overlap_output=True
     )
-    
+
     # Load image
     image = Image.fromarray(image)
 
@@ -122,18 +128,38 @@ def query_image(dropdown, image):
     # Return the blend of the images and the dictionary formatted in json
     return Image.blend(image, img2, 0.5), json.dumps(predict, indent=20)
 
+
 def get_value(dropdown):
+    """
+    Get the model selected in dropdown component and return this id
+
+    :param dropdown: A model selected in dropdown
+    :return: The model id selected
+    """
     return models_name.index(dropdown)
 
+
 def change_model_title(model_id):
+    """
+    Change the model title to the title of the current model
+
+    :param model_id: The id of the current model
+    :return: A new title
+    """
     return f"## {config['models'][model_id]['title']}"
 
+
 def change_model_description(model_id):
+    """
+    Change the model description to the description of the current model
+
+    :param model_id: The id of the current model
+    :return: A new description
+    """
     return config["models"][model_id]["description"]
 
 
 with gr.Blocks() as process_image:
-
     # Create a int Number for define the model id
     model_id = gr.Number(precision=0, value=0, visible=False)
 
@@ -148,9 +174,9 @@ with gr.Blocks() as process_image:
 
     # Create model title
     model_title = gr.Markdown(f"## {config['models'][model_id.value]['title']}")
-    
+
     # Create model description
-    model_description = gr.Markdown(config['models'][model_id.value]["description"])
+    model_description = gr.Markdown(config["models"][model_id.value]["description"])
 
     # Set the model id to the selected model id by the dropdown button
     dropdown.change(get_value, dropdown, model_id)
@@ -159,7 +185,9 @@ with gr.Blocks() as process_image:
     model_id.change(change_model_title, model_id, model_title)
 
     # Change model description when the model_id is update
-    model_id.change(change_model_description, model_id, model_description)
+    model_description = model_id.change(
+        change_model_description, model_id, model_description
+    )
 
     # Create a first row of blocks
     with gr.Row():
@@ -175,13 +203,11 @@ with gr.Blocks() as process_image:
 
                 # Generates a button to submit the prediction
                 submit_button = gr.Button("Submit", variant="primary")
-            
+
             # Create a row under the buttons
             with gr.Row():
                 # Generate example images that can be used as input image for every model
-                for model in config["models"]:
-                    with gr.Tab(f"Examples Page {model['model_name']}"):
-                        gr.Examples(model["examples"], inputs=image)
+                gr.Examples(config["examples"], inputs=image)
 
         # Create a column on the right
         with gr.Column():
@@ -205,7 +231,9 @@ with gr.Blocks() as process_image:
     )
 
     # Create the button to submit the prediction
-    submit_button.click(query_image, inputs=[dropdown, image], outputs=[image_output, json_output])
+    submit_button.click(
+        query_image, inputs=[dropdown, image], outputs=[image_output, json_output]
+    )
 
 # Launch the application with the public mode (True or False)
 process_image.launch(share=args.public)
