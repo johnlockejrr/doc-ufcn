@@ -1,6 +1,9 @@
 title: A demo showing a prediction from the Teklia UFCN models on huggingface
 description: >-
-  Teklia description...
+  [Teklia](https://teklia.com/)’s expertise is to develop document analysis and processing solutions using, among other things, OCR technology.
+  Our software combines image analysis, printed and handwritten text recognition, text segmentation with a document classification and indexation system.
+  Our objective is to deliver to our clients an automated document processing tool easy-to-use and adapted to their needs.
+  With the same state of mind, we developed additional solutions to enhance both security and business-process.
 examples:
   - hugging_face/resource/hugging_face_1.jpg
   - hugging_face/resource/hugging_face_2.jpg
@@ -9,22 +12,22 @@ models:
   - model_name: doc-ufcn-generic-historical-line
     title: Doc ufcn generic historical line Demo
     description: >-
-      "A demo showing a prediction from the [Teklia/doc-ufcn-generic-historical-line](https://huggingface.co/Teklia/doc-ufcn-generic-historical-line) model.
-      The generic historical line detection model predicts text lines from document images."
+      A demo showing a prediction from the [Teklia/doc-ufcn-generic-historical-line](https://huggingface.co/Teklia/doc-ufcn-generic-historical-line) model.
+      The generic historical line detection model predicts text lines from document images.
     classes_colors:
       - green
   - model_name: doc-ufcn-huginmunin-line
     title: Doc ufcn huginmunin line Demo
     description: >-
-      "A demo showing a prediction from the [Teklia/doc-ufcn-huginmunin-line](https://huggingface.co/Teklia/doc-ufcn-huginmunin-line) model.
-      The huginmunin line model predicts text lines from document images."
+      A demo showing a prediction from the [Teklia/doc-ufcn-huginmunin-line](https://huggingface.co/Teklia/doc-ufcn-huginmunin-line) model.
+      The huginmunin line model predicts text lines from document images.
     classes_colors:
       - green
       - blue
   - model_name: doc-ufcn-generic-page
     title: Doc ufcn generic page Demo
     description: >-
-      "A demo showing a prediction from the [Teklia/doc-ufcn-generic-page](https://huggingface.co/Teklia/doc-ufcn-generic-page) model.
-      The generic page model predicts pages from document images."
+      A demo showing a prediction from the [Teklia/doc-ufcn-generic-page](https://huggingface.co/Teklia/doc-ufcn-generic-page) model.
+      The generic page model predicts pages from document images.
     classes_colors:
       - green
