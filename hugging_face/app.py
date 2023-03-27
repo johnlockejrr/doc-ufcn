@@ -33,6 +33,7 @@ args = parser.parse_args()
 # Load the config
 config = parse_configurations(args.config)
 
+# Create a list of models name
 models_name = [model["model_name"] for model in config["models"]]
 
 # Check that the paths of the examples are valid
