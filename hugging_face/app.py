@@ -3,7 +3,6 @@
 import argparse
 import json
 from pathlib import Path
-from typing import NamedTuple
 
 import gradio as gr
 import numpy as np
@@ -34,8 +33,11 @@ args = parser.parse_args()
 # Load the config
 config = parse_configurations(args.config)
 
-# Create a list of models name
-models_name = [model["model_name"] for model in config["models"]]
+# Check that the paths of the examples are valid
+for example in config["examples"]:
+    assert Path.exists(
+        Path(example)
+    ), f"The path of the image '{example}' does not exist."
 
 # Check that the paths of the examples are valid
 for example in config["examples"]:
@@ -71,29 +73,18 @@ def load_model(model_name: str) -> UFCNModel:
         model.load()
     return model
 
-    # Check that the paths of the examples are valid
-    for example in config["examples"]:
-        assert Path.exists(
-            Path(example)
-        ), f"The path of the image '{example}' does not exist."
+def load_model(model_name) -> UFCNModel:
+    """
+    Load a model by name if it doesn't already exist then return the model
 
-    # Load the model
-    model = DocUFCN(
-        no_of_classes=len(classes),
-        model_input_size=parameters["input_size"],
-        device="cpu",
-    )
-    model.load(model_path=model_path, mean=parameters["mean"], std=parameters["std"])
-
-    MODELS[model_name] = UFCNModel(
-        name=model_name,
-        classes=classes,
-        colors=classes_colors,
-        model=model,
-        title=title,
-        description=description,
-    )
-    return MODELS[model_name]
+    :param model_name: The name of the selected model
+    :return: The UFCNModel instance selected
+    """
+    assert model_name in MODELS
+    model = MODELS[model_name]
+    if not model.loaded:
+        model.load()
+    return model
 
 def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json]):
     """
@@ -108,8 +99,8 @@ def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json])
         - `channel` key : str, the name of the predicted class.
     """
 
-    # # # Load the model and get its classes, classes_colors and the model
-    # Model = load_model(model)
+    # Load the model and get its classes, classes_colors and the model
+    ufcn_model = load_model(model_name)
 
     # Load the model and get its classes, classes_colors and the model
     ufcn_model = load_model(model_name)
@@ -178,31 +169,12 @@ def get_model_idx(dropdown):
 
 def update_model(model_name):
     """
-    Update MODELS dict
-
-    :param model_name: The name of the current model
-    """
-    MODELS[model_name] = load_model(model_name)
-
-
-def update_model_title(model_name):
-    """
     Update the model title to the title of the current model
 
-    :param model_id: The id of the current model
+    :param model_name: A model selected in dropdown
     :return: A new title
     """
-    return f"## {MODELS[model_name].title}"
-
-
-def update_model_description(model_name):
-    """
-    Update the model description to the description of the current model
-
-    :param model_id: The id of the current model
-    :return: A new description
-    """
-    return MODELS[model_name].description
+    return f"## {MODELS[model_name].title}", MODELS[model_name].description
 
 
 with gr.Blocks() as process_image:
@@ -232,19 +204,13 @@ with gr.Blocks() as process_image:
 
     load_model(model_name.value)
 
-    model_title = gr.Markdown(f"## {MODELS[model_name.value].title}")
-    # model_title = gr.Markdown(f"## {config['models'][model_id.value]['title']}")
+    model_title = gr.Markdown(f"## {selected_model.title}")
 
     # Create model description
-    model_description = gr.Markdown(MODELS[model_name.value].description)
+    model_description = gr.Markdown(selected_model.description)
 
-    model_name.change(update_model, model_name)
-
-    # Change model title when the model_id is update
-    model_name.change(update_model_title, model_name, model_title)
-
-    # Change model description when the model_id is update
-    model_name.change(update_model_description, model_name, model_description)
+    # Change model title and description when the model_id is update
+    model_name.change(update_model, model_name, [model_title, model_description])
 
     # Create a first row of blocks
     with gr.Row():
