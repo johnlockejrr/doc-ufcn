@@ -3,6 +3,7 @@
 import argparse
 import json
 from pathlib import Path
+from typing import NamedTuple
 
 import gradio as gr
 import numpy as np
@@ -72,8 +73,8 @@ def load_model(model_name: str) -> UFCNModel:
 
     # Check that the paths of the examples are valid
     for example in config["examples"]:
-        assert os.path.exists(
-            example
+        assert Path.exists(
+            Path(example)
         ), f"The path of the image '{example}' does not exist."
 
     # Load the model
@@ -84,7 +85,15 @@ def load_model(model_name: str) -> UFCNModel:
     )
     model.load(model_path=model_path, mean=parameters["mean"], std=parameters["std"])
 
-    return classes, classes_colors, model
+    MODELS[model_name] = UFCNModel(
+        name=model_name,
+        classes=classes,
+        colors=classes_colors,
+        model=model,
+        title=title,
+        description=description,
+    )
+    return MODELS[model_name]
 
 def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json]):
     """
@@ -98,11 +107,9 @@ def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json])
         - `confidence` key : float, confidence of the model,
         - `channel` key : str, the name of the predicted class.
     """
-    # Get the id of the model in the list of models
-    model_id = models_name.index(dropdown)
 
-    # Load the model and get its classes, classes_colors and the model
-    classes, classes_colors, model = load_model(dropdown, model_id)
+    # # # Load the model and get its classes, classes_colors and the model
+    # Model = load_model(model)
 
     # Load the model and get its classes, classes_colors and the model
     ufcn_model = load_model(model_name)
@@ -159,9 +166,9 @@ def update_model(model_name: gr.Dropdown) -> str:
     return f"## {MODELS[model_name].title}", MODELS[model_name].description
 
 
-def get_value(dropdown):
+def get_model_idx(dropdown):
     """
-    Get the model selected in dropdown component and return this id
+    Get the model selected in dropdown component and return its id
 
     :param dropdown: A model selected in dropdown
     :return: The model id selected
@@ -169,30 +176,36 @@ def get_value(dropdown):
     return models_name.index(dropdown)
 
 
-def change_model_title(model_id):
+def update_model(model_name):
     """
-    Change the model title to the title of the current model
+    Update MODELS dict
+
+    :param model_name: The name of the current model
+    """
+    MODELS[model_name] = load_model(model_name)
+
+
+def update_model_title(model_name):
+    """
+    Update the model title to the title of the current model
 
     :param model_id: The id of the current model
     :return: A new title
     """
-    return f"## {config['models'][model_id]['title']}"
+    return f"## {MODELS[model_name].title}"
 
 
-def change_model_description(model_id):
+def update_model_description(model_name):
     """
-    Change the model description to the description of the current model
+    Update the model description to the description of the current model
 
     :param model_id: The id of the current model
     :return: A new description
     """
-    return config["models"][model_id]["description"]
+    return MODELS[model_name].description
 
 
 with gr.Blocks() as process_image:
-    # Create a int Number for define the model id
-    model_id = gr.Number(precision=0, value=0, visible=False)
-
     # Create app title
     title = gr.Markdown(f"# {config['title']}")
 
@@ -217,22 +230,21 @@ with gr.Blocks() as process_image:
     # Create dropdown button
     dropdown = gr.Dropdown(models_name, value=models_name[0], label="Models")
 
-    # Create model title
-    model_title = gr.Markdown(f"## {config['models'][model_id.value]['title']}")
+    load_model(model_name.value)
+
+    model_title = gr.Markdown(f"## {MODELS[model_name.value].title}")
+    # model_title = gr.Markdown(f"## {config['models'][model_id.value]['title']}")
 
     # Create model description
-    model_description = gr.Markdown(config["models"][model_id.value]["description"])
+    model_description = gr.Markdown(MODELS[model_name.value].description)
 
-    # Set the model id to the selected model id by the dropdown button
-    dropdown.change(get_value, dropdown, model_id)
+    model_name.change(update_model, model_name)
 
     # Change model title when the model_id is update
-    model_id.change(change_model_title, model_id, model_title)
+    model_name.change(update_model_title, model_name, model_title)
 
     # Change model description when the model_id is update
-    model_description = model_id.change(
-        change_model_description, model_id, model_description
-    )
+    model_name.change(update_model_description, model_name, model_description)
 
     # Create a first row of blocks
     with gr.Row():
