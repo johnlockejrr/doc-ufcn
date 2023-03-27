@@ -13,12 +13,13 @@ from doc_ufcn import models
 from doc_ufcn.main import DocUFCN
 from hugging_face.config import parse_configurations
 
+# Create an argument parser for get the config
 parser = argparse.ArgumentParser(description="UFCN HuggingFace app")
 parser.add_argument(
     "--config",
     type=Path,
     required=True,
-    help="The JSON-formatted configuration file of the Hugging Face app",
+    help="The YAML-formatted configuration file of the Hugging Face app",
 )
 
 # Get the application's public mode (local or with sharing)
@@ -34,10 +35,19 @@ args = parser.parse_args()
 # Load the config
 config = parse_configurations(args.config)
 
+# Create a list of models name
 models_name = [model["model_name"] for model in config["models"]]
 
 
 def load_model(model_name, model_id):
+    """
+    Load a model by name
+
+    :param model_name: The name of the model to load
+    :param model_id: The id of the current model
+    :return: The classes, the colors by classes and the model
+    """
+
     # Download the model
     model_path, parameters = models.download_model(name=model_name)
 

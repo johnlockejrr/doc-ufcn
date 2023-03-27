@@ -7,10 +7,10 @@ from teklia_toolbox.config import ConfigParser
 
 def parse_configurations(config_path: Path):
     """
-    Parse multiple JSON configuration files into a single source
+    Parse multiple YAML configuration files into a single source
     of configuration for the HuggingFace app
 
-    :param config_path: pathlib.Path, Path to the .json config file
+    :param config_path: pathlib.Path, Path to the .yaml config file
     :return: dict, containing the configuration. Ensures config is complete and with correct typing
     """
     parser = ConfigParser()
