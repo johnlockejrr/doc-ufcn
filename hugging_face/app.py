@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw
 from hugging_face.config import parse_configurations
 from hugging_face.tools import UFCNModel
 
-# Create an argument parser for get the config
+# Parse the CLI arguments
 parser = argparse.ArgumentParser(description="UFCN HuggingFace app")
 parser.add_argument(
     "--config",
@@ -56,13 +56,14 @@ models_name = list(MODELS)
 
 def load_model(model_name) -> UFCNModel:
     """
-    Load a model by name if it doesn't already exist then return the model
+    Retrieve the model, and load its parameters/files if it wasn't done before.
 
     :param model_name: The name of the selected model
     :return: The UFCNModel instance selected
     """
     assert model_name in MODELS
     model = MODELS[model_name]
+    # Load the model's files if it wasn't done before
     if not model.loaded:
         model.load()
     return model
@@ -70,7 +71,7 @@ def load_model(model_name) -> UFCNModel:
 
 def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json]):
     """
-    Load a model and draws the predicted polygons with the color provided by the model on an image
+    Loads a model and draws the predicted polygons with the color provided by the model on an image
 
     :param model: A model selected in dropdown
     :param image: An image to predict
@@ -130,7 +131,7 @@ def update_model(model_name: gr.Dropdown) -> str:
     """
     Update the model title to the title of the current model
 
-    :param model_name: A model selected in dropdown
+    :param model_name: The name of the selected model
     :return: A new title
     """
     return f"## {MODELS[model_name].title}", MODELS[model_name].description
@@ -138,10 +139,10 @@ def update_model(model_name: gr.Dropdown) -> str:
 
 with gr.Blocks() as process_image:
     # Create app title
-    title = gr.Markdown(f"# {config['title']}")
+    gr.Markdown(f"# {config['title']}")
 
     # Create app description
-    description = gr.Markdown(config["description"])
+    gr.Markdown(config["description"])
 
     # Create dropdown button
     model_name = gr.Dropdown(models_name, value=models_name[0], label="Models")
