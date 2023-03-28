@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from dataclasses import dataclass, field
+
 from doc_ufcn import models
 from doc_ufcn.main import DocUFCN
 

@@ -39,12 +39,6 @@ for example in config["examples"]:
         Path(example)
     ), f"The path of the image '{example}' does not exist."
 
-# Check that the paths of the examples are valid
-for example in config["examples"]:
-    assert Path.exists(
-        Path(example)
-    ), f"The path of the image '{example}' does not exist."
-
 # Cached models, maps model_name to UFCNModel object
 MODELS = {
     model["model_name"]: UFCNModel(
@@ -60,19 +54,6 @@ MODELS = {
 models_name = list(MODELS)
 
 
-def load_model(model_name: str) -> UFCNModel:
-    """
-    Load a model by name if it doesn't already exist then return the model
-
-    :param model_name: The name of the selected model
-    :return: The UFCNModel instance selected
-    """
-    assert model_name in MODELS
-    model = MODELS[model_name]
-    if not model.loaded:
-        model.load()
-    return model
-
 def load_model(model_name) -> UFCNModel:
     """
     Load a model by name if it doesn't already exist then return the model
@@ -86,6 +67,7 @@ def load_model(model_name) -> UFCNModel:
         model.load()
     return model
 
+
 def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json]):
     """
     Load a model and draws the predicted polygons with the color provided by the model on an image
@@ -98,9 +80,6 @@ def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json])
         - `confidence` key : float, confidence of the model,
         - `channel` key : str, the name of the predicted class.
     """
-
-    # Load the model and get its classes, classes_colors and the model
-    ufcn_model = load_model(model_name)
 
     # Load the model and get its classes, classes_colors and the model
     ufcn_model = load_model(model_name)
@@ -157,26 +136,6 @@ def update_model(model_name: gr.Dropdown) -> str:
     return f"## {MODELS[model_name].title}", MODELS[model_name].description
 
 
-def get_model_idx(dropdown):
-    """
-    Get the model selected in dropdown component and return its id
-
-    :param dropdown: A model selected in dropdown
-    :return: The model id selected
-    """
-    return models_name.index(dropdown)
-
-
-def update_model(model_name):
-    """
-    Update the model title to the title of the current model
-
-    :param model_name: A model selected in dropdown
-    :return: A new title
-    """
-    return f"## {MODELS[model_name].title}", MODELS[model_name].description
-
-
 with gr.Blocks() as process_image:
     # Create app title
     title = gr.Markdown(f"# {config['title']}")
@@ -191,19 +150,6 @@ with gr.Blocks() as process_image:
     selected_model: UFCNModel = MODELS[model_name.value]
 
     # Create model title
-    model_title = gr.Markdown(f"## {selected_model.title}")
-
-    # Create model description
-    model_description = gr.Markdown(selected_model.description)
-
-    # Change model title and description when the model_id is update
-    model_name.change(update_model, model_name, [model_title, model_description])
-
-    # Create dropdown button
-    dropdown = gr.Dropdown(models_name, value=models_name[0], label="Models")
-
-    load_model(model_name.value)
-
     model_title = gr.Markdown(f"## {selected_model.title}")
 
     # Create model description
