@@ -2,16 +2,14 @@
 
 import argparse
 import json
-from dataclasses import dataclass, field
 from pathlib import Path
 
 import gradio as gr
 import numpy as np
 from PIL import Image, ImageDraw
 
-from doc_ufcn import models
-from doc_ufcn.main import DocUFCN
 from hugging_face.config import parse_configurations
+from hugging_face.tools import UFCNModel
 
 # Create an argument parser for get the config
 parser = argparse.ArgumentParser(description="UFCN HuggingFace app")
@@ -41,50 +39,6 @@ for example in config["examples"]:
         Path(example)
     ), f"The path of the image '{example}' does not exist."
 
-
-@dataclass
-class UFCNModel:
-    name: str
-    colors: list
-    title: str
-    description: str
-    classes: list = field(default_factory=list)
-    model: DocUFCN = None
-
-    def get_class_name(self, channel_idx):
-        return self.classes[channel_idx]
-
-    @property
-    def loaded(self):
-        return self.model is not None
-
-    @property
-    def num_channels(self):
-        return len(self.classes)
-
-    def load(self):
-        # Download the model
-        model_path, parameters = models.download_model(name=self.name)
-
-        # Store classes
-        self.classes = parameters["classes"]
-
-        # Check that the number of colors is equal to the number of classes -1
-        assert self.num_channels - 1 == len(
-            self.colors
-        ), f"The parameter classes_colors was filled with the wrong number of colors. {self.num_channels-1} colors are expected instead of {len(self.colors)}."
-
-        # Load the model
-        self.model = DocUFCN(
-            no_of_classes=len(self.classes),
-            model_input_size=parameters["input_size"],
-            device="cpu",
-        )
-        self.model.load(
-            model_path=model_path, mean=parameters["mean"], std=parameters["std"]
-        )
-
-
 # Cached models, maps model_name to UFCNModel object
 MODELS = {
     model["model_name"]: UFCNModel(
@@ -100,7 +54,7 @@ MODELS = {
 models_name = list(MODELS)
 
 
-def load_model(model_name) -> UFCNModel:
+def load_model(model_name: str) -> UFCNModel:
     """
     Load a model by name if it doesn't already exist then return the model
 
@@ -114,7 +68,7 @@ def load_model(model_name) -> UFCNModel:
     return model
 
 
-def query_image(model_name: gr.Dropdown, image: gr.Image):
+def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json]):
     """
     Load a model and draws the predicted polygons with the color provided by the model on an image
 
@@ -172,11 +126,11 @@ def query_image(model_name: gr.Dropdown, image: gr.Image):
     return Image.blend(image, img2, 0.5), json.dumps(predict, indent=2)
 
 
-def update_model(model_name):
+def update_model(model_name: gr.Dropdown) -> str:
     """
     Update the model title to the title of the current model
 
-    :param model_id: The id of the current model
+    :param model_name: A model selected in dropdown
     :return: A new title
     """
     return f"## {MODELS[model_name].title}", MODELS[model_name].description
@@ -192,8 +146,10 @@ with gr.Blocks() as process_image:
     # Create dropdown button
     model_name = gr.Dropdown(models_name, value=models_name[0], label="Models")
 
+    # get models
     selected_model: UFCNModel = MODELS[model_name.value]
 
+    # Create model title
     model_title = gr.Markdown(f"## {selected_model.title}")
 
     # Create model description
