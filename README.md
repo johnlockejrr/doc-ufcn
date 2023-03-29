@@ -305,7 +305,7 @@ pip install gradio
 The code was last tested with `gradio==3.18.0`.
 
 
-![image](https://gitlab.com/teklia/dla/doc-ufcn/-/tree/select-doc-ufcn-model-on-hugging-face/hugging_face/resource/demo_doc_ufcn_hf.png)
+![image](https://gitlab.com/teklia/dla/doc-ufcn/-/raw/main/hugging_face/resource/demo_doc_ufcn_hf.png)
 
 An example is available in the `huggingface/` folder. You need to create a YAML configuration file with the following parameters:
 
