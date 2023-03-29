@@ -87,7 +87,7 @@ def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json])
 
     # Make a prediction with the model
     detected_polygons, probabilities, mask, overlap = ufcn_model.model.predict(
-        input_image=image, raw_output=True, mask_output=True, overlap_output=True
+        input_image=image, raw_output=True, mask_output=False, overlap_output=False
     )
 
     # Load image
