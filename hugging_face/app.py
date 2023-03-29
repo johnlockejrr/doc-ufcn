@@ -2,23 +2,22 @@
 
 import argparse
 import json
-import os
 from pathlib import Path
 
 import gradio as gr
 import numpy as np
 from PIL import Image, ImageDraw
 
-from doc_ufcn import models
-from doc_ufcn.main import DocUFCN
 from hugging_face.config import parse_configurations
+from hugging_face.tools import UFCNModel
 
+# Parse the CLI arguments
 parser = argparse.ArgumentParser(description="UFCN HuggingFace app")
 parser.add_argument(
     "--config",
     type=Path,
     required=True,
-    help="The JSON-formatted configuration file of the Hugging Face app",
+    help="The YAML-formatted configuration file of the Hugging Face app",
 )
 
 # Get the application's public mode (local or with sharing)
@@ -34,37 +33,47 @@ args = parser.parse_args()
 # Load the config
 config = parse_configurations(args.config)
 
-# Download the model
-model_path, parameters = models.download_model(name=config["model_name"])
-
-# Store classes_colors list
-classes_colors = config["classes_colors"]
-
-# Store classes
-classes = parameters["classes"]
-
-# Check that the number of colors is equal to the number of classes -1
-assert len(classes) - 1 == len(
-    classes_colors
-), f"The parameter classes_colors was filled with the wrong number of colors. {len(classes)-1} colors are expected instead of {len(classes_colors)}."
-
 # Check that the paths of the examples are valid
 for example in config["examples"]:
-    assert os.path.exists(example), f"The path of the image '{example}' does not exist."
+    assert Path.exists(
+        Path(example)
+    ), f"The path of the image '{example}' does not exist."
 
-# Load the model
-model = DocUFCN(
-    no_of_classes=len(classes),
-    model_input_size=parameters["input_size"],
-    device="cpu",
-)
-model.load(model_path=model_path, mean=parameters["mean"], std=parameters["std"])
+# Cached models, maps model_name to UFCNModel object
+MODELS = {
+    model["model_name"]: UFCNModel(
+        name=model["model_name"],
+        colors=model["classes_colors"],
+        title=model["title"],
+        description=model["description"],
+    )
+    for model in config["models"]
+}
+
+# Create a list of models name
+models_name = list(MODELS)
 
 
-def query_image(image):
+def load_model(model_name) -> UFCNModel:
     """
-    Draws the predicted polygons with the color provided by the model on an image
+    Retrieve the model, and load its parameters/files if it wasn't done before.
 
+    :param model_name: The name of the selected model
+    :return: The UFCNModel instance selected
+    """
+    assert model_name in MODELS
+    model = MODELS[model_name]
+    # Load the model's files if it wasn't done before
+    if not model.loaded:
+        model.load()
+    return model
+
+
+def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json]):
+    """
+    Loads a model and draws the predicted polygons with the color provided by the model on an image
+
+    :param model: A model selected in dropdown
     :param image: An image to predict
     :return: Image and dict, an image with the predictions and a
         dictionary mapping an object idx (starting from 1) to a dictionary describing the detected object:
@@ -73,8 +82,11 @@ def query_image(image):
         - `channel` key : str, the name of the predicted class.
     """
 
+    # Load the model and get its classes, classes_colors and the model
+    ufcn_model = load_model(model_name)
+
     # Make a prediction with the model
-    detected_polygons, probabilities, mask, overlap = model.predict(
+    detected_polygons, probabilities, mask, overlap = ufcn_model.model.predict(
         input_image=image, raw_output=True, mask_output=True, overlap_output=True
     )
 
@@ -89,12 +101,12 @@ def query_image(image):
 
     # Create the polygons on the copy of the image for each class with the corresponding color
     # We do not draw polygons of the background channel (channel 0)
-    for channel in range(1, len(classes)):
+    for channel in range(1, ufcn_model.num_channels):
         for i, polygon in enumerate(detected_polygons[channel]):
             # Draw the polygons on the image copy.
             # Loop through the class_colors list (channel 1 has color 0)
             ImageDraw.Draw(img2).polygon(
-                polygon["polygon"], fill=classes_colors[channel - 1]
+                polygon["polygon"], fill=ufcn_model.colors[channel - 1]
             )
 
             # Build the dictionary
@@ -107,12 +119,22 @@ def query_image(image):
                     # Confidence that the model predicts the polygon in the right place
                     "confidence": polygon["confidence"],
                     # The channel on which the polygon is predicted
-                    "channel": classes[channel],
+                    "channel": ufcn_model.classes[channel],
                 }
             )
 
     # Return the blend of the images and the dictionary formatted in json
-    return Image.blend(image, img2, 0.5), json.dumps(predict, indent=20)
+    return Image.blend(image, img2, 0.5), json.dumps(predict, indent=2)
+
+
+def update_model(model_name: gr.Dropdown) -> str:
+    """
+    Update the model title to the title of the current model
+
+    :param model_name: The name of the selected model
+    :return: A new title
+    """
+    return f"## {MODELS[model_name].title}", MODELS[model_name].description
 
 
 with gr.Blocks() as process_image:
@@ -121,6 +143,21 @@ with gr.Blocks() as process_image:
 
     # Create app description
     gr.Markdown(config["description"])
+
+    # Create dropdown button
+    model_name = gr.Dropdown(models_name, value=models_name[0], label="Models")
+
+    # get models
+    selected_model: UFCNModel = MODELS[model_name.value]
+
+    # Create model title
+    model_title = gr.Markdown(f"## {selected_model.title}")
+
+    # Create model description
+    model_description = gr.Markdown(selected_model.description)
+
+    # Change model title and description when the model_id is update
+    model_name.change(update_model, model_name, [model_title, model_description])
 
     # Create a first row of blocks
     with gr.Row():
@@ -139,19 +176,20 @@ with gr.Blocks() as process_image:
 
             # Create a row under the buttons
             with gr.Row():
-                # Generate example images that can be used as input image
-                examples = gr.Examples(inputs=image, examples=config["examples"])
+                # Generate example images that can be used as input image for every model
+                gr.Examples(config["examples"], inputs=image)
 
         # Create a column on the right
         with gr.Column():
-            # Generates an output image that does not support upload
-            image_output = gr.Image(interactive=False)
+            with gr.Row():
+                # Generates an output image that does not support upload
+                image_output = gr.Image(interactive=False)
 
             # Create a row under the predicted image
             with gr.Row():
                 # Create a column so that the JSON output doesn't take the full size of the page
                 with gr.Column():
-                    # Create a collapsible region
+                    # # Create a collapsible region
                     with gr.Accordion("JSON"):
                         # Generates a json with the model predictions
                         json_output = gr.JSON()
@@ -164,7 +202,9 @@ with gr.Blocks() as process_image:
     )
 
     # Create the button to submit the prediction
-    submit_button.click(query_image, inputs=image, outputs=[image_output, json_output])
+    submit_button.click(
+        query_image, inputs=[model_name, image], outputs=[image_output, json_output]
+    )
 
 # Launch the application with the public mode (True or False)
 process_image.launch(share=args.public)

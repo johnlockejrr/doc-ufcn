@@ -305,24 +305,32 @@ pip install gradio
 The code was last tested with `gradio==3.18.0`.
 
 
-![image](https://gitlab.com/teklia/dla/doc-ufcn/-/raw/main/hugging_face/resource/hf_doc_ufcn_line_hist.png)
+![image](https://gitlab.com/teklia/dla/doc-ufcn/-/raw/main/hugging_face/resource/demo_doc_ufcn_hf.png)
 
-An example is available in the `huggingface/` folder. You need to create a JSON configuration file with the following parameters:
+An example is available in the `huggingface/` folder. You need to create a YAML configuration file with the following parameters:
 
 | Parameter        | Description                                                                                                        | Default value                 |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
-| `model_name`     | Name of the model                                                                                             |`doc-ufcn-generic-historical-line`|
-| `classes_colors` | List with the colors of the classes                                                                                |                    `["green"]`|
 | `title`          | Title of the app (supports Markdown)                                                                                                   |                           **Required**|
 | `description`    | Description of the app (supports Markdown)                                                                                           |                           **Required**|
-| `examples`       | Paths towards the image examples.                                                                                  |                           **Required**|
+| `examples`       | Paths towards the image examples                                                                                  |                           **Required**|
+| `models`       | List of models                                                                                  |                           **Required**|
 
-A ready-to-use configuration file is available in `huggingface/config.json`. You may update it to your needs.
+In models parameter, for each model, fill in the following parameters:
+
+| Parameter        | Description                                                                                                        | Default value                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+| `model_name`     | Name of the model                                                                                             |**Required**|
+| `title`          | Title of the model (supports Markdown)                                                                                                   |                           **Required**|
+| `description`    | Description of the model (supports Markdown)                                                                                           |                           **Required**|
+| `classes_colors` | List with the colors of the classes                                                                                |                    **Required**|
+
+A ready-to-use configuration file is available in `huggingface/config.yaml`. You may update it to your needs.
 
 Once the configuration file is ready, just run the following command:
 
 ```shell
-$ python3 hugging_face/app.py --config hugging_face/config.json
+$ python3 hugging_face/app.py --config hugging_face/config.yaml
 ```
 
 If the `--public` argument is specified, the script will generate a public, shareable link that you can send to anyone. More information about public links on gradio is available in the [gradio documentation](https://gradio.app/sharing-your-app/).
@@ -330,7 +338,7 @@ If the `--public` argument is specified, the script will generate a public, shar
 To generate the shareable link, use the following command:
 
 ```shell
-$ python3 hugging_face/app.py --config hugging_face/config.json --public
+$ python3 hugging_face/app.py --config hugging_face/config.yaml --public
 ```
 
 The model's predictions will be shown on the application in JSON format:
