@@ -85,16 +85,16 @@ def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json])
     # Load the model and get its classes, classes_colors and the model
     ufcn_model = load_model(model_name)
 
+    # Load image
+    pil_image = Image.fromarray(image)
+
+    # Copy
+    blend = pil_image.copy()
+
     # Make a prediction with the model
     detected_polygons, probabilities, mask, overlap = ufcn_model.model.predict(
         input_image=image, raw_output=True, mask_output=False, overlap_output=False
     )
-
-    # Load image
-    image = Image.fromarray(image)
-
-    # Make a copy of the image to keep the source and also to be able to use Pillow's blend method
-    img2 = image.copy()
 
     # Initialize the dictionary which will display the json on the application
     predict = []
@@ -105,7 +105,7 @@ def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json])
         for i, polygon in enumerate(detected_polygons[channel]):
             # Draw the polygons on the image copy.
             # Loop through the class_colors list (channel 1 has color 0)
-            ImageDraw.Draw(img2).polygon(
+            ImageDraw.Draw(blend).polygon(
                 polygon["polygon"], fill=ufcn_model.colors[channel - 1]
             )
 
@@ -124,7 +124,7 @@ def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json])
             )
 
     # Return the blend of the images and the dictionary formatted in json
-    return Image.blend(image, img2, 0.5), json.dumps(predict, indent=2)
+    return Image.blend(pil_image, blend, 0.5), json.dumps(predict, indent=2)
 
 
 def update_model(model_name: gr.Dropdown) -> str:
