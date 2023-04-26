@@ -250,6 +250,7 @@ MLflow logging is also available in Doc-UFCN. Information about the instance and
   "mlflow": {
     "experiment_id": ...,
     "run_name": null,
+    "run_id": null,
     "tracking_uri": ...,
     "s3_endpoint_url": ...,
     "aws_access_key_id": ...,
@@ -260,6 +261,7 @@ MLflow logging is also available in Doc-UFCN. Information about the instance and
 
 - `experiment_id`: ID of the MLflow experiment where the run will be recorded,
 - `run_name`: Optional name of the created run,
+- `run_id`: Optional ID of an existing MLflow run that we want to resume (takes precedence over `run_name`),
 - `tracking_uri`: URL towards the MLflow instance, see [MLFLOW_TRACKING_URI](https://www.mlflow.org/docs/latest/quickstart.html?highlight=mlflow_tracking_uri#launch-a-tracking-server-on-a-remote-machine),
 - `s3_endpoint_url`: URL towards the MLflow instance's storage, see [MLFLOW_S3_ENDPOINT_URL](https://www.mlflow.org/docs/latest/python_api/mlflow.environment_variables.html?highlight=mlflow_s3_endpoint#mlflow.environment_variables.MLFLOW_S3_ENDPOINT_URL),
 - `aws_access_key_id` and `aws_secret_access_key`: [AWS credentials](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup.html#setup-credentials) if the storage is Amazon S3 or Amazon S3-compatible. Only needed when logging artifacts.

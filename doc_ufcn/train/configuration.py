@@ -136,6 +136,7 @@ def parse_configurations(paths):
     mlflow.add_option("aws_access_key_id", type=str, default=None)
     mlflow.add_option("aws_secret_access_key", type=str, default=None)
     mlflow.add_option("run_name", type=str, default=None)
+    mlflow.add_option("run_id", type=str, default=None)
 
     # Merge all provided configuration files into a single payload
     # that will be validated by the configuration parser described above

@@ -35,5 +35,15 @@ def start_mlflow_run(config):
         logger.error(f"Couldn't set Mlflow experiment with ID: {experiment_id}")
         raise e
 
-    # Start run
-    yield mlflow.start_run(run_name=config.get("run_name"))
+    run_id = config["run_id"]
+    if run_id is not None:
+        # Resume run
+        logger.info(f"Resuming run ({run_id})")
+        run = mlflow.start_run(run_id=run_id)
+    else:
+        # Start new run
+        run = mlflow.start_run(run_name=config.get("run_name"))
+
+    yield run
+
+    mlflow.end_run()
