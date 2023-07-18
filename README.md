@@ -380,3 +380,7 @@ If you want to cite us in one of your works, please use the following citation.
 ## License
 
 This library is under the 3-Clause BSD License.
+
+## Contact
+
+If you have any questions or suggestions, please contact [Mélodie Boillet](mailto:boillet@teklia.com).
