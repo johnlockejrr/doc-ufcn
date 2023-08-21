@@ -34,7 +34,7 @@ def remote_parameters(name, version):
     headers = {
         "JOB-TOKEN": TOKEN,
     }
-    url = f"https://gitlab.com/api/v4/projects/{PROJECT_ID}/packages/generic/{name}/{version}/parameters.yml"
+    url = f"https://gitlab.teklia.com/api/v4/projects/{PROJECT_ID}/packages/generic/{name}/{version}/parameters.yml"
     r = requests.get(url, headers=headers)
     if not r.ok:
         # Normal case where the model is not available
@@ -55,7 +55,7 @@ def upload(path, name, version):
         "JOB-TOKEN": TOKEN,
     }
     filename = os.path.basename(path)
-    url = f"https://gitlab.com/api/v4/projects/{PROJECT_ID}/packages/generic/{name}/{version}/{filename}"
+    url = f"https://gitlab.teklia.com/api/v4/projects/{PROJECT_ID}/packages/generic/{name}/{version}/{filename}"
     r = requests.put(url, headers=headers, data=open(path, "rb"))
     r.raise_for_status()
     print(f"Uploaded {path}")
