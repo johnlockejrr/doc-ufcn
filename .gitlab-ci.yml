@@ -47,7 +47,7 @@ lint:
 
 docker-build:
   stage: build
-  image: docker:19.03.1
+  image: docker:24.0.6
   services:
     - docker:dind
   variables:
