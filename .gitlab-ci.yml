@@ -4,7 +4,7 @@ stages:
   - release
 
 test:
-  image: python:3.8
+  image: python:3.10
 
   stage: test
   cache:
@@ -24,7 +24,7 @@ test:
     - tox
 
 lint:
-  image: python:3.8
+  image: python:3.10
   stage: test
 
   cache:
@@ -62,7 +62,7 @@ docker-build:
 
 deploy-models:
   stage: release
-  image: python:3.8
+  image: python:3.10
 
   only:
    - main
@@ -78,7 +78,7 @@ deploy-models:
 
 deploy-pypi:
   stage: release
-  image: python:3.8
+  image: python:3.10
 
   only:
     - tags
@@ -96,7 +96,7 @@ deploy-pypi:
 
 release-notes:
   stage: release
-  image: registry.gitlab.com/teklia/devops:latest
+  image: registry.gitlab.teklia.com/infra/devops:latest
 
   only:
     - tags
@@ -106,7 +106,7 @@ release-notes:
 
 bump-python-deps:
   stage: release
-  image: registry.gitlab.com/teklia/devops:latest
+  image: registry.gitlab.teklia.com/infra/devops:latest
 
   only:
     - schedules

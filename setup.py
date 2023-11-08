@@ -20,10 +20,26 @@ setup(
     long_description_content_type="text/markdown",
     author="Mélodie Boillet",
     author_email="boillet@teklia.com",
+    project_urls={
+        "Source": "https://gitlab.teklia.com/dla/doc-ufcn/",
+        "Tracker": "https://gitlab.teklia.com/dla/doc-ufcn/issues/",
+    },
     url="https://gitlab.com/teklia/dla/doc-ufcn",
     install_requires=parse_requirements("requirements.txt"),
     extras_require={
         "training": parse_requirements("training-requirements.txt"),
     },
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests"]),
+    python_requires=">= 3.8, < 3.11",
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        # Specify the Python versions you support here.
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        # Topics
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Topic :: Scientific/Engineering :: Image Recognition",
+    ],
 )
