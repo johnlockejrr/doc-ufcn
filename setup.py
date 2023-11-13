@@ -30,13 +30,11 @@ setup(
         "training": parse_requirements("training-requirements.txt"),
     },
     packages=find_packages(exclude=["tests"]),
-    python_requires=">= 3.8, < 3.11",
+    python_requires=">= 3.10, < 3.11",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         # Specify the Python versions you support here.
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         # Topics
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
