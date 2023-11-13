@@ -1,5 +1,5 @@
 huggingface-hub==0.18.0
-numpy==1.23.5
+numpy==1.26.2
 opencv-python-headless==4.7.0.72
 pyyaml==6.0.1
 requests>=2,<3
