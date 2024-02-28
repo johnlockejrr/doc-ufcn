@@ -4,6 +4,7 @@ import os
 
 import pytest
 from huggingface_hub.utils import RepositoryNotFoundError, RevisionNotFoundError
+from pytest_lazy_fixtures import lf as lazy_fixture
 
 from doc_ufcn import models
 
@@ -16,7 +17,7 @@ from doc_ufcn import models
             "generic-page",
             "main",
             "~/.cache/doc-ufcn/models/generic-page/models--Teklia--doc-ufcn-generic-page/snapshots/ef5519d77baa190bfe294ad3994146dbe7e72095",
-            pytest.lazy_fixture("test_parameters"),
+            lazy_fixture("test_parameters"),
             True,
         ),
         # Correct fullname and version
@@ -24,7 +25,7 @@ from doc_ufcn import models
             "doc-ufcn-generic-page",
             "main",
             "~/.cache/doc-ufcn/models/generic-page/models--Teklia--doc-ufcn-generic-page/snapshots/ef5519d77baa190bfe294ad3994146dbe7e72095",
-            pytest.lazy_fixture("test_parameters"),
+            lazy_fixture("test_parameters"),
             True,
         ),
         # Correct name and incorrect version
@@ -34,7 +35,7 @@ from doc_ufcn import models
             "generic-page",
             None,
             "~/.cache/doc-ufcn/models/generic-page/models--Teklia--doc-ufcn-generic-page/snapshots/ef5519d77baa190bfe294ad3994146dbe7e72095",
-            pytest.lazy_fixture("test_parameters"),
+            lazy_fixture("test_parameters"),
             True,
         ),
         # Incorrect name and incorrect version

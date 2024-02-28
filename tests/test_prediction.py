@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from pytest_lazy_fixtures import lf as lazy_fixture
 
 from doc_ufcn import prediction
 
@@ -313,8 +314,8 @@ def test_resize_predicted_polygons(
         (
             {1: []},
             None,
-            pytest.lazy_fixture("test_image"),
-            pytest.lazy_fixture("test_image"),
+            lazy_fixture("test_image"),
+            lazy_fixture("test_image"),
         ),
         (
             {
@@ -357,8 +358,8 @@ def test_resize_predicted_polygons(
                 ],
             },
             None,
-            pytest.lazy_fixture("test_image"),
-            pytest.lazy_fixture("test_masked_image"),
+            lazy_fixture("test_image"),
+            lazy_fixture("test_masked_image"),
         ),
     ],
 )
