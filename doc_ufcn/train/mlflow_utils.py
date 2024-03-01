@@ -37,3 +37,6 @@ def start_mlflow_run(config):
 
     # Start run
     yield mlflow.start_run(run_name=config.get("run_name"))
+
+    # End active run
+    mlflow.end_run()
