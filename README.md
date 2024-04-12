@@ -4,7 +4,7 @@ This Python 3 library contains a public implementation of Doc-UFCN, a fully conv
 
 The model is designed to run various Document Layout Analysis (DLA) tasks like the text line detection or page segmentation.
 
-![Model schema](https://gitlab.com/teklia/dla/doc-ufcn/-/raw/main/resources/UFCN.png)
+![Model schema](https://gitlab.teklia.com/dla/doc-ufcn/-/raw/main/resources/UFCN.png)
 
 This library can be used to train a model, fine-tune a model or directly apply a trained Doc-UFCN model to document images.
 
@@ -85,8 +85,8 @@ detected_polygons, probabilities, mask, overlap = model.predict(
 )
 ```
 
-![Mask of detected objects](https://gitlab.com/teklia/dla/doc-ufcn/-/raw/main/resources/mask.png)
-![Overlap with the detected objects](https://gitlab.com/teklia/dla/doc-ufcn/-/raw/main/resources/overlap.png)
+![Mask of detected objects](https://gitlab.teklia.com/dla/doc-ufcn/-/raw/main/resources/mask.png)
+![Overlap with the detected objects](https://gitlab.teklia.com/dla/doc-ufcn/-/raw/main/resources/overlap.png)
 
 ### Models
 
@@ -305,7 +305,7 @@ pip install gradio
 The code was last tested with `gradio==3.18.0`.
 
 
-![image](https://gitlab.com/teklia/dla/doc-ufcn/-/raw/main/hugging_face/resource/demo_doc_ufcn_hf.png)
+![image](https://gitlab.teklia.com/dla/doc-ufcn/-/raw/main/hugging_face/resource/demo_doc_ufcn_hf.png)
 
 An example is available in the `huggingface/` folder. You need to create a YAML configuration file with the following parameters:
 
@@ -383,4 +383,4 @@ This library is under the 3-Clause BSD License.
 
 ## Contact
 
-If you have any questions or suggestions, please contact [Mélodie Boillet](mailto:boillet@teklia.com).
+If you have any questions or suggestions, please contact [Mélodie Boillet and Teklia](mailto:team@teklia.com?cc=boillet@teklia.com&subject=Feedback%20on%20Doc-UFCN%3A%20).

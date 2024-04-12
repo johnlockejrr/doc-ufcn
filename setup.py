@@ -24,7 +24,7 @@ setup(
         "Source": "https://gitlab.teklia.com/dla/doc-ufcn/",
         "Tracker": "https://gitlab.teklia.com/dla/doc-ufcn/issues/",
     },
-    url="https://gitlab.com/teklia/dla/doc-ufcn",
+    url="https://gitlab.teklia.com/dla/doc-ufcn",
     install_requires=parse_requirements("requirements.txt"),
     extras_require={
         "training": parse_requirements("training-requirements.txt"),
