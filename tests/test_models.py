@@ -16,7 +16,7 @@ from doc_ufcn import models
         (
             "generic-page",
             "main",
-            "~/.cache/doc-ufcn/models/generic-page/models--Teklia--doc-ufcn-generic-page/snapshots/ef5519d77baa190bfe294ad3994146dbe7e72095",
+            "~/.cache/doc-ufcn/models/generic-page/models--Teklia--doc-ufcn-generic-page/snapshots/21f246af42990ca668e3c2bad69c6e4ae727a0cd",
             lazy_fixture("test_parameters"),
             True,
         ),
@@ -24,7 +24,7 @@ from doc_ufcn import models
         (
             "doc-ufcn-generic-page",
             "main",
-            "~/.cache/doc-ufcn/models/generic-page/models--Teklia--doc-ufcn-generic-page/snapshots/ef5519d77baa190bfe294ad3994146dbe7e72095",
+            "~/.cache/doc-ufcn/models/generic-page/models--Teklia--doc-ufcn-generic-page/snapshots/21f246af42990ca668e3c2bad69c6e4ae727a0cd",
             lazy_fixture("test_parameters"),
             True,
         ),
@@ -34,7 +34,7 @@ from doc_ufcn import models
         (
             "generic-page",
             None,
-            "~/.cache/doc-ufcn/models/generic-page/models--Teklia--doc-ufcn-generic-page/snapshots/ef5519d77baa190bfe294ad3994146dbe7e72095",
+            "~/.cache/doc-ufcn/models/generic-page/models--Teklia--doc-ufcn-generic-page/snapshots/21f246af42990ca668e3c2bad69c6e4ae727a0cd",
             lazy_fixture("test_parameters"),
             True,
         ),
