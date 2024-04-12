@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "doc-ufcn"
+version = "0.2.0rc2"
+description = "Doc-UFCN"
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">= 3.10, < 3.11"
+authors = [
+    { name = "Mélodie Boillet", email = "boillet@teklia.com" },
+]
+dependencies = [
+    "huggingface-hub==0.20.2",
+    "numpy==1.26.2",
+    "opencv-python-headless==4.7.0.72",
+    "pyyaml==6.0.1",
+    "requests>=2,<3",
+    "teklia_toolbox==0.1.3",
+    "torch==2.1.0",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    # Specify the Python versions you support here.
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    # Topics
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+]
+
+[project.urls]
+Source = "https://gitlab.teklia.com/dla/doc-ufcn/"
+Tracker = "https://gitlab.teklia.com/dla/doc-ufcn/issues/"
+
+[project.optional-dependencies]
+training = [
+    "imageio==2.27.0",
+    "matplotlib==3.8.1",
+    "mlflow==2.2.1",
+    "Shapely==2.0.3",
+    "teklia-toolbox==0.1.3",
+    "tensorboard==2.15.1",
+    "torchvision==0.16.0",
+    "tqdm==4.66.1",
+]
+test = [
+    "scikit-image==0.22.0",
+    "pytest==8.1.1",
+    "pytest-lazy-fixtures==1.0.7",
+]
+
+[tool.setuptools.packages]
+find = {}
