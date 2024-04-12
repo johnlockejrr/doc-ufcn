@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "doc-ufcn"
-version = "0.2.0rc2"
+version = "0.2.0rc3"
 description = "Doc-UFCN"
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">= 3.10, < 3.11"
