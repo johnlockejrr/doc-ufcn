@@ -88,10 +88,10 @@ deploy-pypi:
     url: https://pypi.org/project/doc-ufcn
 
   before_script:
-    - pip install twine
+    - pip install twine build
 
   script:
-    - python setup.py sdist bdist_wheel
+    - python -m build
     - twine upload dist/*
 
 release-notes:
