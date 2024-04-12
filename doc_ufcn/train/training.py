@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-    The train module
-    ======================
+The train module
+======================
 
-    Use it to train a model.
+Use it to train a model.
 """
 
 import logging

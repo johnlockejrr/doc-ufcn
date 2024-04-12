@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-    The training utils module
-    ======================
+The training utils module
+======================
 
-    Use it to during the training stage.
+Use it to during the training stage.
 """
 
 import matplotlib.pyplot as plt

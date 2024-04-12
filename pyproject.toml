@@ -52,3 +52,29 @@ test = [
 
 [tool.setuptools.packages]
 find = {}
+
+[tool.ruff]
+exclude = [".git", "__pycache__"]
+
+[tool.ruff.lint.isort]
+known-third-party = [
+    "PIL",
+    "cv2",
+    "gradio",
+    "huggingface_hub",
+    "imageio",
+    "matplotlib",
+    "mlflow",
+    "numpy",
+    "pytest",
+    "requests",
+    "setuptools",
+    "shapely",
+    "skimage",
+    "teklia_toolbox",
+    "torch",
+    "torchvision",
+    "tqdm",
+    "yaml",
+]
+

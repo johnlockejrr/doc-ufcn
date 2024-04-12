@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-    The predict module
-    ======================
+The predict module
+======================
 
-    Use it to predict some images from a trained network.
+Use it to predict some images from a trained network.
 """
 
 import logging

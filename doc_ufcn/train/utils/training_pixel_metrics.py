@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-    The training pixel metrics module
-    ======================
+The training pixel metrics module
+======================
 
-    Use it to compute different metrics during training.
-    Available metrics:
-        - Confusion matrix
-        - Intersection-over-Union
+Use it to compute different metrics during training.
+Available metrics:
+    - Confusion matrix
+    - Intersection-over-Union
 """
 
 import numpy as np

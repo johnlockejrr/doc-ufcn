@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-    The normalization params module
-    ======================
+The normalization params module
+======================
 
-    Use it to get the mean and standard deviation of the training set.
+Use it to get the mean and standard deviation of the training set.
 """
 
 import logging

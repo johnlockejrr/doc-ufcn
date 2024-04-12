@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-    The preprocessing module
-    ======================
+The preprocessing module
+======================
 
-    Use it to preprocess the images.
+Use it to preprocess the images.
 """
 
 import os

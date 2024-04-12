@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
 """
-    The object metrics module
-    ======================
+The object metrics module
+======================
 
-    Use it to compute different metrics during evaluation.
-    Available metrics:
-        - Precision
-        - Recall
-        - F-score
-        - Average precision
+Use it to compute different metrics during evaluation.
+Available metrics:
+    - Precision
+    - Recall
+    - F-score
+    - Average precision
 """
 
 import numpy as np

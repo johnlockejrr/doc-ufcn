@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-    The retrieve experiments configs module
-    ======================
+The retrieve experiments configs module
+======================
 
-    Use it to get the configurations for running the experiments.
+Use it to get the configurations for running the experiments.
 """
 
 import argparse

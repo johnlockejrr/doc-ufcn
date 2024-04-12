@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-    The prediction utils module
-    ======================
+The prediction utils module
+======================
 
-    Use it to during the prediction stage.
+Use it to during the prediction stage.
 """
 
 import json

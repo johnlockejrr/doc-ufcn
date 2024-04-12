@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-    The utils module
-    ======================
+The utils module
+======================
 
-    Generic functions used during all the steps.
+Generic functions used during all the steps.
 """
 
 import copy

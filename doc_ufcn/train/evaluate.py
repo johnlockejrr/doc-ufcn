@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-    The evaluation module
-    ======================
+The evaluation module
+======================
 
-    Use it to evaluation a trained network.
+Use it to evaluation a trained network.
 """
 
 import logging
