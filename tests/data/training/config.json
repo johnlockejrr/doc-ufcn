@@ -1,0 +1,42 @@
+{
+    "img_size": 768,
+    "no_of_epochs": 5,
+    "batch_size": 1,
+    "min_cc": 50,
+    "use_amp": false,
+    "data_paths": {
+        "train": {
+            "image": [
+                "tests/data/training/train/images"
+            ],
+            "json": [
+                "tests/data/training/train/labels_json"
+            ],
+            "mask": [
+                "tests/data/training/train/labels"
+            ]
+        },
+        "val": {
+            "image": [
+                "tests/data/training/val/images"
+            ],
+            "json": [
+                "tests/data/training/val/labels_json"
+            ],
+            "mask": [
+                "tests/data/training/val/labels"
+            ]
+        },
+        "test": {
+            "image": [
+                "tests/data/training/test/images"
+            ],
+            "json": [
+                "tests/data/training/test/labels_json"
+            ],
+            "mask": [
+                "tests/data/training/test/labels"
+            ]
+        }
+    }
+}

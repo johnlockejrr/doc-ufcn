@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-from pathlib import Path
 
 import cv2
 import pytest
 import yaml
 
-FIXTURES = Path(__file__).resolve().parent / "data"
+from tests import FIXTURES
 
 
 @pytest.fixture
