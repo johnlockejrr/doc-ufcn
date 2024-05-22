@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
-
 """
-    The prediction utils module
-    ======================
+The prediction utils module
+======================
 
-    Use it to during the prediction stage.
+Use it to during the prediction stage.
 """
 
 import json
+from pathlib import Path
 
 import cv2
 import imageio as io
@@ -29,9 +28,11 @@ def resize_polygons(
     ratio = float(input_size) / max(image_size)
     new_size = tuple([int(x * ratio) for x in image_size])
     # Compute resizing ratio
-    ratio = [element / float(new) for element, new in zip(image_size, new_size)]
+    ratio = [
+        element / float(new) for element, new in zip(image_size, new_size, strict=True)
+    ]
 
-    for channel in polygons.keys():
+    for channel in polygons:
         for index, polygon in enumerate(polygons[channel]):
             x_points = [element[0][1] for element in polygon["polygon"]]
             y_points = [element[0][0] for element in polygon["polygon"]]
@@ -56,7 +57,9 @@ def resize_polygons(
             assert min(x_points) >= 0
             assert max(y_points) <= image_size[1]
             assert min(y_points) >= 0
-            polygons[channel][index]["polygon"] = list(zip(y_points, x_points))
+            polygons[channel][index]["polygon"] = list(
+                zip(y_points, x_points, strict=True)
+            )
     return polygons
 
 
@@ -76,7 +79,7 @@ def compute_confidence(region: np.ndarray, probas: np.ndarray) -> float:
 # Save the prediction coordinates and images.
 
 
-def save_prediction(polygons: dict, filename: str):
+def save_prediction(polygons: dict, filename: Path):
     """
     Save the detected polygon coordinates and their confidence score
     into a file.
@@ -84,8 +87,7 @@ def save_prediction(polygons: dict, filename: str):
                      confidence scores.
     :param filename: The filename to save the detected polygons.
     """
-    with open(filename.replace("png", "json"), "w") as outfile:
-        json.dump(polygons, outfile, indent=4)
+    filename.with_suffix(".json").write_text(json.dumps(polygons, indent=4))
 
 
 def save_prediction_image(polygons, colors, input_size, filename: str):
@@ -98,7 +100,7 @@ def save_prediction_image(polygons, colors, input_size, filename: str):
     """
     image = np.zeros((input_size[0], input_size[1], 3))
     index = 1
-    for channel in polygons.keys():
+    for channel in polygons:
         if channel == "img_size":
             continue
         color = [int(element) for element in colors[index]]

@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
-
 """
-    The train module
-    ======================
+The train module
+======================
 
-    Use it to train a model.
+Use it to train a model.
 """
 
 import logging
-import os
 import time
+from pathlib import Path
 
 import mlflow
 import numpy as np
@@ -41,12 +39,12 @@ def log_metrics(epoch: int, metrics: dict, writer, step: str, mlflow_logging: bo
     :param step: String indicating whether to log training or validation metrics.
     :param mlflow_logging: Whether we should log data to MLflow.
     """
-    prefixed_metrics = {step + "_" + key: value for key, value in metrics.items()}
+    prefixed_metrics = {f"{step}_{key}": value for key, value in metrics.items()}
 
     step_name = "TRAIN" if step == "Training" else "VALID"
     for tag, scalar in prefixed_metrics.items():
         writer.add_scalar(tag, scalar, epoch)
-        logging.info("  {} {}: {}={}".format(step_name, epoch, tag, round(scalar, 4)))
+        logging.info(f"  {step_name} {epoch}: {tag}={round(scalar, 4)}")
 
     if mlflow_logging:
         mlflow.log_metrics(metrics=prefixed_metrics, step=epoch)
@@ -82,9 +80,7 @@ def run_one_epoch(
 
     t = tqdm(loader)
     step_name = "TRAIN" if step == "Training" else "VALID"
-    t.set_description(
-        "{} (prog) {}/{}".format(step_name, epoch, no_of_epochs + epochs[1])
-    )
+    t.set_description(f"{step_name} (prog) {epoch}/{no_of_epochs + epochs[1]}")
 
     for index, data in enumerate(t, 1):
         params["optimizer"].zero_grad()
@@ -128,8 +124,8 @@ def run_one_epoch(
 
 def run(
     model_path: str,
-    log_path: str,
-    tb_path: str,
+    log_path: Path,
+    tb_path: Path,
     no_of_epochs: int,
     norm_params: dict,
     classes_names: list,
@@ -152,7 +148,7 @@ def run(
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     # Run training.
-    writer = SummaryWriter(os.path.join(log_path, tb_path))
+    writer = SummaryWriter(log_path / tb_path)
     logging.info("Starting training")
     starting_time = time.time()
 
@@ -217,7 +213,7 @@ def run(
     # Save last model.
     path = str(log_path / f"last_{model_path}").replace("model", "model_0")
     index = 1
-    while os.path.exists(path):
+    while Path(path).exists():
         path = path.replace(str(index - 1), str(index))
         index += 1
 

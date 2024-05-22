@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-
 import logging
 import os
+from pathlib import Path
 
 import yaml
 from huggingface_hub import hf_hub_download
@@ -18,8 +17,8 @@ def download_model(name, version=None):
     name = name.replace("doc-ufcn-", "")
     logger.info(f"Will look for model @ {HUGGING_FACE_REPO_PREFIX + name}")
 
-    cache_dir = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
-    dir_path = os.path.join(cache_dir, "doc-ufcn", "models", name)
+    cache_dir = Path(os.environ.get("XDG_CACHE_HOME", Path("~/.cache").expanduser()))
+    dir_path = cache_dir / "doc-ufcn" / "models" / name
 
     try:
         # Retrieve parameters.yml
@@ -49,7 +48,5 @@ def download_model(name, version=None):
         print(str(e))
         raise
 
-    with open(parameters_path) as f:
-        parameters = yaml.safe_load(f)
-
-    return model_path, parameters["parameters"]
+    parameters = yaml.safe_load(Path(parameters_path).read_bytes())
+    return Path(model_path), parameters["parameters"]

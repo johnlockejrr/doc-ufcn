@@ -1,18 +1,16 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
-    The retrieve experiments configs module
-    ======================
+The retrieve experiments configs module
+======================
 
-    Use it to get the configurations for running the experiments.
+Use it to get the configurations for running the experiments.
 """
 
 import argparse
 import csv
 import json
 import logging
-import os
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -78,22 +76,22 @@ def generate_configurations(csv_path):
         yield config
 
 
-def run(csv_path, output):
+def run(csv_path, output: Path):
     """
     Retrieve the configurations for the experiments from a config csv file.
     Save each configuration into TMP_DIR/experiment_name file.
     """
-    os.makedirs(output, exist_ok=True)
+    output.mkdir(exist_ok=True)
 
     for index, config in enumerate(generate_configurations(csv_path), 1):
         # Save each configuration in a dedicated file file.
-        json_file = str(index) + "_" + config["experiment_name"] + ".json"
-        with open(os.path.join(output, json_file), "w") as file:
-            json.dump(
+        json_file = f"{index}_{config['experiment_name']}.json"
+        (output / json_file).write_text(
+            json.dumps(
                 {key: value for key, value in config.items() if value},
-                file,
                 indent=4,
             )
+        )
 
     logger.info(
         f"Retrieved {index} experiment configurations from {csv_path}"

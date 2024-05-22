@@ -1,14 +1,12 @@
-# -*- coding: utf-8 -*-
-
 """
-    The evaluation utils module
-    ======================
+The evaluation utils module
+======================
 
-    Use it to during the evaluation stage.
+Use it to during the evaluation stage.
 """
 
 import json
-import os
+from pathlib import Path
 
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
@@ -26,9 +24,9 @@ def resize_polygons(polygons: dict, gt_size: tuple, pred_size: tuple) -> dict:
     :return polygons: The resized detected polygons.
     """
     # Compute resizing ratio
-    ratio = [gt / pred for gt, pred in zip(gt_size, pred_size)]
+    ratio = [gt / pred for gt, pred in zip(gt_size, pred_size, strict=True)]
 
-    for channel in polygons.keys():
+    for channel in polygons:
         if channel == "img_size":
             continue
         for index, polygon in enumerate(polygons[channel]):
@@ -50,18 +48,19 @@ def resize_polygons(polygons: dict, gt_size: tuple, pred_size: tuple) -> dict:
             assert min(x_points) >= 0
             assert max(y_points) <= gt_size[1]
             assert min(y_points) >= 0
-            polygons[channel][index]["polygon"] = list(zip(y_points, x_points))
+            polygons[channel][index]["polygon"] = list(
+                zip(y_points, x_points, strict=True)
+            )
     return polygons
 
 
-def read_json(filename: str) -> dict:
+def read_json(filename: Path) -> dict:
     """
     Read a label / prediction json file.
     :param filename: Path to the file to read.
     :return: A dictionary with the file content.
     """
-    with open(filename, "r") as file:
-        return json.load(file)
+    return json.loads(filename.read_text())
 
 
 def get_polygons(regions: dict, classes: list) -> dict:
@@ -73,8 +72,8 @@ def get_polygons(regions: dict, classes: list) -> dict:
                    corresponding confidence scores.
     """
     polys = {}
-    for index, channel in enumerate(classes[1:], 1):
-        if channel in regions.keys():
+    for channel in classes[1:]:
+        if channel in regions:
             polys[channel] = [
                 (polygon["confidence"], Polygon(polygon["polygon"]).buffer(0))
                 for polygon in regions[channel]
@@ -115,8 +114,7 @@ def save_results(
         json_dict[channel]["AP@[.95]"] = np.round(aps[95], 4)
         json_dict[channel]["AP@[.5,.95]"] = np.round(np.mean(list(aps.values())), 4)
 
-    with open(os.path.join(path, dataset + "_results.json"), "w") as json_file:
-        json.dump(json_dict, json_file, indent=4)
+    (path / f"{dataset}_results.json").write_text(json.dumps(json_dict, indent=4))
 
 
 def save_graphical_results(results: dict, classes: list, path: str):
@@ -132,7 +130,7 @@ def save_graphical_results(results: dict, classes: list, path: str):
     plot_rank_score(results, classes, "F-score", path)
 
 
-def generate_figure(params: dict, rotation: bool = None):
+def generate_figure(params: dict, rotation: bool | None = None):
     """
     Generic function to generate a figure.
     :param params: A dictionary containing the useful information
@@ -169,7 +167,7 @@ def plot_rank_score(scores: dict, classes: list, metric: str, path: str):
     """
     params = {
         "size": (12, 8),
-        "title": metric + " vs. confidence score for various IoU thresholds",
+        "title": f"{metric} vs. confidence score for various IoU thresholds",
         "xlabel": "Confidence score",
         "ylabel": metric,
         "xticks": [0, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95],
@@ -183,17 +181,17 @@ def plot_rank_score(scores: dict, classes: list, metric: str, path: str):
         for index, iou in enumerate(range(50, 100, 5)):
             if metric == "Precision":
                 score = list(scores[channel]["precision"][iou].values())
-                rank = list(scores[channel]["precision"][iou].keys())
+                rank = list(scores[channel]["precision"][iou])
             if metric == "Recall":
                 score = list(scores[channel]["recall"][iou].values())
-                rank = list(scores[channel]["recall"][iou].keys())
+                rank = list(scores[channel]["recall"][iou])
             if metric == "F-score":
                 score = list(scores[channel]["fscore"][iou].values())
-                rank = list(scores[channel]["fscore"][iou].keys())
+                rank = list(scores[channel]["fscore"][iou])
             axis.plot(
                 rank,
                 score,
-                label="{:.2f}".format(iou / 100),
+                label=f"{iou / 100:.2f}",
                 alpha=1,
                 color=colors[index],
                 linewidth=2,
@@ -209,9 +207,7 @@ def plot_rank_score(scores: dict, classes: list, metric: str, path: str):
         axis.set_xlim([49, 96])
         axis.set_ylim([0, 1])
         plt.legend(prop=fp_light, loc="lower left")
-        plt.savefig(
-            os.path.join(path, metric + "_" + channel + ".png"), bbox_inches="tight"
-        )
+        plt.savefig(path / f"{metric}_{channel}.png", bbox_inches="tight")
 
 
 def plot_precision_recall_curve(object_metrics: dict, classes: list, path: str):
@@ -239,7 +235,7 @@ def plot_precision_recall_curve(object_metrics: dict, classes: list, path: str):
             axis.plot(
                 current_rec,
                 current_pr,
-                label="{:.2f}".format(iou / 100),
+                label=f"{iou / 100:.2f}",
                 alpha=1,
                 color=colors[index],
                 linewidth=2,
@@ -256,6 +252,6 @@ def plot_precision_recall_curve(object_metrics: dict, classes: list, path: str):
         axis.set_ylim([0, 1])
         plt.legend(prop=fp_light, loc="lower right")
         plt.savefig(
-            os.path.join(path, "Precision-recall_" + channel + ".png"),
+            path / f"Precision-recall_{channel}.png",
             bbox_inches="tight",
         )

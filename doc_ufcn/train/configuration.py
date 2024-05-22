@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 import json
-import os
 from pathlib import Path
 
 from teklia_toolbox.config import ConfigParser, ConfigurationError
@@ -10,7 +8,7 @@ from doc_ufcn.train import logger
 STEPS = ["normalization_params", "train", "prediction", "evaluation"]
 
 
-def parse_configurations(paths):
+def parse_configurations(paths: list[Path]):
     """
     Parse multiple JSON configuration files into a single source
     of configuration for the whole training workflow
@@ -39,7 +37,7 @@ def parse_configurations(paths):
         return value == "true"
 
     def _rgb(value: list):
-        if not isinstance(value, (list, tuple)):
+        if not isinstance(value, list | tuple):
             raise ConfigurationError("This RGB value should be a list or tuple")
 
         if len(value) != 3:
@@ -142,10 +140,10 @@ def parse_configurations(paths):
     raw = {}
     for path in paths:
         try:
-            raw.update(json.load(path.open()))
+            raw.update(json.loads(path.read_text()))
         except Exception as e:
             logger.error(f"Failed to parse config {path} : {e}")
-            raise Exception("Invalid configuration")
+            raise Exception("Invalid configuration") from e
 
     # Promote deprecated parameters to root level
     for deprecated_key in ("params", "global_params"):
@@ -178,8 +176,7 @@ def save_configuration(config: dict):
                       the experiment information.
     :param config : Full configuration payload that will be saved and usable to retry the experiment
     """
-    os.makedirs(config["log_path"], exist_ok=True)
-    path = config["log_path"] / (config["experiment_name"] + ".json")
-    with open(path, "w") as config_file:
-        json.dump(config, config_file, indent=4, default=str, sort_keys=True)
-        logger.info(f"Saved configuration in {path.resolve()}")
+    config["log_path"].mkdir(exist_ok=True)
+    path = config["log_path"] / (f"{config['experiment_name']}.json")
+    path.write_text(json.dumps(config, indent=4, default=str, sort_keys=True))
+    logger.info(f"Saved configuration in {path.resolve()}")

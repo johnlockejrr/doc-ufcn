@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
-
 """
-    The predict module
-    ======================
+The predict module
+======================
 
-    Use it to predict some images from a trained network.
+Use it to predict some images from a trained network.
 """
 
 import logging
-import os
 import time
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -57,8 +55,8 @@ def get_predicted_polygons(
 
 
 def run(
-    prediction_path: str,
-    log_path: str,
+    prediction_path: Path,
+    log_path: Path,
     img_size: int,
     colors: list,
     classes_names: list,
@@ -89,19 +87,16 @@ def run(
     starting_time = time.time()
 
     with torch.no_grad():
-        for set, loader in zip(["train", "val", "test"], loaders.values()):
+        for set, loader in zip(["train", "val", "test"], loaders.values(), strict=True):
             seen_datasets = []
             # Create folders to save the predictions.
-            os.makedirs(os.path.join(log_path, prediction_path, set), exist_ok=True)
+            (log_path / prediction_path / set).mkdir(exist_ok=True, parents=True)
 
-            for i, data in enumerate(tqdm(loader, desc="Prediction (prog) " + set), 0):
+            for data in tqdm(loader, desc=f"Prediction (prog) {set}"):
                 # Create dataset folders to save the predictions.
                 if data["dataset"][0] not in seen_datasets:
-                    os.makedirs(
-                        os.path.join(
-                            log_path, prediction_path, set, data["dataset"][0]
-                        ),
-                        exist_ok=True,
+                    (log_path / prediction_path / set / data["dataset"][0]).mkdir(
+                        exist_ok=True
                     )
                     seen_datasets.append(data["dataset"][0])
 
@@ -120,12 +115,12 @@ def run(
                 polygons["img_size"] = [int(element) for element in input_size]
                 pr_utils.save_prediction(
                     polygons,
-                    os.path.join(
-                        log_path,
-                        prediction_path,
-                        set,
-                        data["dataset"][0],
-                        data["name"][0],
+                    (
+                        log_path
+                        / prediction_path
+                        / set
+                        / data["dataset"][0]
+                        / data["name"][0]
                     ),
                 )
                 if set in save_image:
@@ -133,12 +128,12 @@ def run(
                         polygons,
                         colors,
                         input_size,
-                        os.path.join(
-                            log_path,
-                            prediction_path,
-                            set,
-                            data["dataset"][0],
-                            data["name"][0],
+                        (
+                            log_path
+                            / prediction_path
+                            / set
+                            / data["dataset"][0]
+                            / data["name"][0]
                         ),
                     )
 

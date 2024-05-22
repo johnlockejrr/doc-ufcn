@@ -1,14 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """
-    The run experiment module
-    ======================
+The run experiment module
+======================
 
-    Use it to train, predict and evaluate a model.
+Use it to train, predict and evaluate a model.
 """
 
 import logging
-import os
 from pathlib import Path
 
 from torch.cuda.amp import GradScaler
@@ -56,13 +53,8 @@ def get_mean_std(log_path: Path, mean_name: str, std_name: str) -> dict:
     if not std_path.exists():
         raise Exception(f"No file found at {std_path}")
 
-    with mean_path.open() as f:
-        mean = f.read().splitlines()
-        mean = [int(value) for value in mean]
-
-    with std_path.open() as f:
-        std = f.read().splitlines()
-        std = [int(value) for value in std]
+    mean = list(map(int, mean_path.read_text().splitlines()))
+    std = list(map(int, std_path.read_text().splitlines()))
 
     return {"mean": mean, "std": std}
 
@@ -90,6 +82,7 @@ def training_loaders(
         t,
         [exp_data_paths["train"]["image"], exp_data_paths["val"]["image"]],
         [exp_data_paths["train"]["mask"], exp_data_paths["val"]["mask"]],
+        strict=True,
     ):
         dataset = TrainingDataset(
             images,
@@ -135,6 +128,7 @@ def prediction_loaders(
             exp_data_paths["val"]["image"],
             exp_data_paths["test"]["image"],
         ],
+        strict=True,
     ):
         dataset = PredictionDataset(
             images,
@@ -147,7 +141,7 @@ def prediction_loaders(
                 ]
             ),
         )
-        loaders[set + "_loader"] = DataLoader(
+        loaders[f"{set}_loader"] = DataLoader(
             dataset,
             batch_size=1,
             shuffle=False,
@@ -159,7 +153,7 @@ def prediction_loaders(
 
 def training_initialization(
     training: dict,
-    log_path: str,
+    log_path: Path,
     classes_names: list,
     use_amp: bool,
     learning_rate: float,
@@ -324,9 +318,9 @@ def run_experiment(config: dict, num_workers: int = 2, mlflow_logging=False):
         )
 
     if "evaluation" in config["steps"]:
-        for set in config["data_paths"].keys():
+        for set in config["data_paths"]:
             for dataset in config["data_paths"][set]["json"]:
-                if os.path.isdir(dataset):
+                if dataset.is_dir():
                     evaluate(
                         config["log_path"],
                         config["classes_names"],

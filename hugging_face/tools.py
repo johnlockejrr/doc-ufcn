@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from dataclasses import dataclass, field
 
 from doc_ufcn import models
@@ -34,8 +32,8 @@ class UFCNModel:
         self.classes = parameters["classes"]
 
         # Check that the number of colors is equal to the number of classes -1
-        assert self.num_channels - 1 == len(
-            self.colors
+        assert (
+            self.num_channels - 1 == len(self.colors)
         ), f"The parameter classes_colors was filled with the wrong number of colors. {self.num_channels-1} colors are expected instead of {len(self.colors)}."
 
         # Load the model

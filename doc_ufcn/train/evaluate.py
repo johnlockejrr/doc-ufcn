@@ -1,14 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """
-    The evaluation module
-    ======================
+The evaluation module
+======================
 
-    Use it to evaluation a trained network.
+Use it to evaluation a trained network.
 """
 
 import logging
-import os
 import time
 from pathlib import Path
 
@@ -22,7 +19,7 @@ import doc_ufcn.train.utils.pixel_metrics as p_metrics
 
 
 def run(
-    log_path: str,
+    log_path: Path,
     classes_names: list,
     set: str,
     data_paths: dict,
@@ -43,7 +40,7 @@ def run(
     :param mlflow_logging: Whether we should log data to MLflow.
     """
     # Run evaluation.
-    logging.info("Starting evaluation: " + dataset)
+    logging.info(f"Starting evaluation: {dataset}")
     starting_time = time.time()
 
     label_dir = [dir for dir in data_paths if dataset in str(dir)][0]
@@ -64,10 +61,10 @@ def run(
         for channel in classes_names[1:]
     }
     number_of_gt = {channel: 0 for channel in classes_names[1:]}
-    for img_name in tqdm(os.listdir(label_dir), desc="Evaluation (prog) " + set):
-        gt_regions = ev_utils.read_json(os.path.join(label_dir, img_name))
+    for img_path in tqdm(label_dir.iterdir(), desc=f"Evaluation (prog) {set}"):
+        gt_regions = ev_utils.read_json(img_path)
         pred_regions = ev_utils.read_json(
-            os.path.join(log_path, prediction_path, set, dataset, img_name)
+            log_path / prediction_path / set / dataset / img_path.name
         )
 
         gt_polys = ev_utils.get_polygons(gt_regions, classes_names)
@@ -133,14 +130,17 @@ def run(
         print("AP [0.5,0.95] = ", np.round(np.mean(list(aps.values())), 4))
         print("\n")
 
-    os.makedirs(os.path.join(log_path, evaluation_path, set), exist_ok=True)
-    # ev_utils.save_graphical_results(object_metrics, classes_names[1:],
-    #                                os.path.join(log_path, params.evaluation_path, set))
+    (log_path / evaluation_path / set).mkdir(exist_ok=True, parents=True)
+    # ev_utils.save_graphical_results(
+    #     object_metrics,
+    #     classes_names[1:],
+    #     log_path / params.evaluation_path / set
+    # )
     ev_utils.save_results(
         pixel_metrics,
         object_metrics,
         classes_names[1:],
-        os.path.join(log_path, evaluation_path, set),
+        log_path / evaluation_path / set,
         dataset,
     )
 

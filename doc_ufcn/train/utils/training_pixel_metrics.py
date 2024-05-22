@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """
-    The training pixel metrics module
-    ======================
+The training pixel metrics module
+======================
 
-    Use it to compute different metrics during training.
-    Available metrics:
-        - Confusion matrix
-        - Intersection-over-Union
+Use it to compute different metrics during training.
+Available metrics:
+    - Confusion matrix
+    - Intersection-over-Union
 """
 
 import numpy as np
@@ -74,8 +72,6 @@ def iou(confusion_matrix: np.ndarray, channel: str) -> float:
     true_positives = confusion_matrix[channel, channel]
     tpfn = np.sum(confusion_matrix[:, channel])
     tpfp = np.sum(confusion_matrix[channel, :])
-    if true_positives == 0:
-        return 0
-    elif tpfn + tpfp == true_positives:
+    if true_positives == 0 or tpfn + tpfp == true_positives:
         return 0
     return true_positives / (tpfn + tpfp - true_positives)

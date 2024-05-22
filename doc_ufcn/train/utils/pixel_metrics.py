@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
-
 """
-    The pixel metrics module
-    ======================
+The pixel metrics module
+======================
 
-    Use it to compute different metrics during evaluation.
-    Available metrics:
-        - Intersection-over-Union
-        - Precision
-        - Recall
-        - F-score
+Use it to compute different metrics during evaluation.
+Available metrics:
+    - Intersection-over-Union
+    - Precision
+    - Recall
+    - F-score
 """
 
 import numpy as np

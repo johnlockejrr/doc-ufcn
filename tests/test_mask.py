@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import tempfile
 
 import cv2
@@ -9,7 +8,7 @@ from doc_ufcn.train.mask import generate_mask
 
 
 @pytest.mark.parametrize(
-    "image_width, image_height, label_polygons, label_colors",
+    ("image_width", "image_height", "label_polygons", "label_colors"),
     [
         (
             400,
@@ -28,7 +27,7 @@ def test_generate_mask(
     image_width, image_height, label_polygons, label_colors, expected_mask_path
 ):
     # Read the expected output image
-    expected_mask = cv2.imread(expected_mask_path)
+    expected_mask = cv2.imread(str(expected_mask_path))
 
     # Generate the mask
     _, output_path = tempfile.mkstemp(suffix=".teklia.test.mask.png")

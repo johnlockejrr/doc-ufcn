@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-
-import os
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -11,12 +9,7 @@ from tests.conftest import FIXTURES
 
 @pytest.mark.parametrize(
     "no_of_classes",
-    [
-        (-1),
-        ([]),
-        (2.5),
-        ("no_of_classes"),
-    ],
+    [-1, [], 2.5, "no_of_classes"],
 )
 def test_DocUFCN_wrong_no_of_classes(no_of_classes):
     """
@@ -28,11 +21,7 @@ def test_DocUFCN_wrong_no_of_classes(no_of_classes):
 
 @pytest.mark.parametrize(
     "no_of_classes",
-    [
-        (1),
-        (5),
-        (12),
-    ],
+    [1, 5, 12],
 )
 def test_DocUFCN_correct_no_of_classes(no_of_classes):
     """
@@ -46,12 +35,7 @@ def test_DocUFCN_correct_no_of_classes(no_of_classes):
 
 @pytest.mark.parametrize(
     "input_size",
-    [
-        (-1),
-        ([]),
-        (2.5),
-        ("input_size"),
-    ],
+    [-1, [], 2.5, "input_size"],
 )
 def test_DocUFCN_wrong_input_size(input_size):
     """
@@ -63,10 +47,7 @@ def test_DocUFCN_wrong_input_size(input_size):
 
 @pytest.mark.parametrize(
     "input_size",
-    [
-        (768),
-        (250),
-    ],
+    [768, 250],
 )
 def test_DocUFCN_correct_input_size(input_size):
     """
@@ -82,10 +63,9 @@ def test_DocUFCN_correct_input_size(input_size):
     "model_path",
     [
         # Wrong path/file
-        ("page_generic.pth"),
-        (1),
+        Path("page_generic.pth"),
         # Correct path
-        (os.path.join(FIXTURES, "page_generic.pth")),
+        FIXTURES / "page_generic.pth",
     ],
 )
 def test_load(model_path):
@@ -94,11 +74,8 @@ def test_load(model_path):
     """
     model = main.DocUFCN(2, 768, "cpu")
 
-    if not os.path.isfile(model_path):
+    if not model_path.is_file():
         with pytest.raises(AssertionError):
-            model.load(model_path, [190, 182, 165], [48, 48, 45])
-    elif not isinstance(model_path, str):
-        with pytest.raises(AttributeError):
             model.load(model_path, [190, 182, 165], [48, 48, 45])
     else:
         model.load(model_path, [190, 182, 165], [48, 48, 45])
@@ -109,15 +86,7 @@ def test_load(model_path):
 
 @pytest.mark.parametrize(
     "mean",
-    [
-        (10),
-        ([]),
-        ([10]),
-        (["test"]),
-        ([10, "test"]),
-        (-1.5),
-        ("mean"),
-    ],
+    [10, [], [10], ["test"], [10, "test"], -1.5, "mean"],
 )
 def test_mean(mean, page_generic_model_path):
     """
@@ -130,15 +99,7 @@ def test_mean(mean, page_generic_model_path):
 
 @pytest.mark.parametrize(
     "std",
-    [
-        (10),
-        ([]),
-        ([10]),
-        (["test"]),
-        ([10, "test"]),
-        (-1.5),
-        ("mean"),
-    ],
+    [10, [], [10], ["test"], [10, "test"], -1.5, "mean"],
 )
 def test_std(std, page_generic_model_path):
     """
@@ -149,10 +110,7 @@ def test_std(std, page_generic_model_path):
         model.load(page_generic_model_path, [190, 182, 165], std)
 
 
-@pytest.mark.parametrize(
-    "input_image",
-    [([1]), ("input_image"), (1)],
-)
+@pytest.mark.parametrize("input_image", [[1], "input_image", 1])
 def test_predict_input_image(input_image, page_generic_model_path):
     """
     Test of the predict function: check that wrong input images raise an exception.
@@ -173,9 +131,11 @@ def test_predict(test_image, test_json, page_generic_model_path):
 
     # Only one output
     output = model.predict(test_image)
-    for key in output[0].keys():
+    for key in output[0]:
         assert len(output[0][key]) == len(test_json[str(key)])
-        for polygon, expected_polygon in zip(output[0][key], test_json[str(key)]):
+        for polygon, expected_polygon in zip(
+            output[0][key], test_json[str(key)], strict=True
+        ):
             polygon["polygon"] = [list(element) for element in polygon["polygon"]]
             assert polygon["polygon"] == expected_polygon["polygon"]
             assert polygon["confidence"] == expected_polygon["confidence"]

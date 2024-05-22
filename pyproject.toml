@@ -52,3 +52,57 @@ test = [
 
 [tool.setuptools.packages]
 find = {}
+
+[tool.ruff]
+exclude = [".git", "__pycache__"]
+
+[tool.ruff.lint]
+ignore = ["E501"]
+select = [
+    # pycodestyle
+    "E",
+    "W",
+    # Pyflakes
+    "F",
+    # Flake8 Debugger
+    "T1",
+    # Isort
+    "I",
+    # Implicit Optional
+    "RUF013",
+    # Invalid pyproject.toml
+    "RUF200",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # flake8-pytest-style
+    "PT",
+    # flake8-use-pathlib
+    "PTH",
+]
+
+[tool.ruff.lint.isort]
+known-third-party = [
+    "PIL",
+    "cv2",
+    "gradio",
+    "huggingface_hub",
+    "imageio",
+    "matplotlib",
+    "mlflow",
+    "numpy",
+    "pytest",
+    "requests",
+    "setuptools",
+    "shapely",
+    "skimage",
+    "teklia_toolbox",
+    "torch",
+    "torchvision",
+    "tqdm",
+    "yaml",
+]
+

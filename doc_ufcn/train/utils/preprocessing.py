@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
-    The preprocessing module
-    ======================
+The preprocessing module
+======================
 
-    Use it to preprocess the images.
+Use it to preprocess the images.
 """
 
 import os
@@ -24,7 +22,11 @@ class TrainingDataset(Dataset):
     """
 
     def __init__(
-        self, images_dir: str, masks_dir: str, colors: list, transform: list = None
+        self,
+        images_dir: str,
+        masks_dir: str,
+        colors: list,
+        transform: list | None = None,
     ):
         """
         Constructor of the TrainingDataset class.
@@ -95,7 +97,7 @@ class PredictionDataset(Dataset):
     run prediction step.
     """
 
-    def __init__(self, images_dir: str, transform: list = None):
+    def __init__(self, images_dir: str, transform: list | None = None):
         """
         Constructor of the PredictionDataset class.
         :param images_dir: The directories containing the images.
@@ -178,10 +180,9 @@ class Rescale:
             sample["image"] = image
 
         # Resize the label. MUST BE AVOIDED.
-        if "mask" in sample.keys():
-            if max(sample["mask"].shape[:2]) != self.output_size:
-                mask = cv2.resize(sample["mask"], (new_size[1], new_size[0]))
-                sample["mask"] = mask
+        if "mask" in sample and max(sample["mask"].shape[:2]) != self.output_size:
+            mask = cv2.resize(sample["mask"], (new_size[1], new_size[0]))
+            sample["mask"] = mask
         return sample
 
 
@@ -281,6 +282,6 @@ class ToTensor:
         :return sample: The sample made of Tensors.
         """
         sample["image"] = torch.from_numpy(sample["image"].transpose((2, 0, 1)))
-        if "mask" in sample.keys():
+        if "mask" in sample:
             sample["mask"] = torch.from_numpy(sample["mask"])
         return sample

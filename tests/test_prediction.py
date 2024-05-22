@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import numpy as np
 import pytest
 from pytest_lazy_fixtures import lf as lazy_fixture
@@ -8,7 +6,7 @@ from doc_ufcn import prediction
 
 
 @pytest.mark.parametrize(
-    "probabilities, no_of_classes, expected_polygons",
+    ("probabilities", "no_of_classes", "expected_polygons"),
     [
         # Empty prediction
         (
@@ -167,14 +165,14 @@ def test_get_predicted_polygons(probabilities, no_of_classes, expected_polygons)
     polygons = prediction.get_predicted_polygons(np.array(probabilities), no_of_classes)
     # Polygons to list
     for key, value in polygons.items():
-        for index, element in enumerate(value):
+        for index in range(len(value)):
             polygons[key][index]["polygon"] = polygons[key][index]["polygon"].tolist()
 
     assert polygons == expected_polygons
 
 
 @pytest.mark.parametrize(
-    "probabilities, polygon, expected_confidence",
+    ("probabilities", "polygon", "expected_confidence"),
     [
         # One polygon with probabilities = 1
         (
@@ -240,7 +238,13 @@ def test_compute_confidence(probabilities, polygon, expected_confidence):
 
 
 @pytest.mark.parametrize(
-    "polygons, image_size, resized_image_size, padding, expected_resized_polygons",
+    (
+        "polygons",
+        "image_size",
+        "resized_image_size",
+        "padding",
+        "expected_resized_polygons",
+    ),
     [
         (
             {
@@ -303,7 +307,7 @@ def test_resize_predicted_polygons(
 
 
 @pytest.mark.parametrize(
-    "polygons, image_size, image, expected_image",
+    ("polygons", "image_size", "image", "expected_image"),
     [
         (
             {1: []},

@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-
-import os
+from pathlib import Path
 
 import pytest
 from huggingface_hub.utils import RepositoryNotFoundError, RevisionNotFoundError
@@ -10,13 +8,21 @@ from doc_ufcn import models
 
 
 @pytest.mark.parametrize(
-    "name, version, expected_model_path, expected_parameters, correct_name",
+    ("name", "version", "expected_model_path", "expected_parameters", "correct_name"),
     [
         # Correct name and version
         (
             "generic-page",
             "main",
-            "~/.cache/doc-ufcn/models/generic-page/models--Teklia--doc-ufcn-generic-page/snapshots/21f246af42990ca668e3c2bad69c6e4ae727a0cd",
+            (
+                Path("~/.cache")
+                / "doc-ufcn"
+                / "models"
+                / "generic-page"
+                / "models--Teklia--doc-ufcn-generic-page"
+                / "snapshots"
+                / "21f246af42990ca668e3c2bad69c6e4ae727a0cd"
+            ),
             lazy_fixture("test_parameters"),
             True,
         ),
@@ -24,7 +30,15 @@ from doc_ufcn import models
         (
             "doc-ufcn-generic-page",
             "main",
-            "~/.cache/doc-ufcn/models/generic-page/models--Teklia--doc-ufcn-generic-page/snapshots/21f246af42990ca668e3c2bad69c6e4ae727a0cd",
+            (
+                Path("~/.cache")
+                / "doc-ufcn"
+                / "models"
+                / "generic-page"
+                / "models--Teklia--doc-ufcn-generic-page"
+                / "snapshots"
+                / "21f246af42990ca668e3c2bad69c6e4ae727a0cd"
+            ),
             lazy_fixture("test_parameters"),
             True,
         ),
@@ -34,7 +48,15 @@ from doc_ufcn import models
         (
             "generic-page",
             None,
-            "~/.cache/doc-ufcn/models/generic-page/models--Teklia--doc-ufcn-generic-page/snapshots/21f246af42990ca668e3c2bad69c6e4ae727a0cd",
+            (
+                Path("~/.cache")
+                / "doc-ufcn"
+                / "models"
+                / "generic-page"
+                / "models--Teklia--doc-ufcn-generic-page"
+                / "snapshots"
+                / "21f246af42990ca668e3c2bad69c6e4ae727a0cd"
+            ),
             lazy_fixture("test_parameters"),
             True,
         ),
@@ -45,7 +67,7 @@ from doc_ufcn import models
     ],
 )
 def test_download_model(
-    name, version, expected_model_path, expected_parameters, correct_name
+    name, version, expected_model_path: Path, expected_parameters, correct_name
 ):
     """
     Test of the download_model function.
@@ -62,7 +84,5 @@ def test_download_model(
                 model_path, parameters = models.download_model(name, version)
     else:
         model_path, parameters = models.download_model(name, version)
-        assert model_path == os.path.join(
-            os.path.expanduser(expected_model_path), "model.pth"
-        )
+        assert model_path == expected_model_path.expanduser() / "model.pth"
         assert parameters == expected_parameters

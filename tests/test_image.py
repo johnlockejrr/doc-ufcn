@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import numpy as np
 import pytest
 
@@ -7,7 +5,13 @@ from doc_ufcn import image
 
 
 @pytest.mark.parametrize(
-    "input_image, size, padding_value, expected_resized_image, expected_padding",
+    (
+        "input_image",
+        "size",
+        "padding_value",
+        "expected_resized_image",
+        "expected_padding",
+    ),
     [
         # Resizing table 9x9 to 8 without padding
         (
@@ -133,7 +137,14 @@ def test_resize(
 
 
 @pytest.mark.parametrize(
-    "input_image, size, mean, std, expected_preprocessed_image, expected_padding",
+    (
+        "input_image",
+        "size",
+        "mean",
+        "std",
+        "expected_preprocessed_image",
+        "expected_padding",
+    ),
     [
         # Preprocessing table 9x9x3 to 8
         (

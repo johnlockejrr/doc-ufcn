@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import argparse
 import json
 from pathlib import Path
@@ -102,7 +100,7 @@ def query_image(model_name: gr.Dropdown, image: gr.Image) -> list([Image, json])
     # Create the polygons on the copy of the image for each class with the corresponding color
     # We do not draw polygons of the background channel (channel 0)
     for channel in range(1, ufcn_model.num_channels):
-        for i, polygon in enumerate(detected_polygons[channel]):
+        for polygon in detected_polygons[channel]:
             # Draw the polygons on the image copy.
             # Loop through the class_colors list (channel 1 has color 0)
             ImageDraw.Draw(img2).polygon(
@@ -186,13 +184,11 @@ with gr.Blocks() as process_image:
                 image_output = gr.Image(interactive=False)
 
             # Create a row under the predicted image
-            with gr.Row():
-                # Create a column so that the JSON output doesn't take the full size of the page
-                with gr.Column():
-                    # # Create a collapsible region
-                    with gr.Accordion("JSON"):
-                        # Generates a json with the model predictions
-                        json_output = gr.JSON()
+            # Create a column so that the JSON output doesn't take the full size of the page
+            # Create a collapsible region
+            with gr.Row(), gr.Column(), gr.Accordion("JSON"):
+                # Generates a json with the model predictions
+                json_output = gr.JSON()
 
     # Clear button: set default values to inputs and output objects
     clear_button.click(

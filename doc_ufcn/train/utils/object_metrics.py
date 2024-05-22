@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
-
 """
-    The object metrics module
-    ======================
+The object metrics module
+======================
 
-    Use it to compute different metrics during evaluation.
-    Available metrics:
-        - Precision
-        - Recall
-        - F-score
-        - Average precision
+Use it to compute different metrics during evaluation.
+Available metrics:
+    - Precision
+    - Recall
+    - F-score
+    - Average precision
 """
 
 import numpy as np
@@ -48,9 +46,8 @@ def __get_ious(labels: list, predictions: list) -> dict:
             if iou > best_iou:
                 best_iou = iou
                 best_prediction = index
-        if best_prediction is not None:
-            if best_iou > ious[best_prediction]:
-                ious[best_prediction] = best_iou
+        if best_prediction is not None and best_iou > ious[best_prediction]:
+            ious[best_prediction] = best_iou
     return ious
 
 

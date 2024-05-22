@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
 import copy
 import logging
-import os
 import sys
 import time
+from pathlib import Path
 
 import torch
 from torch.cuda.amp import autocast
@@ -28,7 +26,7 @@ class DocUFCNModel(NNModule):
         :param use_amp: Whether to use Automatic Mixed Precision.
                         Disabled by default
         """
-        super(DocUFCNModel, self).__init__()
+        super().__init__()
         self.amp = use_amp
         self.dilated_block1 = self.dilated_block(3, 32)
         self.dilated_block2 = self.dilated_block(32, 64)
@@ -131,7 +129,7 @@ def weights_init(model):
     Initialize the model weights.
     :param model: The model.
     """
-    if isinstance(model, (torch.nn.Conv2d, torch.nn.ConvTranspose2d)):
+    if isinstance(model, torch.nn.Conv2d | torch.nn.ConvTranspose2d):
         torch.nn.init.xavier_uniform_(model.weight.data)
 
 
@@ -155,7 +153,7 @@ def load_network(no_of_classes: int, use_amp: bool):
 
 
 def restore_model(
-    net, optimizer, scaler, log_path: str, model_path: str, keep_last: bool = True
+    net, optimizer, scaler, log_path: Path, model_path: Path, keep_last: bool = True
 ):
     """
     Load the model weights.
@@ -171,25 +169,25 @@ def restore_model(
     :return scaler: The restored scaler.
     """
     starting_time = time.time()
-    if not os.path.isfile(os.path.join(log_path, model_path)):
-        logger.error("No model found at %s", os.path.join(log_path, model_path))
+    if not (log_path / model_path).is_file():
+        logger.error("No model found at %s", log_path / model_path)
         sys.exit()
     else:
         if torch.cuda.is_available():
-            checkpoint = torch.load(os.path.join(log_path, model_path))
+            checkpoint = torch.load(log_path / model_path)
         else:
             checkpoint = torch.load(
-                os.path.join(log_path, model_path), map_location=torch.device("cpu")
+                log_path / model_path, map_location=torch.device("cpu")
             )
         loaded_checkpoint = {}
         if torch.cuda.device_count() > 1:
-            for key in checkpoint["state_dict"].keys():
+            for key in checkpoint["state_dict"]:
                 if "module" not in key:
-                    loaded_checkpoint["module." + key] = checkpoint["state_dict"][key]
+                    loaded_checkpoint[f"module.{key}"] = checkpoint["state_dict"][key]
                 else:
                     loaded_checkpoint = checkpoint["state_dict"]
         else:
-            for key in checkpoint["state_dict"].keys():
+            for key in checkpoint["state_dict"]:
                 loaded_checkpoint[key.replace("module.", "")] = checkpoint[
                     "state_dict"
                 ][key]

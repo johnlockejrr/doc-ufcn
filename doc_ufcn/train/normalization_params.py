@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
-
 """
-    The normalization params module
-    ======================
+The normalization params module
+======================
 
-    Use it to get the mean and standard deviation of the training set.
+Use it to get the mean and standard deviation of the training set.
 """
 
 import logging
+from pathlib import Path
 
 import numpy as np
 from torch.utils.data import DataLoader
@@ -18,7 +17,7 @@ from doc_ufcn.train.utils.preprocessing import PredictionDataset, Rescale, ToTen
 
 
 def run(
-    log_path: str,
+    log_path: Path,
     data_paths: dict,
     img_size: int,
     mean_name: str,
@@ -51,13 +50,8 @@ def run(
     mean = np.array(mean).mean(axis=0)
     std = np.array(std).mean(axis=0)
 
-    logging.info("Mean: {}".format(np.uint8(mean)))
-    logging.info(" Std: {}".format(np.uint8(std)))
+    logging.info(f"Mean: {np.uint8(mean)}")
+    logging.info(f" Std: {np.uint8(std)}")
 
-    with (log_path / mean_name).open("w") as file:
-        for value in mean:
-            file.write(str(np.uint8(value)) + "\n")
-
-    with (log_path / std_name).open("w") as file:
-        for value in std:
-            file.write(str(np.uint8(value)) + "\n")
+    (log_path / mean_name).write_text("\n".join(str(np.uint8(value)) for value in mean))
+    (log_path / std_name).write_text("\n".join(str(np.uint8(value)) for value in std))

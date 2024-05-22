@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import cv2
 import numpy as np
 
@@ -66,10 +64,11 @@ def resize_predicted_polygons(polygons, original_image_size, model_input_size, p
     new_size = tuple([int(x * ratio) for x in original_image_size])
     # Compute resizing ratio.
     ratio = [
-        element / float(new) for element, new in zip(original_image_size, new_size)
+        element / float(new)
+        for element, new in zip(original_image_size, new_size, strict=True)
     ]
 
-    for channel in polygons.keys():
+    for channel in polygons:
         for index, polygon in enumerate(polygons[channel]):
             x_points = [
                 int((element[0][1] - padding[0]) * ratio[0])
@@ -83,7 +82,9 @@ def resize_predicted_polygons(polygons, original_image_size, model_input_size, p
             x_points = np.clip(np.array(x_points), 0, original_image_size[0])
             y_points = np.clip(np.array(y_points), 0, original_image_size[1])
 
-            polygons[channel][index]["polygon"] = list(zip(y_points, x_points))
+            polygons[channel][index]["polygon"] = list(
+                zip(y_points, x_points, strict=True)
+            )
         # Sort the polygons.
         polygons[channel] = sorted(
             polygons[channel],
@@ -106,8 +107,8 @@ def get_prediction_image(polygons, image_size, image=None):
         mask = image
         thickness = 2
 
-    for channel in polygons.keys():
-        color = int(channel * 255 / len(polygons.keys()))
+    for channel in polygons:
+        color = int(channel * 255 / len(polygons))
         if image is not None:
             color = [0, color, 0]
         # Draw polygons.

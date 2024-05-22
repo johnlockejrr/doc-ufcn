@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
-    The utils module
-    ======================
+The utils module
+======================
 
-    Generic functions used during all the steps.
+Generic functions used during all the steps.
 """
 
 import copy
@@ -99,7 +97,7 @@ class Sampler(torch.utils.data.Sampler):
     def __iter__(self):
         buckets = copy.deepcopy(self.buckets)
         for index, bucket in enumerate(buckets):
-            for key in bucket.keys():
+            for key in bucket:
                 random.shuffle(buckets[index][key])
 
         if self.batch_size is not None and self.nb_params is None:
@@ -107,7 +105,7 @@ class Sampler(torch.utils.data.Sampler):
             index_current = -1
             for bucket in buckets:
                 current_batch_size = self.batch_size
-                for key in sorted(bucket.keys(), reverse=True):
+                for key in sorted(bucket, reverse=True):
                     for index in bucket[key]:
                         if current_batch_size + 1 > self.batch_size:
                             current_batch_size = 0
@@ -122,7 +120,7 @@ class Sampler(torch.utils.data.Sampler):
             index_current = -1
             for bucket in buckets:
                 current_params = self.nb_params
-                for key in sorted(bucket.keys(), reverse=True):
+                for key in sorted(bucket, reverse=True):
                     for index in bucket[key]:
                         element_params = (
                             self.data_sizes[index][0] * self.data_sizes[index][1] * 3
@@ -166,7 +164,7 @@ def pad_images_masks(
         * image_padding_value
     )
     padded_masks = np.ones((len(masks), max_height, max_width)) * mask_padding_value
-    for index, (image, mask) in enumerate(zip(images, masks)):
+    for index, (image, mask) in enumerate(zip(images, masks, strict=True)):
         delta_h = max_height - image.shape[0]
         delta_w = max_width - image.shape[1]
         top, bottom = delta_h // 2, delta_h - (delta_h // 2)

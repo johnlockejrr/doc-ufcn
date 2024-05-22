@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
-    The training utils module
-    ======================
+The training utils module
+======================
 
-    Use it to during the training stage.
+Use it to during the training stage.
 """
 
 import matplotlib.pyplot as plt
@@ -27,7 +25,7 @@ class Diceloss(nn.Module):
         Constructor of the Diceloss class.
         :param num_classes: The number of classes involved in the experiment.
         """
-        super(Diceloss, self).__init__()
+        super().__init__()
         self.num_classes = num_classes
 
     def forward(self, pred: np.ndarray, target: np.ndarray) -> float:
@@ -129,7 +127,7 @@ def get_epoch_values(metrics: dict, classes: list, batch: int) -> dict:
     """
     values = {}
     for channel in classes[1:]:
-        values["iou_" + channel] = round(
+        values[f"iou_{channel}"] = round(
             p_metrics.iou(metrics["matrix"], classes.index(channel)), 6
         )
     values["loss"] = metrics["loss"] / batch

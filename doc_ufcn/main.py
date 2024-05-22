@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-
 import logging
-import os
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -25,7 +23,6 @@ class DocUFCN:
         :param model_input_size: The size of the model input.
         :param device: The device to use.
         """
-        super(DocUFCN, self).__init__()
         self.no_of_classes = no_of_classes
         assert isinstance(
             self.no_of_classes, int
@@ -38,7 +35,7 @@ class DocUFCN:
         assert self.model_input_size > 0, "Model input size must be positive"
         self.device = device
 
-    def load(self, model_path, mean, std, mode="eval"):
+    def load(self, model_path: Path, mean, std, mode="eval"):
         """
         Load a trained model.
         :param model_path: Path to the model.
@@ -57,10 +54,10 @@ class DocUFCN:
             raise Exception("Unsupported mode")
 
         # Restore the model weights.
-        assert os.path.isfile(model_path)
+        assert model_path.is_file()
         checkpoint = torch.load(model_path, map_location=self.device)
         loaded_checkpoint = {}
-        for key in checkpoint["state_dict"].keys():
+        for key in checkpoint["state_dict"]:
             loaded_checkpoint[key.replace("module.", "")] = checkpoint["state_dict"][
                 key
             ]

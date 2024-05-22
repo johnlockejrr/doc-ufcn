@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import json
 import shutil
 from pathlib import Path
@@ -13,7 +12,7 @@ from tests import FIXTURES
 DATASET = FIXTURES / "training"
 
 
-@pytest.fixture
+@pytest.fixture()
 def config():
     return parse_configurations([DATASET / "config.json"])
 
