@@ -38,7 +38,7 @@ training = [
     "imageio==2.34.2",
     "matplotlib==3.8.1",
     "mlflow==2.2.1",
-    "Shapely==2.0.5",
+    "Shapely==2.0.6",
     "teklia-toolbox==0.1.5",
     "tensorboard==2.15.1",
     "torchvision==0.16.0",
