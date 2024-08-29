@@ -1,4 +1,5 @@
 import hashlib
+import json
 from pathlib import Path
 
 
@@ -21,3 +22,15 @@ def export_list(data: list, output: Path):
     Export a list of elements to a specified location, one element per line.
     """
     output.write_text("\n".join(map(str, data)))
+
+
+def read_json(filename: Path | str) -> dict:
+    """
+    Read a label / prediction json file.
+    :param filename: Path to the file to read.
+    :return: A dictionary with the file content.
+    """
+    if isinstance(filename, str):
+        filename = Path(filename)
+
+    return json.loads(filename.read_text())

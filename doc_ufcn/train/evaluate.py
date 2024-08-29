@@ -16,6 +16,7 @@ from tqdm import tqdm
 import doc_ufcn.train.utils.evaluation as ev_utils
 import doc_ufcn.train.utils.object_metrics as o_metrics
 import doc_ufcn.train.utils.pixel_metrics as p_metrics
+from doc_ufcn.utils import read_json
 
 
 def run(
@@ -62,8 +63,8 @@ def run(
     }
     number_of_gt = {channel: 0 for channel in classes_names[1:]}
     for img_path in tqdm(label_dir.iterdir(), desc=f"Evaluation (prog) {set}"):
-        gt_regions = ev_utils.read_json(img_path)
-        pred_regions = ev_utils.read_json(
+        gt_regions = read_json(img_path)
+        pred_regions = read_json(
             log_path / prediction_path / set / dataset / img_path.name
         )
 

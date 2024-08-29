@@ -6,7 +6,6 @@ Use it to during the evaluation stage.
 """
 
 import json
-from pathlib import Path
 
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
@@ -52,15 +51,6 @@ def resize_polygons(polygons: dict, gt_size: tuple, pred_size: tuple) -> dict:
                 zip(y_points, x_points, strict=True)
             )
     return polygons
-
-
-def read_json(filename: Path) -> dict:
-    """
-    Read a label / prediction json file.
-    :param filename: Path to the file to read.
-    :return: A dictionary with the file content.
-    """
-    return json.loads(filename.read_text())
 
 
 def get_polygons(regions: dict, classes: list) -> dict:
