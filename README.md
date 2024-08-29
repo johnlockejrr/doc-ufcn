@@ -385,4 +385,4 @@ This library is under the 3-Clause BSD License.
 
 ## Contact
 
-If you have any questions or suggestions, please contact [Mélodie Boillet and Teklia](mailto:team@teklia.com?cc=boillet@teklia.com&subject=Feedback%20on%20Doc-UFCN%3A%20).
+🆘 If you have any questions or suggestions, please write us on [support.teklia.com](https://support.teklia.com/c/machine-learning/doc-ufcn/12).
