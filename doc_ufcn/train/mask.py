@@ -1,11 +1,44 @@
+import argparse
+import logging
 from itertools import combinations
 from pathlib import Path
 
 import cv2
+import imagesize
 import numpy
 from shapely.affinity import scale
 from shapely.geometry import LineString, Polygon
 from shapely.geometry.multipolygon import MultiPolygon
+
+from doc_ufcn.utils import read_json
+
+logger = logging.getLogger(__name__)
+
+
+def parse_args() -> argparse.Namespace:
+    """
+    Configure the CLI arguments for the training workflow
+    """
+    parser = argparse.ArgumentParser(description="Generate the mask labels.")
+    parser.add_argument(
+        "dataset",
+        type=Path,
+        help="Path to the folder of the dataset. This is where the `train`/`val`/`test` splits folder are.",
+    )
+    parser.add_argument(
+        "--img-size",
+        type=int,
+        help="Mask images will be generated at this size. This is the network input size as well.",
+        default=768,
+    )
+    parser.add_argument(
+        "--label-colors",
+        type=read_json,
+        help="Path to JSON file with the color choices for each class.",
+        required=True,
+    )
+
+    return parser.parse_args()
 
 
 def new_image_size(input_size: tuple, output_size: int):
@@ -27,14 +60,13 @@ def new_image_size(input_size: tuple, output_size: int):
 def generate_mask(
     image_width: int,
     image_height: int,
-    max_image_size: float,
+    max_image_size: int | None,
     label_polygons: dict,
     label_colors: dict,
-    output_path: Path,
-) -> str:
+    output_path: str,
+) -> None:
     """
     Generate a mask with the given dimensions and polygons.
-    Returns the path to the generated image.
     """
     if max_image_size is not None:
         mask_height, mask_width, ratio_height, ratio_width = new_image_size(
@@ -57,11 +89,14 @@ def generate_mask(
     img = cv2.imread(output_path)
 
     # Draw the polygons on the image
-    for label in label_polygons:
+    for label, zones in label_polygons.items():
         # Retrieve polygon color
-        color = label_colors[label]
+        color = label_colors.get(label)
+        if not color:
+            raise Exception(f"No color found for class `{label}`")
+
         # Retrieve corresponding polygons
-        polygons = [Polygon(poly) for poly in label_polygons[label]]
+        polygons = [Polygon(zone["polygon"]) for zone in zones]
 
         # Resize the polygons
         polygons = resize_polygons(
@@ -146,3 +181,81 @@ def split_polygons(polygons: list) -> list:
     # Erode all polygons so that they don't touch when drawn over the label image.
     polygons = [poly.buffer(-2 * eps) for poly in polygons]
     return polygons
+
+
+def generate_masks(
+    img_folder: Path, labels_folder: Path, img_size: int, label_colors: dict
+):
+    """Generate mask images for a whole folder.
+
+    Args:
+        img_folder (Path): Where the images are stored.
+        labels_folder (Path): Where the labels are stored in JSON format.
+        img_size (int): Network input size. Mask images will be generated at this size.
+        label_colors (dict): Mapping between classes and their colors on the mask image.
+    """
+    # Masks are stored in this folder
+    output_folder = labels_folder.with_stem("labels")
+    output_folder.mkdir(exist_ok=True)
+
+    for image in img_folder.iterdir():
+        # find related labels
+        labels = (labels_folder / image.stem).with_suffix(".json")
+        if not labels.exists():
+            logger.error(f"JSON labels not found for image ({image.name})")
+            continue
+
+        # Compute image dims
+        width, height = imagesize.get(image)
+        # Parse JSON labels
+        json_labels = read_json(labels)
+
+        # Ignore the 'img_size' key
+        del json_labels["img_size"]
+        # Generate mask
+        generate_mask(
+            image_width=width,
+            image_height=height,
+            max_image_size=img_size,
+            label_polygons=json_labels,
+            label_colors=label_colors,
+            output_path=str(output_folder / image.name),
+        )
+
+
+def run(
+    dataset_folder: Path,
+    img_size: int,
+    label_colors: dict,
+):
+    logger.info(f"Masks will be generated at size {img_size}.")
+    # iterate over subfolders (splits)
+    for subfolder in dataset_folder.iterdir():
+        logger.info(f"Processing folder `{subfolder.name}`")
+
+        # Look for data folders
+        img_folder = subfolder / "images"
+        polygons_folder = subfolder / "labels_json"
+        if not (img_folder.exists() and polygons_folder.exists()):
+            logger.error(
+                "Make sure the `images` and `labels_json` folders are present. Skipping this folder."
+            )
+            continue
+
+        # generation will be done next to JSON labels
+        generate_masks(
+            img_folder=img_folder,
+            labels_folder=polygons_folder,
+            img_size=img_size,
+            label_colors=label_colors,
+        )
+
+
+def main():
+    args = parse_args()
+
+    run(
+        dataset_folder=args.dataset,
+        img_size=args.img_size,
+        label_colors=args.label_colors,
+    )

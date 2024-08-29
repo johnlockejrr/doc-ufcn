@@ -146,8 +146,56 @@ To train and test the model, all the images and their annotations of a dataset s
 ├── ...
 ```
 
+The evaluation is run over json files containing the original polygons coordinates that should be in the `labels_json` folders.
+
+#### Images
+
+The images should be stored at the size of the network input size.
+
+#### JSON labels format
+
+The files in the `labels_json` folder should have the following format:
+
+```json
+{
+    "img_size": [
+        ...,
+        ...
+    ],
+    "<class1>": [
+        {
+            "confidence": ...,
+            "polygon": [[...], ...]
+        },
+        ...
+    ],
+    "<class2>": [
+        ...
+    ],
+    ...
+}
+```
+
+#### Mask images generation
+
+Generate the corresponding masks automatically using the `doc-ufcn-masks` command. It has the following arguments:
+- `dataset`: the path to the folder with all the data (corresponds to `dataset_name` in [the previous example](#preparing-the-data)),
+- `--img-size`: mask images will be generated at this size (defaults to `768`),
+- `--label-colors`: the path to a JSON file with the mapping between the classes and their colors in the masks.
+
 The labels should be generated directly at the network input size (*img_size*) to avoid resizing (that can cause mergings of regions).
-In addition, the evaluation is run over json files containing the original polygons coordinates that should be in the `labels_json` folders.
+
+This is an example usage.
+```sh
+doc-ufcn-masks dataset_name --img-size 768 --label-colors colors.json
+```
+
+While this is the content of `colors.json`
+```json
+{
+    "text_line": [0, 0, 255]
+}
+```
 
 ### Preparing the configuration files
 
