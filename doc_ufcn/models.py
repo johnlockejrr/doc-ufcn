@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 def download_model(name, version=None):
-    # Strip the model name prefix if provided
     logger.info(f"Will look for model @ {HUGGING_FACE_REPO_PREFIX + name}")
 
     cache_dir = Path(os.environ.get("XDG_CACHE_HOME", Path("~/.cache").expanduser()))
