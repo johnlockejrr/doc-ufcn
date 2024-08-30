@@ -45,7 +45,7 @@ training = [
     "tqdm==4.66.1",
 ]
 test = [
-    "scikit-image==0.22.0",
+    "scikit-image==0.24.0",
     "pytest==8.3.2",
     "pytest-lazy-fixtures==1.0.7",
 ]
