@@ -12,7 +12,7 @@ authors = [
     { name = "Mélodie Boillet", email = "boillet@teklia.com" },
 ]
 dependencies = [
-    "huggingface-hub==0.20.2",
+    "huggingface-hub==0.24.6",
     "numpy==1.26.2",
     "opencv-python-headless==4.7.0.72",
     "pyyaml==6.0.1",
