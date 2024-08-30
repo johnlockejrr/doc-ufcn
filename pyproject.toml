@@ -47,7 +47,7 @@ training = [
 test = [
     "scikit-image==0.22.0",
     "pytest==8.3.2",
-    "pytest-lazy-fixtures==1.0.7",
+    "pytest-lazy-fixtures==1.1.1",
 ]
 
 [tool.setuptools.packages]
