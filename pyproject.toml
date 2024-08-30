@@ -40,7 +40,7 @@ training = [
     "mlflow==2.2.1",
     "Shapely==2.0.5",
     "teklia-toolbox==0.1.5",
-    "tensorboard==2.15.1",
+    "tensorboard==2.17.1",
     "torchvision==0.16.0",
     "tqdm==4.66.1",
 ]
