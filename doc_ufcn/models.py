@@ -6,13 +6,13 @@ import yaml
 from huggingface_hub import hf_hub_download
 from huggingface_hub.utils import RepositoryNotFoundError, RevisionNotFoundError
 
-HUGGING_FACE_REPO_PREFIX = ""
-
-
 logger = logging.getLogger(__name__)
 
-
 def download_model(name, version=None):
+    HUGGING_FACE_REPO_PREFIX = "" if "/" in name else "Teklia/doc-ufcn-"
+    # Strip the model name prefix if provided
+    if HUGGING_FACE_REPO_PREFIX:
+        name = name.replace("doc-ufcn-", "")
     logger.info(f"Will look for model @ {HUGGING_FACE_REPO_PREFIX + name}")
 
     cache_dir = Path(os.environ.get("XDG_CACHE_HOME", Path("~/.cache").expanduser()))
