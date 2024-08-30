@@ -100,6 +100,7 @@ from doc_ufcn.main import DocUFCN
 model_path, parameters = models.download_model('generic-page')
 
 model = DocUFCN(len(parameters['classes']), parameters['input_size'], 'cpu')
+
 model.load(model_path, parameters['mean'], parameters['std'])
 ```
 
